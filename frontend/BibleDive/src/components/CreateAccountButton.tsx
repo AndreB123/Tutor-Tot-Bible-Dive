@@ -1,30 +1,32 @@
-import { Pressable, Text } from "react-native";
+import React from "react";
 import { createStyleSheet } from "../styles/useStyles";
+import { Pressable, Text } from 'react-native';
 
-export interface SubmitButtonProps {
-    onPress: () => void;
+
+export interface CreateAccountButtonProps {
+    onPress: () => void,
     testID?: string,
 }
 
-export const SubmitButton: React.FC<SubmitButtonProps> = ({ onPress, testID }) => {
+export const CreateAccountButton: React.FC<CreateAccountButtonProps> = ({ onPress, testID }) => {
     return (
         <Pressable onPress={onPress} style={({ pressed }) => [
             styles.root,
             pressed && styles.pressed
         ]} testID={testID}>
-            <Text style={styles.submit}>
-                Submit
+            <Text style={styles.lorumIpsum}>
+                Create Account
             </Text>
         </Pressable>
     );
-};
+}
 
 const styles = createStyleSheet(theme => ({
     root: {
         flexDirection: 'row',
         paddingTop: 8,
-        paddingLeft: 52,
-        paddingRight: 52,
+        paddingLeft: 26,
+        paddingRight: 26,
         paddingBottom: 8,
         justifyContent: 'center',
         alignItems: 'center',
@@ -33,15 +35,15 @@ const styles = createStyleSheet(theme => ({
         borderStyle: 'solid',
         borderColor: theme.colors.foreground,
         backgroundColor: 'rgba(49, 69, 209, 1)',
-        shadowColor: 'rgba(0, 0, 0, 0.25)',
+        shadowColor: 'rgba(0, 0, 0, 0.250980406999588)',
         shadowRadius: 4,
         shadowOffset: { "width": 0, "height": 4 },
         elevation: 4,
     },
-    submit: {
+    lorumIpsum: {
         color: theme.colors.textPrimary,
         textAlign: 'center',
-        textShadowColor: 'rgba(0, 0, 0, 0.25)',
+        textShadowColor: 'rgba(0, 0, 0, 0.250980406999588)',
         textShadowRadius: 4,
         textShadowOffset: { "width": 0, "height": 4 },
         fontFamily: 'Inter',
@@ -53,3 +55,4 @@ const styles = createStyleSheet(theme => ({
         opacity: 0.5,
     },
 }));
+

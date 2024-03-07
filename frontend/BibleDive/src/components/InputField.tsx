@@ -1,34 +1,49 @@
-import { View } from 'react-native';
+import { View, TextInput } from 'react-native';
 import { createStyleSheet } from '../styles/useStyles';
 
 
 export interface InputFieldProps {
-    testID?: string,
+    onChangeText: (text: string) => void;
+    secureTextEntry?: boolean;
+    testID?: string;
+    placeholder?: string; 
 }
 
-export function InputField(props: InputFieldProps) {
+export const InputField: React.FC<InputFieldProps> = ({onChangeText, testID, placeholder, secureTextEntry = false}) => {
     const styles = createStyleSheet(theme => ({
         root: {
-            width: 150,
-            height: 34,
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            shadowColor: 'rgba(0, 0, 0, 0.250980406999588)',
+            shadowRadius: 4,
+            shadowOffset: { "width": 0, "height": 4 },
+            elevation: 4,
         },
         inputField: {
             width: 150,
             height: 34,
-            flexShrink: 0,
             borderWidth: 1,
+            color: theme.colors.primaryBackground,
             borderStyle: 'solid',
+            paddingTop: 8,
+            paddingBottom: 8,
+            lineHeight: 18,
+            fontSize:14,
             borderColor: theme.colors.foreground,
             backgroundColor: theme.colors.textSecondary,
             shadowColor: 'rgba(0, 0, 0, 0.250980406999588)',
             shadowRadius: 4,
             shadowOffset: { "width": 0, "height": 4 },
+            elevation: 4,
         },
     }));
 
     return (
-        <View style={styles.root} testID={props.testID}>
-            <View style={styles.inputField} testID="1:3768" />
+        <View style={styles.root} testID={testID}>
+            <TextInput style={styles.inputField}
+                onChangeText={onChangeText}
+                placeholder={placeholder}
+                secureTextEntry={secureTextEntry} />
         </View>
     );
 }

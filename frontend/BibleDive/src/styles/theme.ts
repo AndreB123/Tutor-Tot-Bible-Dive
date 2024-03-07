@@ -18,7 +18,7 @@ export const theme: Theme = {
         primaryBackground:      '#1F1F28',
         secondaryBackground:    '#353745',
         tertiaryBackground:     '#4A4E69',
-        foreground:             '#1E1E1E',
+        foreground:             '#000000',
         background:             '#FFFFFF',
         inputFields:            '#2E303E',
         textPrimary:            '#E6E6E6',
