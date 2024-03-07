@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
-import { getAccessToken } from "utils/SecureStorage";
+import { getAccessToken } from "../utils/SecureStorage";
 
 interface AuthContextType{
     isLoggedIn: boolean;

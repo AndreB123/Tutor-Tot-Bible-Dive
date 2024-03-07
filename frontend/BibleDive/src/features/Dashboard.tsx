@@ -1,6 +1,6 @@
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createStyleSheet } from "styles/useStyles"
+import { createStyleSheet } from "../styles/useStyles"
 
 export interface DashbaordScreenProps {
     testID?: string,

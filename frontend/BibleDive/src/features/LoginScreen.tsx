@@ -1,4 +1,4 @@
-import { Login } from "../components/Login";
+import { Login } from "../components/LoginForm";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import { createStyleSheet } from "../styles/useStyles"
 

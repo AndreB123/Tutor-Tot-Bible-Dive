@@ -7,15 +7,15 @@ import React, { useState } from "react";
 import { login } from "../services/AuthService";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "navigation/Navigationtypes";
+import { RootStackParamList } from "../navigation/Navigationtypes";
 
 export interface LoginProps {
     testID?: string,
 }
 
 type DashboardNavigationProp = NativeStackNavigationProp<
-RootStackParamList,
-'Dashboard'
+    RootStackParamList,
+    'Dashboard'
 >;
 
 export function Login(props: LoginProps) {
@@ -89,6 +89,10 @@ export function Login(props: LoginProps) {
         }
     };
 
+    const handleCreateAccountPress = () => {
+        navigation.navigate('CreateAccount');
+    };
+
     return (
         <View style={styles.root} testID={props.testID} >
             <Text style={styles.username} testID="1:3771" >
@@ -109,7 +113,7 @@ export function Login(props: LoginProps) {
             <Text style={styles.or} testID="53:394" >
                 {`Or`}
             </Text>
-            <CreateAccountButton testID="53:482" />
+            <CreateAccountButton onPress={handleCreateAccountPress} testID="53:482" />
         </View>
     );
 }
