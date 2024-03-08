@@ -1,8 +1,9 @@
 import axios from "axios";
 import { clearTokens, getAccessToken, getRefreshToken, storeTokens } from "../utils/SecureStorage";
+import config from "../config/config";
 
 const apiClient = axios.create({
-    baseURL: '' //TODO add base URL
+    baseURL: config.apiBaseUrl
 });
 
 apiClient.interceptors.request.use(async (config)=> {
