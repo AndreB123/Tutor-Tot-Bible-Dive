@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { LoginScreen } from "../features/LoginScreen";
 import { Dashboard } from "../features/Dashboard";
 import { RootStackParamList } from "./Navigationtypes";
-import { useAuth } from "../services/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { useEffect } from "react";
 import { CreateAccount } from "../features/CreateAccount";
 

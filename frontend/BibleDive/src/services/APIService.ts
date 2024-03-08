@@ -19,7 +19,7 @@ apiClient.interceptors.response.use(response => response, async (error)=> {
         originalRequest._retry = true;
         const refreshToken = await getRefreshToken();
         try {
-            const response = await axios.post('endpoint', {refreshToken}); //TODO add endpoint here.
+            const response = await axios.post('/login', {refreshToken});
             const { accessToken, refreshToken: newRefreshToken } = response.data;
             await storeTokens(accessToken, newRefreshToken);
             originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;

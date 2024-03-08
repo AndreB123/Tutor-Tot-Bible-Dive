@@ -43,12 +43,12 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
     };
 
     const handleSubmitPress = async () => {
-        
+
         if (!validateEmail(email)) {
             setError('Invalid Email.');
             return;
         }
-        
+
         if (!validatePassword(password)) {
             setError('Password must be at least 10 characters long and include at least one symbol.');
             return;
@@ -58,8 +58,8 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
             setError('Passwords do not match.');
             return;
         }
-        
-        
+
+
         const isSuccess = await createAccount(email, username, password);
         if (isSuccess) {
             navigation.navigate('Dashboard')
@@ -104,6 +104,9 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
                 placeholder="Confirm Password"
                 secureTextEntry />
             {error ? <Text style={styles.errors}>{error}</Text> : null}
+            <Text style={styles.passwordInfo} testID="56:583">
+                {`Password must contain: \n* At least 10 characters\n* At least 1 symbol`}
+            </Text>
             <SubmitButton onPress={handleSubmitPress} testID="56:582" />
         </View>
     )
@@ -118,7 +121,7 @@ const styles = createStyleSheet(theme => ({
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        rowGap: 15,
+        rowGap: 10,
         columnGap: 15,
         borderRadius: 12,
         borderWidth: 2,
@@ -190,4 +193,17 @@ const styles = createStyleSheet(theme => ({
         fontStyle: 'normal',
         fontWeight: '500',
     },
+    passwordInfo: {
+        width: 200,
+        height: 50,
+        color: theme.colors.textPrimary,
+        textShadowColor: 'rgba(0, 0, 0, 0.250980406999588)',
+        textShadowRadius: 4,
+        textShadowOffset: { "width": 0, "height": 4 },
+        fontFamily: 'Inter',
+        fontSize: 12,
+        fontStyle: 'normal',
+        fontWeight: '500',
+
+    }
 }))
