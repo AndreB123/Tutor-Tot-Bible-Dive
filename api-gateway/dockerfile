@@ -1,0 +1,13 @@
+FROM golang:1.22.1-alpine
+
+WORKDIR /api-gateway
+
+COPY . .
+
+RUN go mod donwload
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix -a cgo -o main .
+
+EXPOSE 8080
+
+CMD [ "./main" ]

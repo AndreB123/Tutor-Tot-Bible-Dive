@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  user-subscription-service:
+    build: ./user-subscription-service
+    ports:
+      - "8081:8080"
+  chat-service:
+    build: ./chat-service
+    ports:
+      - "8082:8080"
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
