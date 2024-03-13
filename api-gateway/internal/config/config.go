@@ -23,7 +23,7 @@ func LoadConfig() *Config {
 		log.Fatal("Missing env var: REFRESH_SECRET")
 	}
 
-	userServiceURL := "http://user-subscription-microservice"
+	userServiceURL := "http://user-subscription-service"
 	/*TODO get the keys to enable Https and WSS via Certificate Authority, and add them to the config
 	to reference them from the inits of the connection in main.go */
 
