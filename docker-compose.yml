@@ -1,14 +1,66 @@
 version: '3.8'
+
+secrets:
+  openai_api_key:
+    external: true
+  access_secret:
+    external: true
+  refresh_secret:
+    external: true
+  chat_db_password:
+    external: true
+  chat_db_user:
+    external: true
+  chat_db_name:
+    external: true
+  chat_db_host:
+    external: true
+  chat_db_port:
+    external: true
+  user_db_password:
+    external: true
+  user_db_user:
+    external: true
+  user_db_name:
+    external: true
+  user_db_host:
+    external: true
+  user_db_port:
+    external: true
+
 services:
   user-subscription-service:
     build: ./user-subscription-service
     ports:
       - "8081:8080"
+    secrets:
+    - access_secret
+    - refresh_secret
+    - user_db_password
+    - user_db_user
+    - user_db_name
+    - user_db_host
+    - user_db_port
+
+
   chat-service:
     build: ./chat-service
     ports:
       - "8082:8080"
+    secrets:
+      - openai_api_key
+      - access_secret
+      - chat_db_password
+      - chat_db_user
+      - chat_db_name
+      - chat_db_host
+      - chat_db_port
+
+
   api-gateway:
     build: ./api-gateway
     ports:
       - "8080:8080"
+    secrets:
+      - refresh_secret
+      - access_secret

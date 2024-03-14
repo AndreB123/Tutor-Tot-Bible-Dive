@@ -6,58 +6,32 @@ import (
 )
 
 type Config struct {
-	AccessSecret  string
-	RefreshSecret string
-	DBHost        string
-	DBUser        string
-	DBPassword    string
-	DBName        string
-	DBPort        string
+	AccessSecret   string
+	RefreshSecret  string
+	UserDBHost     string
+	UserDBUser     string
+	UserDBPassword string
+	UserDBName     string
+	UserDBPort     string
+}
+
+func readSecretFile(secretName string) string {
+	secretPath := "/run/secrets/" + secretName
+	content, err := os.ReadFile(secretPath)
+	if err != nil {
+		log.Fatalf("Failed to read secret file %s, error: %v", secretPath, err)
+	}
+	return string(content)
 }
 
 func LoadConfig() *Config {
-	accessSecret, exists := os.LookupEnv("ACCESS_SECRET")
-	if !exists {
-		log.Fatal("Missing Env for ACCESS_SECRET")
-	}
-
-	refreshSecret, exists := os.LookupEnv("REFRESH_SECRET")
-	if !exists {
-		log.Fatal("Missing Env for REFRESH_SECRET")
-	}
-
-	dbHost, exists := os.LookupEnv("DB_HOST")
-	if !exists {
-		log.Fatal("Missing env for DB_HOST")
-	}
-
-	dbUser, exists := os.LookupEnv("DB_USER")
-	if !exists {
-		log.Fatal("Missing env for DB_USER")
-	}
-
-	dbPassword, exists := os.LookupEnv("DB_PASSWORD")
-	if !exists {
-		log.Fatal("Missing env for DB_PASSWORD")
-	}
-
-	dbName, exists := os.LookupEnv("DB_NAME")
-	if !exists {
-		log.Fatal("Missing env for DB_NAME")
-	}
-
-	dbPort, exists := os.LookupEnv("DB_PORT")
-	if !exists {
-		log.Fatal("Missing env for DB_PORT")
-	}
-
 	return &Config{
-		AccessSecret:  accessSecret,
-		RefreshSecret: refreshSecret,
-		DBHost:        dbHost,
-		DBUser:        dbUser,
-		DBPassword:    dbPassword,
-		DBName:        dbName,
-		DBPort:        dbPort,
+		AccessSecret:   readSecretFile("access_secret"),
+		RefreshSecret:  readSecretFile("refresh_secret"),
+		UserDBHost:     readSecretFile("user_db_host"),
+		UserDBUser:     readSecretFile("user_db_user"),
+		UserDBPassword: readSecretFile("user_db_password"),
+		UserDBName:     readSecretFile("user_db_name"),
+		UserDBPort:     readSecretFile("user_db_port"),
 	}
 }

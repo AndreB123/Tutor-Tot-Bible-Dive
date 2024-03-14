@@ -10,7 +10,7 @@ import (
 
 func NewDB(cfg *config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
+		cfg.UserDBHost, cfg.UserDBUser, cfg.UserDBPassword, cfg.UserDBName, cfg.UserDBPort)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

@@ -15,49 +15,23 @@ type Config struct {
 	AccessSecret string
 }
 
-func LoadConfig() *Config { //TODO change to unique values for chat db
-	openAIKey, exists := os.LookupEnv("OPENAI_API_KEY")
-	if !exists {
-		log.Fatal("Missing API key for OpenAI")
+func readSecretFile(secretName string) string {
+	secretPath := "/run/secrets/" + secretName
+	content, err := os.ReadFile(secretPath)
+	if err != nil {
+		log.Fatalf("Failed to read secret file %s, error: %v", secretPath, err)
 	}
+	return string(content)
+}
 
-	dbHost, exists := os.LookupEnv("DB_HOST")
-	if !exists {
-		log.Fatal("Missing env for DB_HOST")
-	}
-
-	dbUser, exists := os.LookupEnv("DB_USER")
-	if !exists {
-		log.Fatal("Missing env for DB_USER")
-	}
-
-	dbPassword, exists := os.LookupEnv("DB_PASSWORD")
-	if !exists {
-		log.Fatal("Missing env for DB_PASSWORD")
-	}
-
-	dbName, exists := os.LookupEnv("DB_NAME")
-	if !exists {
-		log.Fatal("Missing env for DB_NAME")
-	}
-
-	dbPort, exists := os.LookupEnv("DB_PORT")
-	if !exists {
-		log.Fatal("Missing env for DB_PORT")
-	}
-
-	accessSecret, exists := os.LookupEnv("ACCESS_SECRET")
-	if !exists {
-		log.Fatal("Missing Env for ACCESS_SECRET")
-	}
-
+func LoadConfig() *Config {
 	return &Config{
-		AccessSecret: accessSecret,
-		OpenAIKey:    openAIKey,
-		DBHost:       dbHost,
-		DBUser:       dbUser,
-		DBPassword:   dbPassword,
-		DBName:       dbName,
-		DBPort:       dbPort,
+		AccessSecret: readSecretFile("access_secret"),
+		OpenAIKey:    readSecretFile("openai_api_secret"),
+		DBHost:       readSecretFile("chat_db_host"),
+		DBUser:       readSecretFile("chat_db_user"),
+		DBPassword:   readSecretFile("chat_db_password"),
+		DBName:       readSecretFile("chat_db_name"),
+		DBPort:       readSecretFile("chat_db_port"),
 	}
 }
