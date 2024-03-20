@@ -26,12 +26,12 @@ func readSecretFile(secretName string) string {
 
 func LoadConfig() *Config {
 	return &Config{
-		AccessSecret:   readSecretFile("access_secret"),
-		RefreshSecret:  readSecretFile("refresh_secret"),
-		UserDBHost:     readSecretFile("user_db_host"),
-		UserDBUser:     readSecretFile("user_db_user"),
-		UserDBPassword: readSecretFile("user_db_password"),
-		UserDBName:     readSecretFile("user_db_name"),
-		UserDBPort:     readSecretFile("user_db_port"),
+		AccessSecret:   readSecretFile("ACCESS_SECRET"),
+		RefreshSecret:  readSecretFile("REFRESH_SECRET"),
+		UserDBHost:     readSecretFile("USER_DB_HOST"),
+		UserDBUser:     readSecretFile("USER_DB_USER"),
+		UserDBPassword: readSecretFile("USER_DB_PASSWORD"),
+		UserDBName:     readSecretFile("USER_DB_NAME"),
+		UserDBPort:     readSecretFile("USER_DB_PORT"),
 	}
 }

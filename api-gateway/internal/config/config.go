@@ -29,8 +29,8 @@ func LoadConfig() *Config {
 	chatServiceURL := "http://chat-service"
 
 	return &Config{
-		AccessSecret:   readSecretFile("access_secret"),
-		RefreshSecret:  readSecretFile("refresh_secret"),
+		AccessSecret:   readSecretFile("ACCESS_SECRET"),
+		RefreshSecret:  readSecretFile("REFRESH_SECRET"),
 		UserServiceURL: userServiceURL,
 		ChatServiceURL: chatServiceURL,
 	}

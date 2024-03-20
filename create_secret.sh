@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Path to your secrets .env file
-#TODO 
-SECRETS_FILE=".env.secrets"
+SECRETS_FILE="envs.env_file"
 
 # Check if Docker Swarm is initialized
 docker info | grep -q 'Swarm: active'

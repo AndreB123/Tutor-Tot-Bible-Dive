@@ -26,12 +26,12 @@ func readSecretFile(secretName string) string {
 
 func LoadConfig() *Config {
 	return &Config{
-		AccessSecret: readSecretFile("access_secret"),
-		OpenAIKey:    readSecretFile("openai_api_secret"),
-		DBHost:       readSecretFile("chat_db_host"),
-		DBUser:       readSecretFile("chat_db_user"),
-		DBPassword:   readSecretFile("chat_db_password"),
-		DBName:       readSecretFile("chat_db_name"),
-		DBPort:       readSecretFile("chat_db_port"),
+		AccessSecret: readSecretFile("ACCESS_SECRET"),
+		OpenAIKey:    readSecretFile("OPENAI_API_KEY"),
+		DBHost:       readSecretFile("CHAT_DB_HOST"),
+		DBUser:       readSecretFile("CHAT_DB_USER"),
+		DBPassword:   readSecretFile("CHAT_DB_PASSWORD"),
+		DBName:       readSecretFile("CHAT_DB_NAME"),
+		DBPort:       readSecretFile("CHAT_DB_PORT"),
 	}
 }

@@ -1,66 +1,82 @@
 version: '3.8'
 
 secrets:
-  openai_api_key:
+  OPENAI_API_KEY:
     external: true
-  access_secret:
+  ACCESS_SECRET:
     external: true
-  refresh_secret:
+  REFRESH_SECRET:
     external: true
-  chat_db_password:
+  CHAT_DB_PASSWORD:
     external: true
-  chat_db_user:
+  CHAT_DB_USER:
     external: true
-  chat_db_name:
+  CHAT_DB_NAME:
     external: true
-  chat_db_host:
+  CHAT_DB_HOST:
     external: true
-  chat_db_port:
+  CHAT_DB_PORT:
     external: true
-  user_db_password:
+  USER_DB_PASSWORD:
     external: true
-  user_db_user:
+  USER_DB_USER:
     external: true
-  user_db_name:
+  USER_DB_NAME:
     external: true
-  user_db_host:
+  USER_DB_HOST:
     external: true
-  user_db_port:
+  USER_DB_PORT:
     external: true
 
 services:
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=TestPass
+      - POSTGRES_DB=default_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
   user-subscription-service:
     build: ./user-subscription-service
+    image: user-subscription-service
     ports:
       - "8081:8080"
     secrets:
-    - access_secret
-    - refresh_secret
-    - user_db_password
-    - user_db_user
-    - user_db_name
-    - user_db_host
-    - user_db_port
-
+    - source: ACCESS_SECRET
+    - source: REFRESH_SECRET
+    - source: USER_DB_PASSWORD
+    - source: USER_DB_USER
+    - source: USER_DB_NAME
+    - source: USER_DB_HOST
+    - source: USER_DB_PORT
 
   chat-service:
     build: ./chat-service
+    image: chat-service
     ports:
       - "8082:8080"
     secrets:
-      - openai_api_key
-      - access_secret
-      - chat_db_password
-      - chat_db_user
-      - chat_db_name
-      - chat_db_host
-      - chat_db_port
-
+      - source: OPENAI_API_KEY
+      - source: ACCESS_SECRET
+      - source: CHAT_DB_PASSWORD
+      - source: CHAT_DB_USER
+      - source: CHAT_DB_NAME
+      - source: CHAT_DB_HOST
+      - source: CHAT_DB_PORT
 
   api-gateway:
     build: ./api-gateway
+    image: api-gateway
     ports:
       - "8080:8080"
     secrets:
-      - refresh_secret
-      - access_secret
+      - source: REFRESH_SECRET
+      - source: ACCESS_SECRET
+
+volumes:
+  postgres-data:

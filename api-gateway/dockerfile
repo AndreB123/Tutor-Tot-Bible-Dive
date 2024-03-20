@@ -4,9 +4,9 @@ WORKDIR /api-gateway
 
 COPY . .
 
-RUN go mod donwload
+RUN go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix -a cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/api-gateway
 
 EXPOSE 8080
 
