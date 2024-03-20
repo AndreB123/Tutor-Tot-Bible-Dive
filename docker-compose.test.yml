@@ -45,7 +45,7 @@ services:
     build: ./user-subscription-service
     image: user-subscription-service
     ports:
-      - "8081:8080"
+      - "8083:8080"
     secrets:
     - source: ACCESS_SECRET
     - source: REFRESH_SECRET

@@ -1,4 +1,5 @@
 import apiClient from './APIService';
+import axios from "axios";
 import { storeTokens } from '../utils/SecureStorage';
 
 interface LoginResponse {
@@ -15,6 +16,13 @@ export const login = async (username: string, password: string): Promise<boolean
         return true;
     } catch (error) {
         console.error('Login error', error);
+        if (axios.isAxiosError(error)) {
+            console.log('Error data:', error.response?.data);
+            console.log('Status code:', error.response?.status);
+            console.log('Headers:', error.response?.headers);
+        } else {
+            console.log('Non-Axios error:', error);
+        }
         return false;
     }
 };
@@ -28,6 +36,13 @@ export const createAccount = async (email: string, username: string, password: s
         return true;
     } catch (error) {
         console.error('failed to create account', error);
+        if (axios.isAxiosError(error)) {
+            console.log('Error data:', error.response?.data);
+            console.log('Status code:', error.response?.status);
+            console.log('Headers:', error.response?.headers);
+        } else {
+            console.log('Non-Axios error:', error);
+        }
         return false;
     }
 }

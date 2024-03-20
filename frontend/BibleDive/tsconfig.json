@@ -10,6 +10,6 @@
       "*.svg": ["assets/vectors/*.svg"] // Ensure SVG imports are correctly resolved
     }
   },
-  "include": ["src/**/*", "assets/vectors/*.svg"], 
+  "include": ["src/**/*", "assets/vectors/*.svg", "declarations.d.ts"], 
   "exclude": ["node_modules", "babel.config.js", "metro.config.js", "index.js"] 
 }
