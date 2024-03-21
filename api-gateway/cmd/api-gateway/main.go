@@ -26,8 +26,8 @@ func main() {
 
 	//TODO update this to reflect the TLS creds we get from the config.
 	//Also update other Microservies to com over securegrpc.Creds(credentials.NewServerTLSFromFile(certFile, keyFile))
-	keyPath := "placeholder/key.pem"
-	certPath := "placeholder/cert.pem"
+	keyPath := "/run/secrets/ssl_key"
+	certPath := "/run/secrets/ssl_cert"
 
 	log.Fatal(http.ListenAndServeTLS(":8080", certPath, keyPath, router))
 

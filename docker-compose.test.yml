@@ -27,6 +27,10 @@ secrets:
     external: true
   USER_DB_PORT:
     external: true
+  ssl_cert:
+    external: true
+  ssl_key:
+    external: true
 
 services:
 
@@ -80,6 +84,8 @@ services:
     secrets:
       - source: REFRESH_SECRET
       - source: ACCESS_SECRET
+      - source: ssl_cert
+      - source: ssl_key
 
 volumes:
   postgres-data:
