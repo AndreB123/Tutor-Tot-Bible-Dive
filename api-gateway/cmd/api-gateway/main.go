@@ -29,6 +29,6 @@ func main() {
 	keyPath := "placeholder/key.pem"
 	certPath := "placeholder/cert.pem"
 
-	log.Fatal(http.ListenAndServeTLS(":443", certPath, keyPath, router))
+	log.Fatal(http.ListenAndServeTLS(":8080", certPath, keyPath, router))
 
 }
