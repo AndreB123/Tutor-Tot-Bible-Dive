@@ -5,30 +5,10 @@ import (
 )
 
 type User struct {
-	id       uint `gorm:"primaryKey"`
-	name     string
-	email    string
-	password string
-}
-
-func (u *User) ID() uint {
-	return u.id
-}
-
-func (u *User) Name() string {
-	return u.name
-}
-
-func (u *User) Email() string {
-	return u.email
-}
-
-func (u *User) SetName(name string) {
-	u.name = name
-}
-
-func (u *User) SetEmail(email string) {
-	u.email = email
+	ID       uint `gorm:"primaryKey"`
+	Name     string
+	Email    string
+	Password string
 }
 
 func (u *User) SetPassword(password string) error {
@@ -36,11 +16,11 @@ func (u *User) SetPassword(password string) error {
 	if err != nil {
 		return err
 	}
-	u.password = string(hash)
+	u.Password = string(hash)
 	return nil
 }
 
 func (u *User) ComparePassword(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.password), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	return err == nil
 }

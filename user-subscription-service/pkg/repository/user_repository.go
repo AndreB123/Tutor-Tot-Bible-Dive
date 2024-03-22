@@ -29,7 +29,7 @@ func (repo *UserRepository) GetByID(id uint) (*model.User, error) {
 
 func (repo *UserRepository) GetByEmail(email string) (*model.User, error) {
 	var user model.User
-	result := repo.db.First(&user, email)
+	result := repo.db.Where("email = ?", email).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}

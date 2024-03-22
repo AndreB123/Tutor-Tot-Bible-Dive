@@ -61,13 +61,13 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := h.authService.GenerateToken(user.ID(), true)
+	accessToken, err := h.authService.GenerateToken(user.ID, true)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate access token"})
 		return
 	}
 
-	refreshToken, err := h.authService.GenerateToken(user.ID(), false)
+	refreshToken, err := h.authService.GenerateToken(user.ID, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
 	}
