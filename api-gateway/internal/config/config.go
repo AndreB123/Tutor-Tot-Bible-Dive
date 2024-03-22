@@ -22,11 +22,8 @@ func readSecretFile(secretName string) string {
 }
 
 func LoadConfig() *Config {
-	userServiceURL := "http://user-subscription-service"
-	/*TODO get the keys to enable Https and WSS via Certificate Authority, and add them to the config
-	to reference them from the inits of the connection in main.go */
-
-	chatServiceURL := "http://chat-service"
+	userServiceURL := "http://user-subscription-service:8083"
+	chatServiceURL := "http://chat-service:8082"
 
 	return &Config{
 		AccessSecret:   readSecretFile("ACCESS_SECRET"),

@@ -33,11 +33,9 @@ secrets:
     external: true
 
 services:
-
   postgres:
-    build:
-      context: ./custom-postgres
-      dockerfile: Dockerfile
+    build: ./custom-postgres
+    image: custom-postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=TestPass
@@ -47,6 +45,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
 
   user-subscription-service:
     build: ./user-subscription-service
@@ -54,13 +54,15 @@ services:
     ports:
       - "8083:8080"
     secrets:
-    - source: ACCESS_SECRET
-    - source: REFRESH_SECRET
-    - source: USER_DB_PASSWORD
-    - source: USER_DB_USER
-    - source: USER_DB_NAME
-    - source: USER_DB_HOST
-    - source: USER_DB_PORT
+      - source: ACCESS_SECRET
+      - source: REFRESH_SECRET
+      - source: USER_DB_PASSWORD
+      - source: USER_DB_USER
+      - source: USER_DB_NAME
+      - source: USER_DB_HOST
+      - source: USER_DB_PORT
+    networks:
+      - mynetwork
 
   chat-service:
     build: ./chat-service
@@ -75,17 +77,25 @@ services:
       - source: CHAT_DB_NAME
       - source: CHAT_DB_HOST
       - source: CHAT_DB_PORT
-
+    networks:
+      - mynetwork
+      
   api-gateway:
     build: ./api-gateway
     image: api-gateway
     ports:
-      - "8080:8080"
+      - "443:443"
     secrets:
       - source: REFRESH_SECRET
       - source: ACCESS_SECRET
       - source: ssl_cert
       - source: ssl_key
+    networks:
+      - mynetwork
 
 volumes:
   postgres-data:
+
+networks:
+  mynetwork:
+    driver: overlay
