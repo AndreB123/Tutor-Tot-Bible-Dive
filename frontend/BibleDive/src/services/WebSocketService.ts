@@ -13,7 +13,7 @@ class WebSocketService {
         }
 
         this.websocket.onerror = (e) => {
-            console.error("WebSocket error: ", e.message);
+            console.error("WebSocket error: ", e);
         }
 
         this.websocket.onclose = (e) => {

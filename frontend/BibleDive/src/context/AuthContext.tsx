@@ -1,7 +1,6 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { getAccessToken } from "../utils/SecureStorage";
 import WebSocketService from "../services/WebSocketService";
-import config from "../config/config";
 
 interface AuthContextType {
     isLoggedIn: boolean;
@@ -27,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const establishWebSocket = () => {
-        WebSocketService.connect(config.webSocketUrl)
+        WebSocketService.connect(process.env.EXPO_PUBLIC_WEBSOCKET_URL)
     };
 
     const closeWebSocket = () => {

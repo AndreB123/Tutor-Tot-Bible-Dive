@@ -1,7 +1,5 @@
 import { Text, View } from "react-native";
 import { createStyleSheet } from "../styles/useStyles";
-import BackButton from '../assets/vectors/BackButton.svg';
-import MenuIcon from '../assets/vectors/MenuIcon.svg'
 
 
 
@@ -46,8 +44,6 @@ export function Header(props: HeaderProps) {
             <Text style={styles.dashboard} testID="23:173">
                 {`Dashboard`}
             </Text>
-            <MenuIcon />
-            <BackButton />
         </View>
     );
 }

@@ -1,15 +1,4 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
-  "compilerOptions": {
-    "jsx": "react-native",
-    "esModuleInterop": true, 
-    "allowSyntheticDefaultImports": true, 
-    "baseUrl": ".",
-    "paths": {
-      "*": ["src/*"],
-      "*.svg": ["assets/vectors/*.svg"] // Ensure SVG imports are correctly resolved
-    }
-  },
-  "include": ["src/**/*", "assets/vectors/*.svg", "declarations.d.ts"], 
-  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "index.js"] 
+  "compilerOptions": {},
+  "extends": "expo/tsconfig.base"
 }

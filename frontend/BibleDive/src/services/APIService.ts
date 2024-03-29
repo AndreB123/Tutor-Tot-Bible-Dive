@@ -1,9 +1,10 @@
 import axios from "axios";
 import { clearTokens, getAccessToken, getRefreshToken, storeTokens } from "../utils/SecureStorage";
-import config from "../config/config";
+
+const baseURL = process.env.EXPO_PUBLIC_API_BASE_URL
 
 const apiClient = axios.create({
-    baseURL: config.apiBaseUrl
+    baseURL: baseURL
 });
 
 apiClient.interceptors.request.use(async (config)=> {
