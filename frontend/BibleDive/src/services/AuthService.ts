@@ -16,16 +16,17 @@ export const login = async (username: string, password: string): Promise<boolean
         await storeTokens(accessToken, refreshToken);
         return true;
     } catch (error) {
+        console.error('Login error', error);
         if (axios.isAxiosError(error)) {
             if (error.response) {
-                console.error('Error data:', error.response.data);
-                console.error('Status code:', error.response.status);
-                console.error('Headers:', error.response.headers);
+                console.log('Error data:', error.response.data);
+                console.log('Status code:', error.response.status);
+                console.log('Headers:', error.response.headers);
             } else {
-                console.error('Error message:', error.message);
+                console.log('Error message:', error.message);
             }
         } else {
-            console.error('Non-Axios error:', error);
+            console.log('Non-Axios error:', error);
         }
         return false;
     }
@@ -39,16 +40,17 @@ export const createAccount = async (email: string, username: string, password: s
         await storeTokens(accessToken, refreshToken);
         return true;
     } catch (error) {
+        console.error('failed to create account', error);
         if (axios.isAxiosError(error)) {
             if (error.response) {
-                console.error('Error data:', error.response.data);
-                console.error('Status code:', error.response.status);
-                console.error('Headers:', error.response.headers);
+                console.log('Error data:', error.response.data);
+                console.log('Status code:', error.response.status);
+                console.log('Headers:', error.response.headers);
             } else {
-                console.error('Error message:', error.message);
+                console.log('Error message:', error.message);
             }
         } else {
-            console.error('Non-Axios error:', error);
+            console.log('Non-Axios error:', error);
         }
         return false;
     }

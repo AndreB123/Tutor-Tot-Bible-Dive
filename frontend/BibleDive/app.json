@@ -26,6 +26,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "./plugins/trust-local-certs.js"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "69d2a5be-764f-4489-8d07-437f8e99146b"
+      }
     }
   }
 }

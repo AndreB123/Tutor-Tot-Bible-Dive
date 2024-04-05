@@ -198,6 +198,7 @@ func (h *Handler) Login(ctx *gin.Context) {
 func (h *Handler) CreateUser(ctx *gin.Context) {
 	var accountInfo struct {
 		Email    string `json:"email"`
+		UserName string `json:"username"`
 		Password string `json:"password"`
 	}
 
