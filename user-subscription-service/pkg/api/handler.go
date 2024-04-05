@@ -21,19 +21,20 @@ func NewHandler(userService *service.UserService, authService *service.AuthServi
 }
 
 func (h *Handler) CreateUser(c *gin.Context) {
-	var newUser model.User
 	var userCreds struct {
+		Email    string `json:"email"`
+		Name     string `json:"username"`
 		Password string `json:"password"`
-	}
-
-	if err := c.ShouldBindJSON(&newUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
 	}
 
 	if err := c.ShouldBindJSON(&userCreds); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	newUser := model.User{
+		Name:  userCreds.Name,
+		Email: userCreds.Email,
 	}
 
 	err := h.userService.CreateUser(&newUser, userCreds.Password)

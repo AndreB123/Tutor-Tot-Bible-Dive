@@ -35,7 +35,7 @@ secrets:
 services:
   postgres:
     build: ./custom-postgres
-    image: custom-postgres
+    image: custom-postgres:latest
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=TestPass
@@ -50,7 +50,7 @@ services:
 
   user-subscription-service:
     build: ./user-subscription-service
-    image: user-subscription-service
+    image: user-subscription-service:latest
     ports:
       - "8083:8080"
     secrets:
@@ -66,7 +66,7 @@ services:
 
   chat-service:
     build: ./chat-service
-    image: chat-service
+    image: chat-service:latest
     ports:
       - "8082:8080"
     secrets:
@@ -82,7 +82,7 @@ services:
       
   api-gateway:
     build: ./api-gateway
-    image: api-gateway
+    image: api-gateway:latest
     ports:
       - "443:443"
     secrets:

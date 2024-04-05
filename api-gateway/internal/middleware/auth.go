@@ -13,7 +13,7 @@ import (
 
 func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if ctx.Request.URL.Path == "/api-v1/login" || ctx.Request.URL.Path == "/api-v1/refresh_token" {
+		if ctx.Request.URL.Path == "/api-v1/login" || ctx.Request.URL.Path == "/api-v1/create_user" || ctx.Request.URL.Path == "/api-v1/refresh_token" {
 			ctx.Next()
 			return
 		}
