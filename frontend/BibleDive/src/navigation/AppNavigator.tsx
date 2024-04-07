@@ -22,11 +22,17 @@ function AppNavigator() {
     return (
         <Stack.Navigator>
             {isLoggedIn ? (
-                <Stack.Screen name="Dashboard" component={Dashboard} />
+                <>
+                    <Stack.Screen name="Dashboard" component={Dashboard} />
+                    {/* Add other screens accessible after login here */}
+                </>
             ) : (
-                <Stack.Screen name="Login" component={LoginScreen} />
+                <>
+                    <Stack.Screen name="Login" component={LoginScreen} />
+                    <Stack.Screen name="CreateAccount" component={CreateAccount} />
+                    {/* Add other screens accessible before login here */}
+                </>
             )}
-            <Stack.Screen name="CreateAccount" component={CreateAccount} />
         </Stack.Navigator>
     );
 }

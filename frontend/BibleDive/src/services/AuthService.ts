@@ -4,16 +4,16 @@ import { storeTokens } from '../utils/SecureStorage';
 import Constants from 'expo-constants';
 
 interface LoginResponse {
-    accessToken: string;
-    refreshToken: string;
+    access_token: string;
+    refresh_token: string;
 }
 
 export const login = async (username: string, password: string): Promise<boolean> => {
     try {
         const response = await apiClient.post<LoginResponse>('/login', { username, password });
-        const { accessToken, refreshToken } = response.data;
+        const { access_token, refresh_token } = response.data;
 
-        await storeTokens(accessToken, refreshToken);
+        await storeTokens(access_token, refresh_token);
         return true;
     } catch (error) {
         console.error('Login error', error);
@@ -35,9 +35,9 @@ export const login = async (username: string, password: string): Promise<boolean
 export const createAccount = async (email: string, username: string, password: string): Promise<boolean> => {
     try {
         const response = await apiClient.post<LoginResponse>('/create_user', { email, username, password });
-        const { accessToken, refreshToken } = response.data;
+        const { access_token, refresh_token } = response.data;
         console.log("create account response:", response.data)
-        await storeTokens(accessToken, refreshToken);
+        await storeTokens(access_token, refresh_token);
         return true;
     } catch (error) {
         console.error('failed to create account', error);
