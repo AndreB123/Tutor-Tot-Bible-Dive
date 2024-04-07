@@ -35,6 +35,7 @@ func LoadRouter(cfg *config.Config, chatClient proto.ChatServiceClient) *gin.Eng
 		})
 
 		if err != nil || !token.Valid {
+			fmt.Printf("Failed to validate token: %v", err)
 			ctx.String(http.StatusUnauthorized, "Invalid Token")
 			return
 		}

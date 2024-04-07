@@ -25,8 +25,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const establishWebSocket = () => {
-        WebSocketService.connect(process.env.EXPO_PUBLIC_WEBSOCKET_URL)
+    const establishWebSocket = async () => {
+        const token = await getAccessToken();
+        if (token) {
+            const wsUrl = new URL(process.env.EXPO_PUBLIC_WEBSOCKET_URL);
+            wsUrl.searchParams.append('token', token);
+            WebSocketService.connect(wsUrl.toString());
+        }
     };
 
     const closeWebSocket = () => {
