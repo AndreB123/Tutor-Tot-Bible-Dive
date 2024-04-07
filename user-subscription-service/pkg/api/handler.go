@@ -37,13 +37,29 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		Email: userCreds.Email,
 	}
 
-	err := h.userService.CreateUser(&newUser, userCreds.Password)
+	createdUser, err := h.userService.CreateUser(&newUser, userCreds.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successsfully"})
+	accessToken, err := h.authService.GenerateToken(createdUser.ID, true)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate access token"})
+		return
+	}
+
+	refreshToken, err := h.authService.GenerateToken(createdUser.ID, false)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message":       "User created successsfully",
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
 }
 
 func (h *Handler) Login(c *gin.Context) {
@@ -71,6 +87,7 @@ func (h *Handler) Login(c *gin.Context) {
 	refreshToken, err := h.authService.GenerateToken(user.ID, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{

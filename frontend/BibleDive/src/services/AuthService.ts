@@ -36,7 +36,7 @@ export const createAccount = async (email: string, username: string, password: s
     try {
         const response = await apiClient.post<LoginResponse>('/create_user', { email, username, password });
         const { accessToken, refreshToken } = response.data;
-
+        console.log("create account response:", response.data)
         await storeTokens(accessToken, refreshToken);
         return true;
     } catch (error) {

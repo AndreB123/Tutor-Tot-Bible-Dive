@@ -16,14 +16,14 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	}
 }
 
-func (s *UserService) CreateUser(user *model.User, password string) error {
+func (s *UserService) CreateUser(user *model.User, password string) (*model.User, error) {
 	err := user.SetPassword(password)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return s.userRepository.Create(user)
+	return user, s.userRepository.Create(user)
 }
 
 func (s *UserService) AuthUser(email, password string) (*model.User, error) {
