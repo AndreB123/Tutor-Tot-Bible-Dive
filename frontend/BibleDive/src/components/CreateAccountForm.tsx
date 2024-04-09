@@ -7,6 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/Navigationtypes";
 import { createAccount } from "../services/AuthService";
+import { useAuth } from "../context/AuthContext";
 
 export interface CreateAccountFormProps {
     testID?: string,
@@ -25,6 +26,7 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const navigation = useNavigation<DashboardNavigationProp>();
+     const { checkAuthState } = useAuth();
 
 
     const validateEmail = (email: string): boolean => {
@@ -62,6 +64,7 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
 
         const isSuccess = await createAccount(email, username, password);
         if (isSuccess) {
+            await checkAuthState();
             navigation.navigate('Dashboard')
         } else {
             setUsername('');

@@ -23,11 +23,30 @@ func (s *UserService) CreateUser(user *model.User, password string) (*model.User
 		return nil, err
 	}
 
+	emailExists, err := s.userRepository.EmailExists(user.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	if emailExists {
+		return nil, errors.New("email in use")
+	}
+
+	usernameExists, err := s.userRepository.UsernameExists(user.Name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if usernameExists {
+		return nil, errors.New("username in use")
+	}
+
 	return user, s.userRepository.Create(user)
 }
 
-func (s *UserService) AuthUser(email, password string) (*model.User, error) {
-	user, err := s.userRepository.GetByEmail(email)
+func (s *UserService) AuthUser(username, password string) (*model.User, error) {
+	user, err := s.userRepository.GetByUsername(username)
 	if err != nil {
 		return nil, err
 	}

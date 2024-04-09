@@ -64,7 +64,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 
 func (h *Handler) Login(c *gin.Context) {
 	var loginCreds struct {
-		Email    string `json:"email"`
+		Name     string `json:"username"`
 		Password string `json:"password"`
 	}
 	if err := c.ShouldBindJSON(&loginCreds); err != nil {
@@ -72,7 +72,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.AuthUser(loginCreds.Email, loginCreds.Password)
+	user, err := h.userService.AuthUser(loginCreds.Name, loginCreds.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
 		return

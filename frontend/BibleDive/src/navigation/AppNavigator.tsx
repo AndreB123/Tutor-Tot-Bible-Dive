@@ -12,12 +12,9 @@ function AppNavigator() {
     const { isLoggedIn, checkAuthState } = useAuth();
 
     useEffect(() => {
-        const bootstrapAsync = async () => {
-            await checkAuthState;
-        };
+            checkAuthState();
+        }, [checkAuthState]);
 
-        bootstrapAsync();
-    }, [checkAuthState]);
 
     return (
         <Stack.Navigator>

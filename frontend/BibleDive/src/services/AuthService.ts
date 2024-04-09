@@ -1,7 +1,6 @@
 import apiClient from './APIService';
-import axios, {AxiosError} from "axios";
+import axios from "axios";
 import { storeTokens } from '../utils/SecureStorage';
-import Constants from 'expo-constants';
 
 interface LoginResponse {
     access_token: string;

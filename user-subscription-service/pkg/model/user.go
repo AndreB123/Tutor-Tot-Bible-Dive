@@ -5,9 +5,9 @@ import (
 )
 
 type User struct {
-	ID       uint `gorm:"primaryKey"`
-	Name     string
-	Email    string
+	ID       uint   `gorm:"primaryKey"`
+	Name     string `gorm:"unique"`
+	Email    string `gorm:"unique"`
 	Password string
 }
 
