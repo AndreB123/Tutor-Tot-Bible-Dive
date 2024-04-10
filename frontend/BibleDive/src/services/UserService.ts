@@ -3,10 +3,10 @@ import  { IWebSocketService } from "./WebSocketService";
 class UserService {
     constructor(private webSocketService: IWebSocketService) {}
 
-    getUserDetails(userId: string) {
+    getUserDetails(userID: string) {
         const message = JSON.stringify({
             action: "getUserDetails",
-            userId: userId
+            userId: userID
         });
 
         this.webSocketService.sendMessage(message);

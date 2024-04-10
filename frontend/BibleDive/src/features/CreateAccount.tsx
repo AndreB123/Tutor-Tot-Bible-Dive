@@ -13,7 +13,7 @@ export const CreateAccount: React.FC<CreateAccountProps> = ({testID}) => {
     return (
         <SafeAreaView style={styles.container} testID={testID}>
             <ScrollView contentContainerStyle={styles.contentContainer}>
-                <View style= {{height: 20}} />
+                <View style={{height: 20}} />
                 <CreateAccountForm />
             </ScrollView>
         </SafeAreaView>
