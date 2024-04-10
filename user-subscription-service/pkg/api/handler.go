@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"user-microservice/pkg/model"
 	"user-microservice/pkg/service"
@@ -72,6 +73,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
+	fmt.Printf("Login attempt with username: %s, password: %s\n", loginCreds.Name, loginCreds.Password)
 	user, err := h.userService.AuthUser(loginCreds.Name, loginCreds.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})

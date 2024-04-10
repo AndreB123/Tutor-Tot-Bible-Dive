@@ -5,6 +5,7 @@ import { RootStackParamList } from "./Navigationtypes";
 import { useAuth } from "../context/AuthContext";
 import { useEffect } from "react";
 import { CreateAccount } from "../features/CreateAccount";
+import { ChatPage } from "../features/ChatPage";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -21,7 +22,7 @@ function AppNavigator() {
             {isLoggedIn ? (
                 <>
                     <Stack.Screen name="Dashboard" component={Dashboard} />
-                    {/* Add other screens accessible after login here */}
+                    <Stack.Screen name="ChatPage" component={ChatPage} />
                 </>
             ) : (
                 <>

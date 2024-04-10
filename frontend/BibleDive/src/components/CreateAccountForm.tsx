@@ -18,7 +18,6 @@ type DashboardNavigationProp = NativeStackNavigationProp<
     'Dashboard'
 >;
 
-
 export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
@@ -26,8 +25,7 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const navigation = useNavigation<DashboardNavigationProp>();
-     const { checkAuthState } = useAuth();
-
+    const { checkAuthState } = useAuth();
 
     const validateEmail = (email: string): boolean => {
         const re = /\S+@\S+\.\S+/;
@@ -61,7 +59,6 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
             return;
         }
 
-
         const isSuccess = await createAccount(email, username, password);
         if (isSuccess) {
             await checkAuthState();
@@ -73,7 +70,6 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
             setError('Failed to create account. Try again later.');
         }
     };
-
 
     return (
         <View style={styles.root} testID={testID}>
@@ -207,6 +203,5 @@ const styles = createStyleSheet(theme => ({
         fontSize: 12,
         fontStyle: 'normal',
         fontWeight: '500',
-
     }
 }))

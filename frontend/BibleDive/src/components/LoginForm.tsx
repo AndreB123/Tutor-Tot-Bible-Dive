@@ -8,6 +8,7 @@ import { login } from "../services/AuthService";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/Navigationtypes";
+import { useAuth } from "../context/AuthContext";
 
 export interface LoginProps {
     testID?: string,
@@ -18,69 +19,17 @@ type DashboardNavigationProp = NativeStackNavigationProp<
     'Dashboard'
 >;
 
-export function Login(props: LoginProps) {
+export const Login: React.FC<LoginProps> = ({ testID }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigation = useNavigation<DashboardNavigationProp>();
-
-    const styles = createStyleSheet(theme => ({
-        root: {
-            paddingTop: 27,
-            paddingLeft: 32,
-            paddingRight: 32,
-            paddingBottom: 27,
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            rowGap: 9,
-            columnGap: 9,
-            borderRadius: 12,
-            borderWidth: 2,
-            borderStyle: 'solid',
-            borderColor: theme.colors.foreground,
-            backgroundColor: theme.colors.inputFields,
-            shadowColor: 'rgba(0, 0, 0, 0.250980406999588)',
-            shadowRadius: 4,
-            shadowOffset: { "width": 0, "height": 4 },
-        },
-        username: {
-            width: 147,
-            height: 27,
-            color: theme.colors.background,
-            fontFamily: 'Inter',
-            fontSize: 14,
-            fontStyle: 'normal',
-            fontWeight: '500',
-        },
-        password: {
-            width: 147,
-            height: 27,
-            color: theme.colors.background,
-            fontFamily: 'Inter',
-            fontSize: 14,
-            fontStyle: 'normal',
-            fontWeight: '500',
-        },
-        or: {
-            width: 147,
-            height: 17,
-            color: theme.colors.background,
-            textAlign: 'center',
-            fontFamily: 'Inter',
-            fontSize: 14,
-            fontStyle: 'normal',
-            fontWeight: '500',
-        },
-        errors: {
-            color: theme.colors.errors,
-            margin: 10,
-        }
-    }));
+    const { checkAuthState } = useAuth();
 
     const handleLoginPress = async () => {
         const isSuccess = await login(username, password);
         if (isSuccess) {
+            await checkAuthState();
             navigation.navigate('Dashboard');
         } else {
             setUsername('');
@@ -94,7 +43,7 @@ export function Login(props: LoginProps) {
     };
 
     return (
-        <View style={styles.root} testID={props.testID} >
+        <View style={styles.root} testID={testID} >
             <Text style={styles.username} testID="1:3771" >
                 {`Username`}
             </Text>
@@ -117,3 +66,57 @@ export function Login(props: LoginProps) {
         </View>
     );
 }
+
+const styles = createStyleSheet(theme => ({
+    root: {
+        paddingTop: 27,
+        paddingLeft: 32,
+        paddingRight: 32,
+        paddingBottom: 27,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        rowGap: 9,
+        columnGap: 9,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderStyle: 'solid',
+        borderColor: theme.colors.foreground,
+        backgroundColor: theme.colors.inputFields,
+        shadowColor: 'rgba(0, 0, 0, 0.250980406999588)',
+        shadowRadius: 4,
+        shadowOffset: { "width": 0, "height": 4 },
+    },
+    username: {
+        width: 147,
+        height: 27,
+        color: theme.colors.background,
+        fontFamily: 'Inter',
+        fontSize: 14,
+        fontStyle: 'normal',
+        fontWeight: '500',
+    },
+    password: {
+        width: 147,
+        height: 27,
+        color: theme.colors.background,
+        fontFamily: 'Inter',
+        fontSize: 14,
+        fontStyle: 'normal',
+        fontWeight: '500',
+    },
+    or: {
+        width: 147,
+        height: 17,
+        color: theme.colors.background,
+        textAlign: 'center',
+        fontFamily: 'Inter',
+        fontSize: 14,
+        fontStyle: 'normal',
+        fontWeight: '500',
+    },
+    errors: {
+        color: theme.colors.errors,
+        margin: 10,
+    }
+}));
