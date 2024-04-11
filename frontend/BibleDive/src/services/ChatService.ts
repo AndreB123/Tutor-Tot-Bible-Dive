@@ -13,4 +13,13 @@ class ChatService {
 
         this.webSocketService.sendMessage(message);
     }
+
+    getChatSummaries() {
+        const message = {
+            action: 'GetChatSummariesUID',
+        };
+        this.webSocketService.sendMessage(JSON.stringify(message));
+    }
 }
+
+export default ChatService;

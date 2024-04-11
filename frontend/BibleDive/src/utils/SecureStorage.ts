@@ -49,6 +49,14 @@ const isTokenExpired = (token) => {
     return expired;
 };
 
+export const getUserIDFromToken = async () => {
+    const accessToken = await getAccessToken();
+    if (!accessToken) return null;
+
+    const decoded = parseJwt(accessToken);
+    return decoded ? decoded.user_id : null;
+};
+
 export const storeTokens = async (accessToken: string, refreshToken: string) => {
     console.log(`Storing access token: ${accessToken}`);
     console.log(`Storing refresh token: ${refreshToken}`);

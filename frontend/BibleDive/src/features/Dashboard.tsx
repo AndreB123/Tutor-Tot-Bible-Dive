@@ -2,6 +2,7 @@ import { ScrollView, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createStyleSheet } from "../styles/useStyles"
 import LogoutButton from "../components/LogoutButton";
+import { useUser } from "../context/UserContext";
 
 export interface DashbaordScreenProps {
     testID?: string,
@@ -24,7 +25,8 @@ export const Dashboard = (props: DashbaordScreenProps) => {
         }
     }));
 
-    const username = 'User';
+    const { user } = useUser();
+    const username = user ? user.name : 'Diver';
 
     return (
         <SafeAreaView style={styles.container} testID={props.testID}>
