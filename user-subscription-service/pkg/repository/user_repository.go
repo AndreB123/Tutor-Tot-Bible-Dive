@@ -65,6 +65,6 @@ func (repo *UserRepository) GetByUsername(username string) (*model.User, error) 
 	return &user, nil
 }
 
-func (repo *UserRepository) Update(user UserRepository) error {
-	return repo.db.Save(user).Error
+func (repo *UserRepository) Update(user *model.User) (*model.User, error) {
+	return user, repo.db.Save(user).Error
 }

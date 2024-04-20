@@ -1,7 +1,7 @@
 import  { IWebSocketService } from "./WebSocketService";
 
 class UserService {
-    constructor(private webSocketService: IWebSocketService) {
+    constructor(private webSocketService: IWebSocketService, private onUpdateUser: (user: any) => void) {
         this.registerMessageHandlers();
     }
 
@@ -21,7 +21,7 @@ class UserService {
     private handleUserDetailsResponse = (message: any) => {
         const userDetails = message.userDetails;
         console.log("Received user details:", userDetails);
-        //TODO update usercontext
+        this.onUpdateUser(userDetails);
     }
 }
 

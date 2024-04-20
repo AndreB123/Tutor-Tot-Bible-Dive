@@ -24,7 +24,7 @@ func NewHandler(userService *service.UserService, authService *service.AuthServi
 func (h *Handler) CreateUser(c *gin.Context) {
 	var userCreds struct {
 		Email    string `json:"email"`
-		Name     string `json:"username"`
+		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 
@@ -34,8 +34,8 @@ func (h *Handler) CreateUser(c *gin.Context) {
 	}
 
 	newUser := model.User{
-		Name:  userCreds.Name,
-		Email: userCreds.Email,
+		Username: userCreds.Username,
+		Email:    userCreds.Email,
 	}
 
 	createdUser, err := h.userService.CreateUser(&newUser, userCreds.Password)

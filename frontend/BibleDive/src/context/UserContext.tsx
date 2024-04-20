@@ -10,7 +10,11 @@ export const UserProvider = ({ children }) => {
     const [userID, setUserID] = useState(null);
     const [user, setUser] = useState(null);
 
-    const userService = new UserService(WebSocketService);
+    const handleUpdateUser = useCallback((userDetails) => {
+        setUser(userDetails);
+    }, []);
+
+    const userService = useMemo(() => new UserService(WebSocketService, handleUpdateUser), [handleUpdateUser]);
 
     useEffect(() => {
         const loadUserID = async () => {
@@ -18,7 +22,7 @@ export const UserProvider = ({ children }) => {
                 const id = await getUserIDFromToken();
                 setUserID(id);
                 if (id) {
-                    fetchUserDetails(id);
+                    userService.getUserDetails(id);
                 }
             } catch (error) {
                 console.error('Failed to load user ID', error);
@@ -26,22 +30,15 @@ export const UserProvider = ({ children }) => {
         };
 
         loadUserID();
-    }, []);
-   
-    const fetchUserDetails = useCallback(async (userID) => {
-        try {
-        const userDetails = userService.getUserDetails(userID);
-        setUser(userDetails);
-        } catch (error ) {
-            console.error('Failed to fetch user details', error);
-        }
     }, [userService]);
+   
+    
 
     const value = useMemo(()=> ({
         userID,
         user,
-        fetchUserDetails
-    }), [userID, user, fetchUserDetails]);
+        fetchUserDetails: userService.getUserDetails
+    }), [userID, user, userService]);
 
     return (
         <UserContext.Provider value={value}>

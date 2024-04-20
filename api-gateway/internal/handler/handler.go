@@ -164,7 +164,7 @@ func (h *Handler) GetRecentMessages(conn *websocket.Conn, chatID uint32, lastMsg
 
 func (h *Handler) Login(ctx *gin.Context) {
 	var loginCreds struct {
-		Name     string `json:"username"`
+		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 
