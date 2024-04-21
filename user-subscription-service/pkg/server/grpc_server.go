@@ -4,6 +4,9 @@ import (
 	"log"
 	"user-microservice/pkg/proto"
 	"user-microservice/pkg/service"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserServer struct {
@@ -57,6 +60,59 @@ func (s *UserServer) UpdateUserInfo(req *proto.UpdateUserInfoRequest) (*proto.Up
 	return resp, nil
 }
 
-//func (s *UserServer) ListUsers(req *proto.ListUsersRequest) (*proto.ListUsersResponse, error) {
-//	return
-//}
+func (s *UserServer) ListUsers(req *proto.ListUsersRequest) (*proto.ListUsersResponse, error) {
+	usersList, err := s.userService.ListAllUsers()
+	if err != nil {
+		log.Printf("Unable to print all users: %v", err)
+	}
+
+	var users []*proto.User
+	for _, user := range usersList {
+		protoUser := &proto.User{
+			Id:       uint32(user.ID),
+			Username: user.Username,
+			Email:    user.Email,
+		}
+		users = append(users, protoUser)
+	}
+	resp := &proto.ListUsersResponse{
+		Users: users,
+	}
+
+	return resp, nil
+}
+
+func (s *UserServer) DeleteUser(req *proto.DeleteUserRequest) (*proto.DeleteUserResponse, error) {
+	userID := uint(req.GetId())
+	err := s.userService.DeleteUser(userID)
+	if err != nil {
+		log.Printf("Failed to delete user: %v", err)
+		return &proto.DeleteUserResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "failed to delete user")
+	}
+	return &proto.DeleteUserResponse{
+		Success: true,
+	}, nil
+}
+
+func (s *UserServer) SearchUsersByUsername(req *proto.SearchForUserRequest) (*proto.SearchForUsersResponse, error) {
+	username := req.GetUsername()
+	usersList, err := s.userService.SearchUsersByUsername(username)
+	if err != nil {
+		log.Printf("unable to return users: %v", err)
+	}
+	var users []*proto.User
+	for _, user := range usersList {
+		protoUser := &proto.User{
+			Id:       uint32(user.ID),
+			Username: user.Username,
+			Email:    user.Email,
+		}
+		users = append(users, protoUser)
+	}
+	resp := &proto.SearchForUsersResponse{
+		Users: users,
+	}
+	return resp, nil
+}

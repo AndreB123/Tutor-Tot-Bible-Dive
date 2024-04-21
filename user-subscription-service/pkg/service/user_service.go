@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"user-microservice/pkg/model"
 	"user-microservice/pkg/repository"
 )
@@ -77,4 +78,42 @@ func (s *UserService) UpdateUser(userID uint, username, email string) (*model.Us
 	}
 
 	return user, nil
+}
+
+func (s *UserService) ListAllUsers() ([]*model.User, error) {
+	users, err := s.userRepository.ListAllUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (s *UserService) SearchUsersByUsername(pattern string) ([]*model.User, error) {
+	trimmedPattern := strings.TrimSpace(pattern)
+
+	if len(trimmedPattern) > 100 {
+		trimmedPattern = trimmedPattern[:100]
+	}
+
+	sanitizedPattern := strings.ReplaceAll(trimmedPattern, "%", "\\%")
+	sanitizedPattern = strings.ReplaceAll(sanitizedPattern, "_", "\\_")
+
+	users, err := s.userRepository.SearchUsersByUsername(sanitizedPattern)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (s *UserService) DeleteUser(userID uint) error {
+	if userID == 0 {
+		return errors.New("invalid user ID")
+	}
+
+	err := s.userRepository.DeleteUserByID(userID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

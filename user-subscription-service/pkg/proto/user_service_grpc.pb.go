@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.3
-// source: user-subscription-service/pkg/proto/user_service.proto
+// source: proto/user_service.proto
 
 package proto
 
@@ -23,6 +23,7 @@ const (
 	UserService_UpdateUserInfo_FullMethodName = "/proto.UserService/UpdateUserInfo"
 	UserService_ListUsers_FullMethodName      = "/proto.UserService/ListUsers"
 	UserService_DeleteUser_FullMethodName     = "/proto.UserService/DeleteUser"
+	UserService_SearchForUser_FullMethodName  = "/proto.UserService/SearchForUser"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -37,6 +38,7 @@ type UserServiceClient interface {
 	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
 	// Deletes a user from the system.
 	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
+	SearchForUser(ctx context.Context, in *SearchForUserRequest, opts ...grpc.CallOption) (*SearchForUsersResponse, error)
 }
 
 type userServiceClient struct {
@@ -83,6 +85,15 @@ func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserReques
 	return out, nil
 }
 
+func (c *userServiceClient) SearchForUser(ctx context.Context, in *SearchForUserRequest, opts ...grpc.CallOption) (*SearchForUsersResponse, error) {
+	out := new(SearchForUsersResponse)
+	err := c.cc.Invoke(ctx, UserService_SearchForUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -95,6 +106,7 @@ type UserServiceServer interface {
 	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
 	// Deletes a user from the system.
 	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
+	SearchForUser(context.Context, *SearchForUserRequest) (*SearchForUsersResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -113,6 +125,9 @@ func (UnimplementedUserServiceServer) ListUsers(context.Context, *ListUsersReque
 }
 func (UnimplementedUserServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
+}
+func (UnimplementedUserServiceServer) SearchForUser(context.Context, *SearchForUserRequest) (*SearchForUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchForUser not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -199,6 +214,24 @@ func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_SearchForUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchForUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SearchForUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_SearchForUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SearchForUser(ctx, req.(*SearchForUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -222,7 +255,11 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "DeleteUser",
 			Handler:    _UserService_DeleteUser_Handler,
 		},
+		{
+			MethodName: "SearchForUser",
+			Handler:    _UserService_SearchForUser_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "user-subscription-service/pkg/proto/user_service.proto",
+	Metadata: "proto/user_service.proto",
 }

@@ -29,6 +29,10 @@ message DeleteUserRequest {
     uint32 id = 1;
 }
 
+message SearchForUserRequest {
+    string username = 1;
+}
+
 //Responses
 message GetUserInfoResponse {
     User user = 1;
@@ -46,6 +50,10 @@ message DeleteUserResponse {
     bool success = 1;
 }
 
+message SearchForUsersResponse {
+    repeated User users = 1;
+}
+
 service UserService {
     // Retrieves user information by ID.
     rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
@@ -58,4 +66,6 @@ service UserService {
 
     // Deletes a user from the system.
     rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+    rpc SearchForUser(SearchForUserRequest) returns (SearchForUsersResponse);
 }
