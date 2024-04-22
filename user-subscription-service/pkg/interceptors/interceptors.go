@@ -1,10 +1,10 @@
 package interceptors
 
 import (
-	contextkeys "chat-service/pkg/context-keys"
 	"context"
 	"fmt"
 	"log"
+	contextkeys "user-microservice/pkg/context-keys"
 
 	"github.com/dgrijalva/jwt-go"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"

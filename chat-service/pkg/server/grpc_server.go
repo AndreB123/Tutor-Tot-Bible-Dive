@@ -1,7 +1,7 @@
 package server
 
 import (
-	"chat-service/pkg/contextkeys"
+	contextkeys "chat-service/pkg/context-keys"
 	"chat-service/pkg/proto"
 	"chat-service/pkg/service"
 	"context"

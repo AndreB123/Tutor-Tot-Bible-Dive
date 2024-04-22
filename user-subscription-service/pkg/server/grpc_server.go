@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"log"
 	"user-microservice/pkg/proto"
 	"user-microservice/pkg/service"
@@ -22,7 +23,7 @@ func NewUserServer(userServer *service.UserService, authService *service.AuthSer
 	}
 }
 
-func (s *UserServer) GetUserInfo(req *proto.GetUserInfoRequest) (*proto.GetUserInfoResponse, error) {
+func (s *UserServer) GetUserInfo(ctx context.Context, req *proto.GetUserInfoRequest) (*proto.GetUserInfoResponse, error) {
 	userID := uint(req.GetId())
 
 	user, err := s.userService.GetUserByID(userID)
@@ -40,7 +41,7 @@ func (s *UserServer) GetUserInfo(req *proto.GetUserInfoRequest) (*proto.GetUserI
 	return resp, nil
 }
 
-func (s *UserServer) UpdateUserInfo(req *proto.UpdateUserInfoRequest) (*proto.UpdateUserInfoResponse, error) {
+func (s *UserServer) UpdateUserInfo(ctx context.Context, req *proto.UpdateUserInfoRequest) (*proto.UpdateUserInfoResponse, error) {
 	userID := uint(req.GetId())
 	username := req.GetUsername()
 	email := req.GetEmail()
@@ -60,7 +61,7 @@ func (s *UserServer) UpdateUserInfo(req *proto.UpdateUserInfoRequest) (*proto.Up
 	return resp, nil
 }
 
-func (s *UserServer) ListUsers(req *proto.ListUsersRequest) (*proto.ListUsersResponse, error) {
+func (s *UserServer) ListUsers(ctx context.Context, req *proto.ListUsersRequest) (*proto.ListUsersResponse, error) {
 	usersList, err := s.userService.ListAllUsers()
 	if err != nil {
 		log.Printf("Unable to print all users: %v", err)
@@ -82,7 +83,7 @@ func (s *UserServer) ListUsers(req *proto.ListUsersRequest) (*proto.ListUsersRes
 	return resp, nil
 }
 
-func (s *UserServer) DeleteUser(req *proto.DeleteUserRequest) (*proto.DeleteUserResponse, error) {
+func (s *UserServer) DeleteUser(ctx context.Context, req *proto.DeleteUserRequest) (*proto.DeleteUserResponse, error) {
 	userID := uint(req.GetId())
 	err := s.userService.DeleteUser(userID)
 	if err != nil {
@@ -96,7 +97,7 @@ func (s *UserServer) DeleteUser(req *proto.DeleteUserRequest) (*proto.DeleteUser
 	}, nil
 }
 
-func (s *UserServer) SearchUsersByUsername(req *proto.SearchForUserRequest) (*proto.SearchForUsersResponse, error) {
+func (s *UserServer) SearchUsersByUsername(ctx context.Context, req *proto.SearchForUserRequest) (*proto.SearchForUsersResponse, error) {
 	username := req.GetUsername()
 	usersList, err := s.userService.SearchUsersByUsername(username)
 	if err != nil {
