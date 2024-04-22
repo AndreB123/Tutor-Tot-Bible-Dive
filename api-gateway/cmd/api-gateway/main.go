@@ -27,8 +27,9 @@ func main() {
 	defer grpcConn.Close()
 
 	chatClient := proto.NewChatServiceClient(grpcConn)
+	userClient := proto.NewUserServiceClient(grpcConn)
 
-	router := router.LoadRouter(cfg, chatClient)
+	router := router.LoadRouter(cfg, chatClient, userClient)
 	log.Println("HTTP router loaded")
 
 	keyPath := "/run/secrets/ssl_key"

@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "user-subscription-service/pkg/proto";
+
+//Types
+message User {
+    uint32 id = 1;
+    string username = 2;
+    string email = 3;
+}
+
+//Request
+message GetUserInfoRequest {
+    uint32 id = 1;
+}
+
+message UpdateUserInfoRequest {
+    uint32 id = 1;
+    string username = 2;
+    string email = 3;
+}
+
+message ListUsersRequest {
+}
+
+message DeleteUserRequest {
+    uint32 id = 1;
+}
+
+message SearchForUserRequest {
+    string username = 1;
+}
+
+//Responses
+message GetUserInfoResponse {
+    User user = 1;
+}
+
+message UpdateUserInfoResponse {
+    User user = 1;
+}
+
+message ListUsersResponse {
+    repeated User users = 1;
+}
+
+message DeleteUserResponse {
+    bool success = 1;
+}
+
+message SearchForUsersResponse {
+    repeated User users = 1;
+}
+
+service UserService {
+    // Retrieves user information by ID.
+    rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
+
+    // Updates user information.
+    rpc UpdateUserInfo(UpdateUserInfoRequest) returns (UpdateUserInfoResponse);
+
+    // Lists all users in the system.
+    rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+
+    // Deletes a user from the system.
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+    rpc SearchForUser(SearchForUserRequest) returns (SearchForUsersResponse);
+}

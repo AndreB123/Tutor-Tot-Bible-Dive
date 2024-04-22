@@ -18,151 +18,112 @@ import (
 
 var dataType = "application/json"
 
-type WSMessage struct {
-	Type string          `json:"type"`
-	JWT  string          `json:"jwt"`
-	Data json.RawMessage `json:"data"`
-}
-
-type Handler struct {
+type UserHandler struct {
 	Config     *config.Config
-	ChatClient proto.ChatServiceClient
+	UserClient proto.UserServiceClient
 }
 
-func NewHandler(cfg *config.Config, chatClient proto.ChatServiceClient) *Handler {
-	return &Handler{
+func NewUserHandler(cfg *config.Config, userClient proto.UserServiceClient) *UserHandler {
+	return &UserHandler{
 		Config:     cfg,
-		ChatClient: chatClient,
+		UserClient: userClient,
 	}
 }
 
-func HandleWebSocketConnection(conn *websocket.Conn, h *Handler) {
-	defer conn.Close()
+func (h *UserHandler) ProcessMessage(conn *websocket.Conn, jwt string, data []byte) {
+	var msg middleware.WSMessage
 
-	for {
-		_, msg, err := conn.ReadMessage()
-		if err != nil {
-			log.Printf("Failed to read message: %v", err)
-			break
+	if err := json.Unmarshal(data, &msg.Type); err != nil {
+		log.Printf("Error determining message type: %v", err)
+		return
+	}
+
+	switch msg.Type {
+	case "get_user_info":
+		h.GetUserInfo(conn, jwt)
+	case "update_user_info":
+		var updateInfo proto.UpdateUserInfoRequest
+		if err := json.Unmarshal(msg.Data, &updateInfo); err != nil {
+			log.Printf("Failed to unmarshal UpdateUserInfoRequest: %v", err)
 		}
-
-		var wsMsg WSMessage
-		if err := json.Unmarshal(msg, &wsMsg); err != nil {
-			log.Printf("Failed to unmarshal message: %v", err)
-			continue
+		h.UpdateUserInfo(conn, jwt, updateInfo.Username, updateInfo.Email)
+	case "search_for_user":
+		var search proto.SearchForUserRequest
+		if err := json.Unmarshal(msg.Data, &search); err != nil {
+			log.Printf("Failed to unmarshal SearchForUserRequest: %v", err)
 		}
-
-		switch wsMsg.Type {
-		case "get_chat_summaries":
-			h.GetChatSummaries(conn, wsMsg.JWT)
-
-		case "get_recent_messages":
-			var getRecentMessages proto.GetRecentMessagesRequest
-			if err := json.Unmarshal(wsMsg.Data, &getRecentMessages); err != nil {
-				log.Printf("Failed to unmarshal GetRecentMessagesREqust: %v", err)
-			}
-			h.GetRecentMessages(conn, getRecentMessages.ChatId, getRecentMessages.LastMessageId, getRecentMessages.Limit, wsMsg.JWT)
-		case "start_message_stream":
-			var createMsgReq proto.CreateMessageRequest
-			if err := json.Unmarshal(wsMsg.Data, &createMsgReq); err != nil {
-				log.Printf("Failed to unmarshal CreateMessageRequest: %v", err)
-				continue
-			}
-			go h.StreamMessages(conn, createMsgReq.ChatId, createMsgReq.Body, createMsgReq.Sender, wsMsg.JWT)
-		}
+		h.SearchForUser(conn, jwt, search.Username)
 	}
 }
 
-func (h *Handler) StreamMessages(conn *websocket.Conn, chatID uint32, body string, sender string, jwt string) {
+func (h *UserHandler) GetUserInfo(conn *websocket.Conn, jwt string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	stream, err := h.ChatClient.StreamMessages(ctxWithMetadata)
+	resp, err := h.UserClient.GetUserInfo(ctxWithMetadata, &proto.GetUserInfoRequest{})
 	if err != nil {
-		log.Printf("Could not start Strean: %v", err)
+		log.Fatalf("failed to create message")
 		return
 	}
 
-	req := &proto.CreateMessageRequest{
-		ChatId: chatID,
-		Body:   body,
-		Sender: sender,
-	}
-
-	if err := stream.Send(req); err != nil {
-		log.Printf("Failed to send a message: %v", err)
+	userInfo, err := json.Marshal(resp)
+	if err != nil {
+		log.Printf("failed ot marshal the userinfo to JSON: %v", err)
 		return
 	}
 
-	for {
-		in, err := stream.Recv()
-		if err != nil {
-			log.Printf("Error receiving stream: %v", err)
-			break
-		}
-
-		wsMsg, err := json.Marshal(in)
-		if err != nil {
-			log.Printf("Error marshaling message to JSON: %v", err)
-			continue
-		}
-
-		if err := conn.WriteMessage(websocket.TextMessage, wsMsg); err != nil {
-			log.Printf("Error sending message over WS connection: %v", err)
-			break
-		}
+	if err := conn.WriteMessage(websocket.TextMessage, userInfo); err != nil {
+		log.Printf("Error sending userinfo over WS connnection: %v", err)
 	}
 }
 
-func (h *Handler) GetChatSummaries(conn *websocket.Conn, jwt string) {
+func (h *UserHandler) UpdateUserInfo(conn *websocket.Conn, jwt, username, email string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.ChatClient.GetChatSummariesUID(ctxWithMetadata, &proto.GetChatSummariesUIDRequest{})
+	resp, err := h.UserClient.UpdateUserInfo(ctxWithMetadata, &proto.UpdateUserInfoRequest{Username: username, Email: email})
 	if err != nil {
-		log.Fatalf("Failed to create message")
+		log.Print("Failed to create UpdateUserMessage")
 		return
 	}
 
-	summaries, err := json.Marshal(resp)
+	userInfo, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("Error marchaling chat sums to JSON: %v", err)
+		log.Printf("failed ot marshal the userinfo to JSON: %v", err)
 		return
 	}
-
-	if err := conn.WriteMessage(websocket.TextMessage, summaries); err != nil {
-		log.Printf("Error sending chat summaries over WS connection: %v", err)
+	if err := conn.WriteMessage(websocket.TextMessage, userInfo); err != nil {
+		log.Printf("Error sending userinfo over WS connnection: %v", err)
 	}
 }
 
-func (h *Handler) GetRecentMessages(conn *websocket.Conn, chatID uint32, lastMsgID uint32, limit int32, jwt string) {
+func (h *UserHandler) SearchForUser(conn *websocket.Conn, jwt, username string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.ChatClient.GetRecentMessages(ctxWithMetadata, &proto.GetRecentMessagesRequest{ChatId: chatID, LastMessageId: lastMsgID, Limit: limit})
+	resp, err := h.UserClient.SearchForUser(ctxWithMetadata, &proto.SearchForUserRequest{Username: username})
 	if err != nil {
-		log.Printf("Error getting recent messages: %v", err)
+		log.Print("Failed to create UpdateUserMessage")
 		return
 	}
 
-	msgs, err := json.Marshal(resp)
+	userName, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("Error marshaling recent messages to JSON: %v", err)
+		log.Printf("failed ot marshal the username to JSON: %v", err)
 		return
 	}
-
-	if err := conn.WriteMessage(websocket.TextMessage, msgs); err != nil {
-		log.Printf("Errpr sending recent messages to client: %v", err)
+	if err := conn.WriteMessage(websocket.TextMessage, userName); err != nil {
+		log.Printf("Error sending UserName over WS connnection: %v", err)
 	}
 }
 
-func (h *Handler) Login(ctx *gin.Context) {
+func (h *UserHandler) Login(ctx *gin.Context) {
 	var loginCreds struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -195,7 +156,7 @@ func (h *Handler) Login(ctx *gin.Context) {
 	ctx.Data(resp.StatusCode, dataType, body)
 }
 
-func (h *Handler) CreateUser(ctx *gin.Context) {
+func (h *UserHandler) CreateUser(ctx *gin.Context) {
 	var accountInfo struct {
 		Email    string `json:"email"`
 		UserName string `json:"username"`
@@ -229,7 +190,7 @@ func (h *Handler) CreateUser(ctx *gin.Context) {
 	ctx.Data(resp.StatusCode, dataType, body)
 }
 
-func (h *Handler) RefreshToken(ctx *gin.Context) {
+func (h *UserHandler) RefreshToken(ctx *gin.Context) {
 	var tokenRequest struct {
 		RefreshToken string `json:"refresh_token"`
 	}
@@ -261,5 +222,3 @@ func (h *Handler) RefreshToken(ctx *gin.Context) {
 
 	ctx.Data(resp.StatusCode, dataType, body)
 }
-
-//helper funcitons
