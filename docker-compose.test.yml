@@ -1,5 +1,3 @@
-version: '3.8'
-
 secrets:
   OPENAI_API_KEY:
     external: true
@@ -53,6 +51,7 @@ services:
     image: user-subscription-service:latest
     ports:
       - "8083:8080"
+      - "8084:8081"
     volumes:
       - ./user-subscription-service:/user-subscription-service
       - go-modules:/go/pkg/mod

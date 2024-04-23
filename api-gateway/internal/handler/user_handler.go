@@ -140,7 +140,7 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := http.Post(h.Config.UserServiceURL+"/login", dataType, bytes.NewBuffer(credsJSON))
+	resp, err := http.Post(h.Config.UserHTTPServiceURL+"/login", dataType, bytes.NewBuffer(credsJSON))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to user service"})
 		return
@@ -174,7 +174,7 @@ func (h *UserHandler) CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := http.Post(h.Config.UserServiceURL+"/create_user", dataType, bytes.NewBuffer(actInfoJSON))
+	resp, err := http.Post(h.Config.UserHTTPServiceURL+"/create_user", dataType, bytes.NewBuffer(actInfoJSON))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failled to post to user service"})
 		return
@@ -206,7 +206,7 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := http.Post(h.Config.UserServiceURL+"/refresh_token", dataType, bytes.NewBuffer(tokenJSON))
+	resp, err := http.Post(h.Config.UserHTTPServiceURL+"/refresh_token", dataType, bytes.NewBuffer(tokenJSON))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reach user service"})
 		return

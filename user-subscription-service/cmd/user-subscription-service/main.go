@@ -24,12 +24,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to db: %v", err)
 	}
-	lis, err := net.Listen("tcp", ":8080")
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(interceptors.NewUnaryInterceptor(cfg.AccessSecret)), grpc.StreamInterceptor(interceptors.NewStreamInterceptor(cfg.AccessSecret)))
 
 	//init repos, services and handlers
 	userRepo := repository.NewUserRepository(db)
@@ -37,9 +31,19 @@ func main() {
 	authService := service.NewAuthService(cfg)
 	handler := api.NewHandler(userService, authService)
 
+	//setup gin router
 	router := api.SetupRouter(handler)
-	userServer := server.NewUserServer(userService, authService)
 
+	lis, err := net.Listen("tcp", ":8081")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(
+		interceptors.NewUnaryInterceptor(cfg.AccessSecret)),
+		grpc.StreamInterceptor(interceptors.NewStreamInterceptor(cfg.AccessSecret)),
+	)
+	userServer := server.NewUserServer(userService, authService)
 	proto.RegisterUserServiceServer(grpcServer, userServer)
 
 	//migrate db
@@ -47,7 +51,12 @@ func main() {
 		log.Fatalf("failed to auto-migrate: %v", err)
 	}
 
-	router.Run()
+	go func() {
+		log.Println("HTTP server is listening on :8080")
+		if err := router.Run(); err != nil {
+			log.Fatalf("Failed to run HTTP server: %v", err)
+		}
+	}()
 
 	log.Println("gRPC server is listening on ", lis.Addr())
 	if err := grpcServer.Serve(lis); err != nil {

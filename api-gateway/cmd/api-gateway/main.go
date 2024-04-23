@@ -18,16 +18,25 @@ func main() {
 	cfg := config.LoadConfig()
 
 	log.Printf("Chat Service URL: %s", cfg.ChatServiceURL)
-	grpcConn, err := grpc.Dial(cfg.ChatServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	chatGrpcConn, err := grpc.Dial(cfg.ChatServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock()) //TODO change to secure connection for prod
 	if err != nil {
 		log.Fatalf("Was not able to connect: %v", err)
 		return
 	}
 	log.Println("Connected to Chat Service")
-	defer grpcConn.Close()
+	defer chatGrpcConn.Close()
 
-	chatClient := proto.NewChatServiceClient(grpcConn)
-	userClient := proto.NewUserServiceClient(grpcConn)
+	log.Printf("User Service URL: %s", cfg.UserServiceURL)
+	UsergrpcConn, err := grpc.Dial(cfg.UserServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock()) //TODO change to secure connection for prod
+	if err != nil {
+		log.Fatalf("Was not able to connect: %v", err)
+		return
+	}
+	log.Println("Connected to User Service")
+	defer UsergrpcConn.Close()
+
+	chatClient := proto.NewChatServiceClient(chatGrpcConn)
+	userClient := proto.NewUserServiceClient(UsergrpcConn)
 
 	router := router.LoadRouter(cfg, chatClient, userClient)
 	log.Println("HTTP router loaded")

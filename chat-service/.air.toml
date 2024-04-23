@@ -8,3 +8,5 @@ tmp_dir = "./tmp"
   exclude_dir = ["assets"]
 [log]
   time = true
+[watch]
+interval = 20000
