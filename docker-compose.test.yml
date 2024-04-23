@@ -53,6 +53,9 @@ services:
     image: user-subscription-service:latest
     ports:
       - "8083:8080"
+    volumes:
+      - ./user-subscription-service:/user-subscription-service
+      - go-modules:/go/pkg/mod
     secrets:
       - source: ACCESS_SECRET
       - source: REFRESH_SECRET
@@ -63,12 +66,16 @@ services:
       - source: USER_DB_PORT
     networks:
       - mynetwork
+    command: air
 
   chat-service:
     build: ./chat-service
     image: chat-service:latest
     ports:
       - "8082:8080"
+    volumes:
+      - ./chat-service:/chat-service
+      - go-modules:/go/pkg/mod
     secrets:
       - source: OPENAI_API_KEY
       - source: ACCESS_SECRET
@@ -79,12 +86,16 @@ services:
       - source: CHAT_DB_PORT
     networks:
       - mynetwork
+    command: air
       
   api-gateway:
     build: ./api-gateway
     image: api-gateway:latest
     ports:
       - "443:443"
+    volumes:
+      - ./api-gateway:/api-gateway
+      - go-modules:/go/pkg/mod
     secrets:
       - source: REFRESH_SECRET
       - source: ACCESS_SECRET
@@ -92,9 +103,11 @@ services:
       - source: ssl_key
     networks:
       - mynetwork
+    command: air
 
 volumes:
   postgres-data:
+  go-modules:
 
 networks:
   mynetwork:

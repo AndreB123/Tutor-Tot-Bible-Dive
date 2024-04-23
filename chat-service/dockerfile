@@ -6,6 +6,9 @@ COPY . .
 
 RUN go mod download
 
+RUN go get -u github.com/cosmtrek/air
+RUN go install github.com/cosmtrek/air@latest
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/chat-service
 
 EXPOSE 8080

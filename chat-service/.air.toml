@@ -1,0 +1,10 @@
+# .air.toml
+root = "."
+tmp_dir = "./tmp"
+[build]
+  cmd = "go build -o ./tmp/main ./cmd/chat-service"
+  bin = "./tmp/main"
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  exclude_dir = ["assets"]
+[log]
+  time = true
