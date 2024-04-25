@@ -30,52 +30,67 @@ func NewUserHandler(cfg *config.Config, userClient proto.UserServiceClient) *Use
 	}
 }
 
-func (h *UserHandler) ProcessMessage(conn *websocket.Conn, jwt string, data []byte) {
-	var msg middleware.WSMessage
-
-	if err := json.Unmarshal(data, &msg.Type); err != nil {
-		log.Printf("Error determining message type: %v", err)
-		return
-	}
-
-	switch msg.Type {
+func (h *UserHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMessage) {
+	log.Printf("Raw data: %s", string(msg.Data))
+	switch msg.Action {
 	case "get_user_info":
-		h.GetUserInfo(conn, jwt)
+		var getUserInfo proto.GetUserInfoRequest
+		if err := json.Unmarshal(msg.Data, &getUserInfo); err != nil {
+			log.Printf("Failed to unmarshal GetUserInfoRequest: %v", err)
+		}
+		h.GetUserInfo(conn, msg.JWT, getUserInfo.Id)
 	case "update_user_info":
 		var updateInfo proto.UpdateUserInfoRequest
 		if err := json.Unmarshal(msg.Data, &updateInfo); err != nil {
 			log.Printf("Failed to unmarshal UpdateUserInfoRequest: %v", err)
 		}
-		h.UpdateUserInfo(conn, jwt, updateInfo.Username, updateInfo.Email)
+		h.UpdateUserInfo(conn, msg.JWT, updateInfo.Username, updateInfo.Email)
 	case "search_for_user":
 		var search proto.SearchForUserRequest
 		if err := json.Unmarshal(msg.Data, &search); err != nil {
 			log.Printf("Failed to unmarshal SearchForUserRequest: %v", err)
 		}
-		h.SearchForUser(conn, jwt, search.Username)
+		h.SearchForUser(conn, msg.JWT, search.Username)
+	default:
+		log.Print("Invalid action type")
 	}
+
 }
 
-func (h *UserHandler) GetUserInfo(conn *websocket.Conn, jwt string) {
+func (h *UserHandler) GetUserInfo(conn *websocket.Conn, jwt string, userId uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.UserClient.GetUserInfo(ctxWithMetadata, &proto.GetUserInfoRequest{})
+	resp, err := h.UserClient.GetUserInfo(ctxWithMetadata, &proto.GetUserInfoRequest{Id: userId})
 	if err != nil {
-		log.Fatalf("failed to create message")
+		log.Printf("failed to create message: %v", err)
 		return
 	}
 
 	userInfo, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("failed ot marshal the userinfo to JSON: %v", err)
+		log.Printf("failed to marshal the userinfo to JSON: %v", err)
 		return
 	}
 
-	if err := conn.WriteMessage(websocket.TextMessage, userInfo); err != nil {
-		log.Printf("Error sending userinfo over WS connnection: %v", err)
+	wsMsg := middleware.WSMessage{
+		Action: "get_user_info_resp",
+		Data:   userInfo,
+	}
+
+	msg, err := json.Marshal(wsMsg)
+	if err != nil {
+		log.Printf("Failed to marshal WS message: %v", err)
+		return
+	}
+
+	log.Printf("Attempting to send user info: %s", string(msg))
+	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+		log.Printf("Error sending user info over WebSocket connection: %v", err)
+	} else {
+		log.Printf("User info sent successfully.")
 	}
 }
 
@@ -93,7 +108,7 @@ func (h *UserHandler) UpdateUserInfo(conn *websocket.Conn, jwt, username, email 
 
 	userInfo, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("failed ot marshal the userinfo to JSON: %v", err)
+		log.Printf("failed to marshal the userinfo to JSON: %v", err)
 		return
 	}
 	if err := conn.WriteMessage(websocket.TextMessage, userInfo); err != nil {
@@ -115,7 +130,7 @@ func (h *UserHandler) SearchForUser(conn *websocket.Conn, jwt, username string) 
 
 	userName, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("failed ot marshal the username to JSON: %v", err)
+		log.Printf("failed to marshal the username to JSON: %v", err)
 		return
 	}
 	if err := conn.WriteMessage(websocket.TextMessage, userName); err != nil {

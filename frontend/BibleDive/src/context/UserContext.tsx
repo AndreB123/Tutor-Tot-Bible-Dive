@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import UserService from "../services/UserService";
 import WebSocketService from "../services/WebSocketService";
-import { getUserIDFromToken } from "../utils/SecureStorage";
+import { getUserIDFromToken, getAccessToken } from "../utils/SecureStorage";
 
 
 const UserContext = createContext(null);
@@ -19,19 +19,20 @@ export const UserProvider = ({ children }) => {
     useEffect(() => {
         const loadUserID = async () => {
             try {
-                const id = await getUserIDFromToken();
+                const jwt = await getAccessToken();
+                const id = await getUserIDFromToken()
                 setUserID(id);
-                if (id) {
-                    userService.getUserDetails(id);
+                if (jwt) {
+                    userService.getUserDetails(id, jwt);
                 }
             } catch (error) {
-                console.error('Failed to load user ID', error);
+                console.error('Failed to get user details', error);
             }
         };
 
         loadUserID();
-    }, [userService]);
-   
+    }, [userID, userService]);
+
     
 
     const value = useMemo(()=> ({

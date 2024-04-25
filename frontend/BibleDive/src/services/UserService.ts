@@ -5,23 +5,33 @@ class UserService {
         this.registerMessageHandlers();
     }
 
-    getUserDetails(userID: string) {
+    async getUserDetails(id: string, jwt: string) {
+        await this.webSocketService.onConnected;
         const message = JSON.stringify({
-            action: "getUserDetails",
-            userId: userID
+            Type: "user",
+            Action: "get_user_info",
+            JWT: jwt,
+            Data: {
+                id: id
+            }
         });
-
+        console.log("message called ")
         this.webSocketService.sendMessage(message);
     }
 
     private registerMessageHandlers() {
-        this.webSocketService.registerMessageHandler("userDetailsResponse", this.handleUserDetailsResponse);
+        this.webSocketService.registerMessageHandler("get_user_info_resp", this.handleUserDetailsResponse);
     }
 
     private handleUserDetailsResponse = (message: any) => {
-        const userDetails = message.userDetails;
+        const userDetails = message.data.user;
         console.log("Received user details:", userDetails);
-        this.onUpdateUser(userDetails);
+    
+        if (userDetails) {
+            this.onUpdateUser(userDetails);
+        } else {
+            console.error("User details were not found in the message:", message);
+        }
     }
 }
 

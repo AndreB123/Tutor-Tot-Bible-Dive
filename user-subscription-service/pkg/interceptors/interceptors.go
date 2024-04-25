@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	contextkeys "user-microservice/pkg/context-keys"
 
 	"github.com/dgrijalva/jwt-go"
@@ -49,16 +50,20 @@ func NewUnaryInterceptor(secretKey string) grpc.UnaryServerInterceptor {
 }
 
 func isValidToken(token string, secretKey string) (uint, bool) {
+	token = strings.TrimPrefix(token, "Bearer ")
+
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexprected signing method: %v", t.Header["alg"])
 		}
 		return []byte(secretKey), nil
 	})
+
 	if err != nil {
-		fmt.Println("failed to parse token")
+		fmt.Printf("Failed to parse token: %v", err)
 		return 0, false
 	}
+
 	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
 		userID := claims["user_id"].(float64)
 		if !ok {
@@ -67,5 +72,6 @@ func isValidToken(token string, secretKey string) (uint, bool) {
 		}
 		return uint(userID), true
 	}
+	fmt.Println("Invalid token or claims type incorrect")
 	return 0, false
 }

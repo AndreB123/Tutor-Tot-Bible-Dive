@@ -24,16 +24,8 @@ func NewChatHandler(cfg *config.Config, chatClient proto.ChatServiceClient) *Cha
 	}
 }
 
-func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, jwt string, data []byte) {
-
-	var msg middleware.WSMessage
-
-	if err := json.Unmarshal(data, &msg.Type); err != nil {
-		log.Printf("Error determining message type: %v", err)
-		return
-	}
-
-	switch msg.Type {
+func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMessage) {
+	switch msg.Action {
 	case "get_chat_summaries":
 		h.GetChatSummaries(conn, msg.JWT)
 
@@ -51,7 +43,6 @@ func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, jwt string, data []by
 		}
 		go h.StreamMessages(conn, createMsgReq.ChatId, createMsgReq.Body, createMsgReq.Sender, msg.JWT)
 	}
-
 }
 
 func (h *ChatHandler) StreamMessages(conn *websocket.Conn, chatID uint32, body string, sender string, jwt string) {

@@ -25,6 +25,7 @@ func NewWebSocketManager(cfg *config.Config, serviceFactory services.ServiceFact
 			WriteBufferSize: 1024,
 		},
 		serviceFactory: serviceFactory,
+		config:         cfg,
 	}
 }
 
@@ -52,7 +53,7 @@ func (manager *WebSocketManager) HandleConnections(w http.ResponseWriter, r *htt
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Panicln("Read Failed:", err)
+			log.Println("Read Failed:", err)
 			break
 		}
 
@@ -68,9 +69,11 @@ func (manager *WebSocketManager) handleMessage(conn *websocket.Conn, msg []byte)
 		return
 	}
 
+	log.Printf("Received message with type: %s", wsMsg.Type)
+
 	handler := manager.serviceFactory.GetHandler(wsMsg.Type)
 	if handler != nil {
-		handler.ProcessMessage(conn, wsMsg.JWT, wsMsg.Data)
+		handler.ProcessMessage(conn, wsMsg)
 	} else {
 		log.Println("Handler not found for message type:", wsMsg.Type)
 	}

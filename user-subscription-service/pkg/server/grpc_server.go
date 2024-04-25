@@ -25,7 +25,7 @@ func NewUserServer(userServer *service.UserService, authService *service.AuthSer
 
 func (s *UserServer) GetUserInfo(ctx context.Context, req *proto.GetUserInfoRequest) (*proto.GetUserInfoResponse, error) {
 	userID := uint(req.GetId())
-
+	log.Println("getting user")
 	user, err := s.userService.GetUserByID(userID)
 	if err != nil {
 		log.Printf("Failed to find user with id: %v, %v", userID, err)

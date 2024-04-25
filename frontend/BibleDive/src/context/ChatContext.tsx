@@ -1,4 +1,7 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import WebSocketService from "../services/WebSocketService";
+import ChatService from "../services/ChatService";
+
 
 interface Message {
     id: number;
@@ -24,10 +27,12 @@ interface ChatContextType {
     chats: Chat[];
     setCurrentChat: (chat: Chat) => void;
     setChats: (chats: Chat[]) => void;
-    addMessgeToChat: (message: Message) => void;
+    addMessageToChat: (message: Message) => void;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
+
+const chatService = new ChatService(WebSocketService);
 
 export const ChatProvider = ({ children }) => {
     const [currentChat, setCurrentChat] = useState<Chat | null>(null);
@@ -41,7 +46,8 @@ export const ChatProvider = ({ children }) => {
         setChats(chats);
     }, []);
 
-    const addMessgeToChat = (message: Message) => {
+
+    const addMessageToChat = (message: Message) => {
         if (currentChat && message.chat_id === currentChat.id) {
             setCurrentChat({
                 ...currentChat,
@@ -55,7 +61,7 @@ export const ChatProvider = ({ children }) => {
         chats,
         setCurrentChat: handleSetCurrentChat,
         setChats: handleSetChats,
-        addMessgeToChat: addMessgeToChat,
+        addMessageToChat: addMessageToChat,
     }), [currentChat, chats, setCurrentChat, setChats]);
 
     return (

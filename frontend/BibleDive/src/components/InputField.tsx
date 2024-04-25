@@ -4,12 +4,21 @@ import { createStyleSheet } from '../styles/useStyles';
 
 export interface InputFieldProps {
     onChangeText: (text: string) => void;
+    value: string;
     secureTextEntry?: boolean;
     testID?: string;
     placeholder?: string; 
+    onSubmitEditing
 }
 
-export const InputField: React.FC<InputFieldProps> = ({onChangeText, testID, placeholder, secureTextEntry = false}) => {
+export const InputField: React.FC<InputFieldProps> = ({
+    onChangeText, 
+    value,
+    onSubmitEditing, 
+    testID, 
+    placeholder, 
+    secureTextEntry = false
+}) => {
     const styles = createStyleSheet(theme => ({
         root: {
             flexDirection: 'column',
@@ -41,9 +50,12 @@ export const InputField: React.FC<InputFieldProps> = ({onChangeText, testID, pla
     return (
         <View style={styles.root} testID={testID}>
             <TextInput style={styles.inputField}
+                onSubmitEditing={onSubmitEditing}
+                value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                secureTextEntry={secureTextEntry} />
+                secureTextEntry={secureTextEntry} 
+                returnKeyType="go" />
         </View>
     );
 }

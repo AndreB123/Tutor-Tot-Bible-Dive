@@ -46,16 +46,25 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
 
         if (!validateEmail(email)) {
             setError('Invalid Email.');
+            setUsername('');
+            setPassword('');
+            setConfirmPassword('');
             return;
         }
 
         if (!validatePassword(password)) {
             setError('Password must be at least 10 characters long and include at least one symbol.');
+            setUsername('');
+            setPassword('');
+            setConfirmPassword('');
             return;
         }
 
         if (!passwordsMatch(password, confirmPassword)) {
             setError('Passwords do not match.');
+            setUsername('');
+            setPassword('');
+            setConfirmPassword('');
             return;
         }
 
@@ -71,6 +80,8 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
         }
     };
 
+    const clearError = () => setError('');
+
     return (
         <View style={styles.root} testID={testID}>
             <Text style={styles.createAccount} testID="56:578">
@@ -80,28 +91,40 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
                 {`Email`}
             </Text>
             <InputField testID="56:575"
-                onChangeText={setEmail}
-                placeholder="Email" />
+                value={email}
+                onChangeText={(text) => { clearError(); setEmail(text); }}
+                placeholder="Email"
+                onSubmitEditing={handleSubmitPress}
+                 />
             <Text style={styles.username} testID="56:589">
                 {`Username`}
             </Text>
             <InputField testID="56:588"
-                onChangeText={setUsername}
-                placeholder="Username" />
+                value={username}
+                onChangeText={(text) => { clearError(); setUsername(text); }}
+                placeholder="Username"
+                onSubmitEditing={handleSubmitPress}
+                 />
             <Text style={styles.password} testID="56:580">
                 {`Password`}
             </Text>
             <InputField testID="56:576"
-                onChangeText={setPassword}
+                value={password}
+                onChangeText={(text) => { clearError(); setPassword(text); }}
                 placeholder="Password"
-                secureTextEntry />
+                onSubmitEditing={handleSubmitPress}
+                 />
             <Text style={styles.confirmPassword} testID="56:581">
                 {`Confirm Password`}
             </Text>
             <InputField testID="56:577"
-                onChangeText={setConfirmPassword}
+                value={confirmPassword}
+                onChangeText={(text) => { clearError(); setConfirmPassword(text); }}
                 placeholder="Confirm Password"
-                secureTextEntry />
+                secureTextEntry
+                onSubmitEditing={handleSubmitPress}
+                 />
+                
             {error ? <Text style={styles.errors}>{error}</Text> : null}
             <Text style={styles.passwordInfo} testID="56:583">
                 {`Password must contain: \n* At least 10 characters\n* At least 1 symbol`}
@@ -203,5 +226,9 @@ const styles = createStyleSheet(theme => ({
         fontSize: 12,
         fontStyle: 'normal',
         fontWeight: '500',
+    },
+    errors: {
+        color: theme.colors.errors,
+        margin: 10,
     }
 }))

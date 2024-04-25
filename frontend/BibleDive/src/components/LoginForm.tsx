@@ -42,21 +42,29 @@ export const Login: React.FC<LoginProps> = ({ testID }) => {
         navigation.navigate('CreateAccount');
     };
 
+    const clearError = () => setError('');
+
     return (
         <View style={styles.root} testID={testID} >
             <Text style={styles.username} testID="1:3771" >
                 {`Username`}
             </Text>
-            <InputField testID="1:3787"
-                onChangeText={setUsername}
-                placeholder="Username" />
+            <InputField
+                value={username}
+                onChangeText={(text) => { clearError(); setUsername(text); }}
+                placeholder="Username"
+                onSubmitEditing={handleLoginPress} 
+                />
             <Text style={styles.password} testID="1:3772" >
                 {`Password`}
             </Text>
-            <InputField testID="1:3789"
-                onChangeText={setPassword}
+            <InputField
+                value={password}
+                onChangeText={(text) => { clearError(); setPassword(text); }}
                 placeholder="Password"
-                secureTextEntry />
+                secureTextEntry
+                onSubmitEditing={handleLoginPress}
+                />
             {error ? <Text style={styles.errors}>{error}</Text> : null}
             <SubmitButton onPress={handleLoginPress} testID="1:3790" />
             <Text style={styles.or} testID="53:394" >
