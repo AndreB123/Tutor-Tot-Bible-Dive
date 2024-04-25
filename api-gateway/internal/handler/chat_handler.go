@@ -6,6 +6,7 @@ import (
 	"api-gateway/pkg/proto"
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"time"
 
@@ -70,21 +71,16 @@ func (h *ChatHandler) StreamMessages(conn *websocket.Conn, chatID uint32, body s
 
 	for {
 		in, err := stream.Recv()
+		if err == io.EOF {
+			middleware.SendWebSocketMessage(conn, "message_complete", "{}")
+			break
+		}
 		if err != nil {
 			log.Printf("Error receiving stream: %v", err)
 			break
 		}
 
-		wsMsg, err := json.Marshal(in)
-		if err != nil {
-			log.Printf("Error marshaling message to JSON: %v", err)
-			continue
-		}
-
-		if err := conn.WriteMessage(websocket.TextMessage, wsMsg); err != nil {
-			log.Printf("Error sending message over WS connection: %v", err)
-			break
-		}
+		middleware.SendWebSocketMessage(conn, "message_fragment", in)
 	}
 }
 

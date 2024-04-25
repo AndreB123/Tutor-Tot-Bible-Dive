@@ -75,23 +75,8 @@ func (h *UserHandler) GetUserInfo(conn *websocket.Conn, jwt string, userId uint3
 		return
 	}
 
-	wsMsg := middleware.WSMessage{
-		Action: "get_user_info_resp",
-		Data:   userInfo,
-	}
+	middleware.SendWebSocketMessage(conn, "get_user_info_resp", userInfo)
 
-	msg, err := json.Marshal(wsMsg)
-	if err != nil {
-		log.Printf("Failed to marshal WS message: %v", err)
-		return
-	}
-
-	log.Printf("Attempting to send user info: %s", string(msg))
-	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-		log.Printf("Error sending user info over WebSocket connection: %v", err)
-	} else {
-		log.Printf("User info sent successfully.")
-	}
 }
 
 func (h *UserHandler) UpdateUserInfo(conn *websocket.Conn, jwt, username, email string) {
