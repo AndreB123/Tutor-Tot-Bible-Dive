@@ -59,7 +59,7 @@ class WebSocketService implements IWebSocketService {
     }
 
     sendMessage(message: string, isQueued: boolean = false) {
-        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+        if (this.websocket.readyState === WebSocket.OPEN) {
             this.websocket.send(message);
         } else {
             if (!isQueued) {

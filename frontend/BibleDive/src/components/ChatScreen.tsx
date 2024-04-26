@@ -7,28 +7,34 @@ import { useChat } from "../context/ChatContext";
 import { useUser } from "../context/UserContext";
 
 
-const ChatScreen = () => {
+const ChatScreen = ({ initialChatId = 0}) => {
     const [inputText, setInputText] = useState("");
-    const { currentChat, setCurrentChat, sendMessage } = useChat();
+    const { currentChat, sendMessage } = useChat();
     const flatListRef = useRef(null);
-    const { user } = useUser();
+    const { userID } = useUser();
 
+    const [chatId, setChatId] = useState(currentChat?.id || initialChatId);
+
+    useEffect (()=> {
+        if (currentChat) {
+            setChatId(currentChat.id);
+        }
+    }, [currentChat]);
 
     const pushMessage = () => {
         if (inputText.trim()) {
+            const TempMsgId = Date.now();
             const newMessage = {
-                id: null,
-                chat_id: currentChat ? currentChat.id : Date.now(),
+                id: TempMsgId,
+                chat_id: chatId,
                 body: inputText,
-                sender: user.username,
+                sender: userID,
                 created_at: new Date(),
             };
             sendMessage(newMessage);
             setInputText("");
         }
     };
-
-
 
     return (
         <KeyboardAvoidingView
@@ -38,10 +44,10 @@ const ChatScreen = () => {
     >
          <FlatList
                 ref={flatListRef}
-                data={messages}
-                keyExtractor={(_, index) => index.toString()}
+                data={currentChat?.messages || []}
+                keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
                 renderItem={({ item }) => (
-                    <ChatBubble message={item.text} isSender={item.senderName === "You"} />
+                    <ChatBubble message={item.body} isSender={item.sender === userID} />
                 )}
                 contentContainerStyle={styles.messagesContainer}
                 onContentSizeChange={() => flatListRef.current.scrollToEnd({ animated: true })}

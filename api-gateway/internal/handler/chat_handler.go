@@ -26,6 +26,8 @@ func NewChatHandler(cfg *config.Config, chatClient proto.ChatServiceClient) *Cha
 }
 
 func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMessage) {
+	log.Printf("Raw data: %s", string(msg.Data))
+
 	switch msg.Action {
 	case "get_chat_summaries":
 		h.GetChatSummaries(conn, msg.JWT)

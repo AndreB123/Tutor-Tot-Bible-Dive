@@ -1,12 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import WebSocketService from "../services/WebSocketService";
 import ChatService from "../services/ChatService";
-import { useUser } from "./UserContext";
 import { getAccessToken } from "../utils/SecureStorage";
 
 
 interface Message {
-    id: number;
+    id: number | null;
     chat_id: number;
     sender: string;
     body: string;
@@ -56,8 +55,21 @@ export const ChatProvider = ({ children }) => {
             setCurrentChat(prevChat => ({ ...prevChat, id: newId, name: newName }));
         }
     }, []);
-    
 
+    const handleServerMessageConfirmation = (tempId, confirmedId) => {
+        setChats(prevChats => {
+            return prevChats.map(chat => ({
+                ...chat,
+                messages: chat.messages.map(msg => {
+                    if (msg.id === tempId) {
+                        return { ...msg, id: confirmedId }; // Replace temp ID with server ID
+                    }
+                    return msg;
+                })
+            }));
+        });
+    };
+    
     const updateMessageFragment = useCallback((message) => {
         setChats(prevChats => {
             const updatedChats = prevChats.map(chat => {
@@ -76,8 +88,8 @@ export const ChatProvider = ({ children }) => {
         });
     }, []);
 
-    const addMessageToChat = useCallback((message) =>{
-        setChats(prevChats =>{
+    const addMessageToChat = useCallback((message) => {
+        setChats(prevChats => {
             const updatedChats = prevChats.map(chat => {
                 if (chat.id === message.chat_id) {
                     const messageExists = chat.messages.some(m => m.id === message.id);
