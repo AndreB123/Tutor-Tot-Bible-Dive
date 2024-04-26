@@ -5,36 +5,30 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { theme } from "../styles/theme";
 import { useChat } from "../context/ChatContext";
 import { useUser } from "../context/UserContext";
-import ChatService from "../services/ChatService";
 
 
 const ChatScreen = () => {
-    const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState("");
+    const { currentChat, setCurrentChat, sendMessage } = useChat();
     const flatListRef = useRef(null);
-    const { currentChat } = useChat();
     const { user } = useUser();
-    const chatID = currentChat.id;
-    const userID = user.id;
+
 
     const pushMessage = () => {
         if (inputText.trim()) {
             const newMessage = {
-                text: inputText,
-                senderName: userID,
+                id: null,
+                chat_id: currentChat ? currentChat.id : Date.now(),
+                body: inputText,
+                sender: user.username,
+                created_at: new Date(),
             };
-            setMessages(prevMessage =>[...prevMessage, newMessage]);
+            sendMessage(newMessage);
             setInputText("");
         }
     };
-    
-    useEffect(() => {
-        const receiveMessage = (newMessage) => {
-            setMessages(prevMessages => [...prevMessages, newMessage]);
-        };
 
-        
-    });
+
 
     return (
         <KeyboardAvoidingView

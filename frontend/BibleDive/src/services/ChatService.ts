@@ -1,7 +1,10 @@
 import { IWebSocketService } from "./WebSocketService";
 
 class ChatService {
-    constructor(private webSocketService: IWebSocketService) {
+    constructor(private webSocketService: IWebSocketService, 
+        private onMessageFragment: (message: any) => void,
+        private onMessageComplete: (message: any) => void) {
+
         this.registerMessageHandlers();
     }
 
@@ -22,11 +25,18 @@ class ChatService {
     }
 
     private registerMessageHandlers() {
-        this.webSocketService.registerMessageHandler("get_user_info_resp", this.handleSendMessage);
+        this.webSocketService.registerMessageHandler("message_fragment", this.handleMessageFragment);
+        this.webSocketService.registerMessageHandler("message_complete", this.handleMessageComplete);
     }
 
-    private handleSendMessage = (message: any) => {
-        const msg = message.data
+    private handleMessageFragment = (message: any) => {
+        const msgContents = message.data;
+        this.onMessageFragment(msgContents);
+    }
+
+    private handleMessageComplete = (message: any) => {
+        console.log("Message stream complete for chat ID:", message.chatID);
+        this.onMessageComplete(message)
     }
 
     getChatSummaries(jwt: string) {
