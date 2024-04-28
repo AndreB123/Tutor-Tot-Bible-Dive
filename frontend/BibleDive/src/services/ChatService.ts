@@ -16,7 +16,7 @@ class ChatService {
             JWT: jwt,
             Data: {
                 chatID: chatID,
-                sender: userID,
+                sender: userID.toString(),
                 body: body
             }
         });
