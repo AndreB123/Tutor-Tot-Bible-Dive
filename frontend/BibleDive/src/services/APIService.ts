@@ -20,7 +20,7 @@ export const refreshTokens = async () => {
         await storeTokens(accessToken, newRefreshToken);
         return accessToken;
     } catch (error) {
-        console.error('Error refreshing token', error);
+        console.error('Error refreshing token automatically', error);
         await clearTokens();
         return null;
     }

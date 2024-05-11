@@ -87,7 +87,7 @@ class WebSocketService implements IWebSocketService {
                 this.sendMessage(message, true);
             }
         }
-        }, 2);
+        }, 20);
          
         
     }

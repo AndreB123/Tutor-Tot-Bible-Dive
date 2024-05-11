@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -49,6 +50,8 @@ func NewUnaryInterceptor(secretKey string) grpc.UnaryServerInterceptor {
 }
 
 func isValidToken(token string, secretKey string) (uint, bool) {
+	token = strings.TrimPrefix(token, "Bearer ")
+
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexprected signing method: %v", t.Header["alg"])
@@ -56,7 +59,7 @@ func isValidToken(token string, secretKey string) (uint, bool) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		fmt.Println("failed to parse token")
+		fmt.Printf("failed to parse token: %v", err)
 		return 0, false
 	}
 	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
@@ -67,5 +70,6 @@ func isValidToken(token string, secretKey string) (uint, bool) {
 		}
 		return uint(userID), true
 	}
+	fmt.Println("Invalid token or claims type incorrect")
 	return 0, false
 }

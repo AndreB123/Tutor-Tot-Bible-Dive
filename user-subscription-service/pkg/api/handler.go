@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"user-microservice/pkg/model"
 	"user-microservice/pkg/service"
@@ -40,6 +41,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 
 	createdUser, err := h.userService.CreateUser(&newUser, userCreds.Password)
 	if err != nil {
+		log.Printf("error creating user: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
