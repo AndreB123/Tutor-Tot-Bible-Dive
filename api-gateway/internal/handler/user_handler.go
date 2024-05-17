@@ -69,13 +69,8 @@ func (h *UserHandler) GetUserInfo(conn *websocket.Conn, jwt string, userId uint3
 		return
 	}
 
-	userInfo, err := json.Marshal(resp)
-	if err != nil {
-		log.Printf("failed to marshal the userinfo to JSON: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "get_user_info_resp", userInfo)
+	log.Printf("user info: %v", resp)
+	middleware.SendWebSocketMessage(conn, "get_user_info_resp", resp)
 
 }
 

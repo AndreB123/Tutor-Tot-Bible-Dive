@@ -38,7 +38,7 @@ export const Dashboard = (props: DashbaordScreenProps) => {
     }));
 
     const { user } = useUser();
-    const username = user ? user.name : 'Diver';
+    const username = user ? user.user.username : 'Diver';
 
     const handleGetStartedPress = () => {
         navigation.navigate('ChatPage');

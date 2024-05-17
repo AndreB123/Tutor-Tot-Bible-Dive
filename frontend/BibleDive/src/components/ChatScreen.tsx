@@ -13,11 +13,10 @@ const ChatScreen = ({ initialChatId = 0}) => {
     const flatListRef = useRef(null);
     const { userID } = useUser();
 
-    const [chatId, setChatId] = useState(currentChat?.id || initialChatId);
 
     useEffect (()=> {
         if (currentChat) {
-            setChatId(currentChat.id);
+            console.log('Current chat updated:', currentChat)
         }
     }, [currentChat]);
 
@@ -26,15 +25,21 @@ const ChatScreen = ({ initialChatId = 0}) => {
             const TempMsgId = Date.now();
             const newMessage = {
                 id: TempMsgId,
-                chat_id: chatId,
+                chat_id: currentChat ? currentChat.id : initialChatId,
                 body: inputText,
                 sender: userID,
                 created_at: new Date(),
             };
+            console.log('Sending message:', newMessage);
             sendMessage(newMessage);
             setInputText("");
         }
+
     };
+
+    useEffect(() => {
+        console.log('Rendering messages:', JSON.stringify(currentChat?.messages || []));
+    }, [currentChat]);
 
     return (
         <KeyboardAvoidingView
@@ -45,13 +50,13 @@ const ChatScreen = ({ initialChatId = 0}) => {
          <FlatList
                 ref={flatListRef}
                 data={currentChat?.messages || []}
-                keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <ChatBubble message={item.body} isSender={item.sender === userID} />
                 )}
                 contentContainerStyle={styles.messagesContainer}
-                onContentSizeChange={() => flatListRef.current.scrollToEnd({ animated: true })}
-                onLayout={() => flatListRef.current.scrollToEnd({ animated: true })}
+                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
             />
         <View style={styles.inputContainer}>
                 <TextInput

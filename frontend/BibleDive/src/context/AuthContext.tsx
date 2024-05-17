@@ -5,8 +5,10 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/Navigationtypes";
 
+
 interface AuthContextType {
     isLoggedIn: boolean;
+    logoutInitiated: boolean;
     checkAuthState: () => Promise<void>;
     establishWebSocket: () => void;
     closeWebSocket: () => void;
@@ -22,9 +24,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [logoutInitiated, setLogoutInitiated] = useState(false);
     const navigation = useNavigation<LoginNavigationProp>();
 
     const logout = async () => {
+        setLogoutInitiated(true);
         await clearTokens();
         setIsLoggedIn(false);
         closeWebSocket();
@@ -48,6 +52,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const wsUrl = new URL(process.env.EXPO_PUBLIC_WEBSOCKET_URL);
             wsUrl.searchParams.append('token', token);
             WebSocketService.connect(wsUrl.toString());
+
+
+            WebSocketService.websocket.onerror = (error) => {
+                console.error("WS Error, logging out: ", error);
+                logout();
+            }
         } else {
             await logout();
         }
@@ -63,11 +73,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const value = useMemo(() => ({
         isLoggedIn,
+        logoutInitiated,
         checkAuthState,
         establishWebSocket,
         closeWebSocket,
         logout
-    }), [isLoggedIn, checkAuthState, establishWebSocket, closeWebSocket, logout]);
+    }), [isLoggedIn, logoutInitiated, checkAuthState, establishWebSocket, closeWebSocket, logout]);
 
     return (
         <AuthContext.Provider value={value}>

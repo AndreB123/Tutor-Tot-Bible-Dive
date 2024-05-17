@@ -12,6 +12,9 @@ class WebSocketService implements IWebSocketService {
     onConnected: Promise<void>;
     private resolveConnection: () => void;
     private messageQueue: string[] = [];
+    private shouldReconnect: boolean = true;
+    private reconnectAttempts: number = 0;
+    private maxReconnectAttempts: number = 5; 
 
 
     constructor() {
@@ -25,13 +28,14 @@ class WebSocketService implements IWebSocketService {
             this.disconnect(); 
         }
         this.websocket = new WebSocket(url);
+        this.shouldReconnect = true;
     
         this.websocket.onopen = () => {
             console.log("WebSocket Connection Established");
-            this.resolveConnection();
-            this.onConnected.then(() => {
-                this.flushMessageQueue(); 
-            });
+            this.reconnectAttempts = 0;
+            this.resolveConnection();   
+            this.flushMessageQueue(); 
+            
         };
 
         this.websocket.onmessage = (e) => {
@@ -51,6 +55,17 @@ class WebSocketService implements IWebSocketService {
         this.websocket.onclose = (e) => {
             console.log("WebSocket connection closed: ", e.reason);
             this.websocket = null;
+            if (e.reason.includes('401')) {
+                this.shouldReconnect = false;
+                return
+            }
+
+            if (this.shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
+                this.reconnectAttempts++;
+                setTimeout(() => {
+                    this.connect(url);
+                }, 1000); // Reconnect after 1 second
+            }
         };
     }
 
@@ -59,7 +74,8 @@ class WebSocketService implements IWebSocketService {
     }
 
     sendMessage(message: string, isQueued: boolean = false) {
-        if (this.websocket.readyState === WebSocket.OPEN) {
+        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+            console.log("Sending message:", message);
             this.websocket.send(message);
         } else {
             if (!isQueued) {
@@ -73,23 +89,24 @@ class WebSocketService implements IWebSocketService {
 
     disconnect() {
         if (this.websocket) {
+            this.shouldReconnect = false;
             this.websocket.close();
             this.websocket = null;
         }
     }
 
     private flushMessageQueue() {
-        setTimeout(() => {
-        console.log("Flushing message queue with " + this.messageQueue.length + " messages.");
-        while (this.messageQueue.length > 0) {
-            const message = this.messageQueue.shift();
-            if (message) {
-                this.sendMessage(message, true);
+        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+            console.log("Flushing message queue with " + this.messageQueue.length + " messages.");
+            while (this.messageQueue.length > 0) {
+                const message = this.messageQueue.shift();
+                if (message) {
+                    this.sendMessage(message, true);
+                }
             }
+        } else {
+            console.log("Cannot flush message queue, WebSocket is not open.");
         }
-        }, 20);
-         
-        
     }
 }
 

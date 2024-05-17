@@ -24,7 +24,7 @@ class UserService {
     }
 
     private handleUserDetailsResponse = (message: any) => {
-        const userDetails = message.data.user;
+        const userDetails = message.data;
         console.log("Received user details:", userDetails);
     
         if (userDetails) {
@@ -33,6 +33,7 @@ class UserService {
             console.error("User details were not found in the message:", message);
         }
     }
+    
 }
 
 export default UserService;

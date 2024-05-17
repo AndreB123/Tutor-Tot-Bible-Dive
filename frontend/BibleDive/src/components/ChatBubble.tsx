@@ -8,10 +8,11 @@ export interface ChatBubbleProps {
 }
 
  const ChatBubble =({ message, isSender }: ChatBubbleProps) => {
+    console.log(`Rendering ChatBubble: ${message}, isSender: ${isSender}`);
     const [bubbleWidth, setBubbleWidth] = useState(new Animated.Value(10));
 
     useEffect(() => {
-        // Simple heuristic to estimate width based on message length
+        console.log("new chat bubble")
         const newWidth = Math.max(50, message.length * 8); // Ensure minimum width and scale by character count
         Animated.timing(bubbleWidth, {
             toValue: newWidth,

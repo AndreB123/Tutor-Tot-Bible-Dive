@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import WebSocketService from "../services/WebSocketService";
 import ChatService from "../services/ChatService";
 import { getAccessToken } from "../utils/SecureStorage";
+import { useAuth } from "./AuthContext";
 
 
 interface Message {
@@ -26,6 +27,7 @@ interface ChatContextType {
     setChats: (chats: Chat[]) => void;
     addMessageToChat: (message: Message) => void;
     sendMessage: (message: Message) => void;
+    updateMessageFragment: (message: Message) => void;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -33,94 +35,141 @@ const ChatContext = createContext<ChatContextType | null>(null);
 export const ChatProvider = ({ children }) => {
     const [currentChat, setCurrentChat] = useState<Chat | null>(null);
     const [chats, setChats] = useState<Chat[]>([]);
+    const { logoutInitiated } = useAuth();
 
-    const handleSetCurrentChat = useCallback((chat: Chat) => {
-        setCurrentChat(chat);
-    }, []);
-
-    const handleSetChats = useCallback((chats: Chat[]) => {
-        setChats(chats);
-    }, []);
-
-    const updateChatId = useCallback((tempId, newId, newName) => {
-        setChats(prevChats => prevChats.map(chat => {
-            if (chat.id === tempId) {
-                // Update all messages within the chat to reflect the new chat ID
-                const updatedMessages = chat.messages.map(message => ({ ...message, chat_id: newId }));
-                return { ...chat, id: newId, name: newName, messages: updatedMessages };
-            }
-            return chat;
-        }));
-        if (currentChat && currentChat.id === tempId) {
-            setCurrentChat(prevChat => ({ ...prevChat, id: newId, name: newName }));
+    useEffect(() => {
+        if (logoutInitiated) {
+            setChats([]);
+            setCurrentChat(null);
         }
-    }, []);
+    }, [logoutInitiated]);
 
-    const handleServerMessageConfirmation = (tempId, confirmedId) => {
-        setChats(prevChats => {
-            return prevChats.map(chat => ({
-                ...chat,
-                messages: chat.messages.map(msg => {
-                    if (msg.id === tempId) {
-                        return { ...msg, id: confirmedId }; // Replace temp ID with server ID
-                    }
-                    return msg;
-                })
-            }));
-        });
-    };
     
-    const updateMessageFragment = useCallback((message) => {
+    const updateMessageFragment = useCallback((message: Message) => {
+        console.log('Updating message fragment:', message);
+    
         setChats(prevChats => {
             const updatedChats = prevChats.map(chat => {
-                if (chat.id === message.chat_id) {
+                if (chat.id === message.chat_id || chat.id === 0) {
                     const updatedMessages = chat.messages.map(msg => {
                         if (msg.id === message.id) {
-                            return { ...msg, body: message.body};
+                            return { ...msg, body: msg.body + message.body, chat_id: message.chat_id };
                         }
                         return msg;
                     });
-                    return { ...chat, messages: updatedMessages };
-                }
-               return chat;
-            });
-            return updatedChats;
-        });
-    }, []);
-
-    const addMessageToChat = useCallback((message) => {
-        setChats(prevChats => {
-            const updatedChats = prevChats.map(chat => {
-                if (chat.id === message.chat_id) {
-                    const messageExists = chat.messages.some(m => m.id === message.id);
-                    if (!messageExists) {
-                        return { ...chat, messages: [...chat.messages, message]};
-                    }
+    
+                    // Update all messages' chat_id to the new chat_id
+                    const messagesWithUpdatedChatId = updatedMessages.map(msg => ({
+                        ...msg,
+                        chat_id: message.chat_id
+                    }));
+    
+                    return { ...chat, id: message.chat_id, messages: messagesWithUpdatedChatId };
                 }
                 return chat;
             });
+            console.log('Chats updated:', JSON.stringify(updatedChats));
             return updatedChats;
         });
-    }, []);
+    
+        if (currentChat?.id === message.chat_id || currentChat?.id === 0) {
+            setCurrentChat(prevChat => {
+                const updatedMessages = prevChat.messages.map(msg => ({
+                    ...msg,
+                    chat_id: message.chat_id
+                }));
+                const updatedChat = {
+                    ...prevChat,
+                    id: message.chat_id,
+                    messages: updatedMessages.map(msg =>
+                        msg.id === message.id ? { ...msg, body: msg.body + message.body, chat_id: message.chat_id } : msg
+                    )
+                };
+                console.log('Current chat updated:', JSON.stringify(updatedChat));
+                return updatedChat;
+            });
+        }
+    }, [currentChat]);
 
-    const chatService = useMemo(() => new ChatService(WebSocketService, updateMessageFragment, addMessageToChat),[updateMessageFragment, addMessageToChat])
+    const addMessageToChat = useCallback((message: Message) => {
+        console.log('Adding message to chat:', message);
+    
+        setChats(prevChats => {
+            const chatExists = prevChats.some(chat => chat.id === message.chat_id || chat.id === 0);
+            if (!chatExists) {
+                const newChat = {
+                    id: message.chat_id,
+                    name: '',
+                    messages: [message]
+                };
+                console.log('New chat created:', JSON.stringify(newChat));
+                setCurrentChat(newChat);
+                return [...prevChats, newChat];
+            }
+    
+            const updatedChats = prevChats.map(chat => {
+                if (chat.id === message.chat_id || chat.id === 0) {
+                    const updatedMessages = chat.messages.map(msg => ({
+                        ...msg,
+                        chat_id: message.chat_id
+                    }));
+    
+                    // Ensure all messages have the updated chat_id and append the new message
+                    const messagesWithUpdatedChatId = [...updatedMessages, { ...message, chat_id: message.chat_id }];
+                    const updatedChat = {
+                        ...chat,
+                        id: message.chat_id,
+                        messages: messagesWithUpdatedChatId
+                    };
+                    console.log('Updated chat:', JSON.stringify(updatedChat));
+                    return updatedChat;
+                }
+                return chat;
+            });
+            console.log('Chats updated:', JSON.stringify(updatedChats));
+            return updatedChats;
+        });
+    
+        if (currentChat?.id === message.chat_id || currentChat?.id === 0) {
+            setCurrentChat(prevChat => {
+                const updatedMessages = prevChat.messages.map(msg => ({
+                    ...msg,
+                    chat_id: message.chat_id
+                }));
+                const updatedChat = {
+                    ...prevChat,
+                    id: message.chat_id,
+                    messages: [...updatedMessages, message]
+                };
+                console.log('Current chat updated:', JSON.stringify(updatedChat));
+                return updatedChat;
+            });
+        }
+    }, [currentChat]);
+    
+
+    const chatService = useMemo(() => new ChatService(
+        WebSocketService, 
+        updateMessageFragment, 
+        addMessageToChat, 
+    ), [updateMessageFragment, addMessageToChat])
 
     const sendMessage = async (message) => {
         try {
-            const jwt = await getAccessToken(); 
-            await chatService.sendChatMessage(message.chat_id, message.sender, message.body, jwt);
+            const jwt = await getAccessToken();
+            await chatService.sendChatMessage(message.chat_id.toString(), message.sender.toString(), message.body, jwt);
             console.log("Message sent successfully");
             addMessageToChat(message); 
+            console.log("Message added to chat:", message);
         } catch (error) {
             console.error("Failed to send message:", error);
         }
     }
-
     
     useEffect(() => {
         if (currentChat && chats.length > 0) {
-            const updateCurrentChat = chats.find(chat => chat.id === currentChat.id);
-            setCurrentChat(updateCurrentChat);
+            const updatedCurrentChat = chats.find(chat => chat.id === currentChat.id);
+            setCurrentChat(updatedCurrentChat || null);
         }
     }, [chats, currentChat]);
 
@@ -129,12 +178,11 @@ export const ChatProvider = ({ children }) => {
         sendMessage,
         currentChat,
         chats,
-        setCurrentChat: handleSetCurrentChat,
-        setChats: handleSetChats,
+        setCurrentChat,
+        setChats,
         addMessageToChat: addMessageToChat,
         updateMessageFragment,
-        updateChatId
-    }), [sendMessage, currentChat, chats, setCurrentChat, setChats, updateChatId ]);
+    }), [sendMessage, currentChat, chats]);
 
     return (
         <ChatContext.Provider value={value}>

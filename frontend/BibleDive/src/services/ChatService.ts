@@ -1,10 +1,11 @@
 import { IWebSocketService } from "./WebSocketService";
 
 class ChatService {
-    constructor(private webSocketService: IWebSocketService, 
+    constructor(
+        private webSocketService: IWebSocketService, 
         private onMessageFragment: (message: any) => void,
-        private onMessageComplete: (message: any) => void) {
-
+        private onMessageComplete: (message: any) => void,
+    ) {
         this.registerMessageHandlers();
     }
 
@@ -20,7 +21,7 @@ class ChatService {
                 body: body
             }
         });
-
+        console.log("Sending chat message:", message);
         this.webSocketService.sendMessage(message);
     }
 
@@ -30,13 +31,18 @@ class ChatService {
     }
 
     private handleMessageFragment = (message: any) => {
-        const msgContents = message.data;
+        console.log("Handling message fragment:", message);
+        const msgContents = message.data.message;
         this.onMessageFragment(msgContents);
     }
 
     private handleMessageComplete = (message: any) => {
-        console.log("Message stream complete for chat ID:", message.chatID);
-        this.onMessageComplete(message)
+        console.log("Message stream complete");
+        if (message.data && message.data.message) {
+            this.onMessageComplete(message.data.message);
+        } else {
+            console.log("Received message_complete");
+        }
     }
 
     getChatSummaries(jwt: string) {
@@ -46,6 +52,7 @@ class ChatService {
             JWT: jwt,
             Data: {}
         });
+        console.log("Requesting chat summaries:", message);
         this.webSocketService.sendMessage(message);
     }
 }

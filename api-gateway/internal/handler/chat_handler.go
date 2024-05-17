@@ -75,12 +75,15 @@ func (h *ChatHandler) StreamMessages(conn *websocket.Conn, chatID uint32, body s
 		in, err := stream.Recv()
 		if err == io.EOF {
 			middleware.SendWebSocketMessage(conn, "message_complete", "{}")
+			log.Println("Stream completed successfully")
 			break
 		}
 		if err != nil {
 			log.Printf("Error receiving stream: %v", err)
 			break
 		}
+
+		log.Printf("Received message fragment: %v", in)
 
 		middleware.SendWebSocketMessage(conn, "message_fragment", in)
 	}

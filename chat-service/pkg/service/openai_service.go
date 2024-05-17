@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -16,7 +17,14 @@ type OpenAIService struct {
 }
 
 func NewOpenAIService(cfg *config.Config) *OpenAIService {
-	client := openai.NewClient(cfg.OpenAIKey)
+	apiKey := strings.TrimSpace(cfg.OpenAIKey)
+
+	if apiKey == "" {
+		fmt.Println("Error: API key is empty")
+		return nil
+	}
+
+	client := openai.NewClient(apiKey)
 	return &OpenAIService{
 		client: client,
 	}
@@ -39,6 +47,8 @@ func (s *OpenAIService) SendMessageToOpenAI(ctx context.Context, prompt string, 
 		Stream: true,
 	}
 
+	fmt.Printf("Sending ChatCompletionRequest: %+v\n", completionReq)
+
 	stream, err := s.client.CreateChatCompletionStream(ctx, completionReq)
 	if err != nil {
 		fmt.Printf("ChatCompletionStream error: %v/n", err)
@@ -59,7 +69,15 @@ func (s *OpenAIService) SendMessageToOpenAI(ctx context.Context, prompt string, 
 			return err
 		}
 
-		if err := onMessage(resp.Choices[0].Delta.Content); err != nil {
+		content := resp.Choices[0].Delta.Content
+		if content == "" {
+			fmt.Println("Received empty content in stream response")
+		} else {
+			fmt.Printf("Received content: %s\n", content)
+		}
+
+		if err := onMessage(content); err != nil {
+			fmt.Printf("Error in onMessage callback: %v\n", err)
 			return err
 		}
 	}
