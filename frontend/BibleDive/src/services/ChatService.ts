@@ -38,7 +38,7 @@ class ChatService {
 
     private handleMessageComplete = (message: any) => {
         console.log("Message stream complete");
-        if (message.data && message.data.message) {
+        if (message?.data?.message) {
             this.onMessageComplete(message.data.message);
         } else {
             console.log("Received message_complete");

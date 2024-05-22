@@ -16,7 +16,7 @@ const ChatScreen = ({ initialChatId = 0}) => {
 
     useEffect (()=> {
         if (currentChat) {
-            console.log('Current chat updated:', currentChat)
+            console.log('Current chat updated:', JSON.stringify(currentChat))
         }
     }, [currentChat]);
 
@@ -43,21 +43,21 @@ const ChatScreen = ({ initialChatId = 0}) => {
 
     return (
         <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 100}
-    >
-         <FlatList
-                ref={flatListRef}
-                data={currentChat?.messages || []}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <ChatBubble message={item.body} isSender={item.sender === userID} />
-                )}
-                contentContainerStyle={styles.messagesContainer}
-                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            />
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.container}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 100}
+        >
+        <FlatList
+            ref={flatListRef}
+            data={currentChat?.messages || []}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+                <ChatBubble message={item.body} isSender={item.sender === userID} />
+            )}
+            contentContainerStyle={styles.messagesContainer}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        />
         <View style={styles.inputContainer}>
                 <TextInput
                     style={styles.inputField}
