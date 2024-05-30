@@ -7,39 +7,41 @@ import { useChat } from "../context/ChatContext";
 import { useUser } from "../context/UserContext";
 
 
-const ChatScreen = ({ initialChatId = 0}) => {
+const ChatScreen = ({ initialChatId = 0 }) => {
     const [inputText, setInputText] = useState("");
-    const { currentChat, sendMessage } = useChat();
+    const { getChatById, sendMessage, chatId } = useChat();
     const flatListRef = useRef(null);
     const { userID } = useUser();
+    const [currentChatId, setCurrentChatId] = useState(initialChatId);
 
-
-    useEffect (()=> {
-        if (currentChat) {
-            console.log('Current chat updated:', JSON.stringify(currentChat))
+    useEffect(() => {
+        if (initialChatId === 0 && chatId !== 0) {
+            console.log('Updating chat ID from 0 to:', chatId);
+            setCurrentChatId(chatId);
         }
-    }, [currentChat]);
+    }, [chatId, initialChatId]);
+
+    const chat = getChatById(currentChatId) || { id: currentChatId, name: '', messages: [] };
 
     const pushMessage = () => {
         if (inputText.trim()) {
             const TempMsgId = Date.now();
             const newMessage = {
                 id: TempMsgId,
-                chat_id: currentChat ? currentChat.id : initialChatId,
+                chat_id: chat.id,
                 body: inputText,
                 sender: userID,
                 created_at: new Date(),
             };
-            console.log('Sending message:', newMessage);
+            console.log('Sending message:', JSON.stringify(newMessage));
             sendMessage(newMessage);
             setInputText("");
         }
-
     };
 
     useEffect(() => {
-        console.log('Rendering messages:', JSON.stringify(currentChat?.messages || []));
-    }, [currentChat]);
+        console.log('Rendering messages:', JSON.stringify(chat?.messages || []), ' chatid: ', JSON.stringify(currentChatId));
+    }, [chat]);
 
     return (
         <KeyboardAvoidingView
@@ -47,30 +49,30 @@ const ChatScreen = ({ initialChatId = 0}) => {
             style={styles.container}
             keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 100}
         >
-        <FlatList
-            ref={flatListRef}
-            data={currentChat?.messages || []}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-                <ChatBubble message={item.body} isSender={item.sender === userID} />
-            )}
-            contentContainerStyle={styles.messagesContainer}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        />
-        <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.inputField}
-                    value={inputText}
-                    onChangeText={setInputText}
-                    placeholder="Type a message..."
-                    returnKeyType="send"
-                    onSubmitEditing={pushMessage}
-                />
-            <TouchableOpacity onPress={pushMessage} style={styles.sendButton}>
-                <Icon name="send" size={27} color="#FFF"/>
-            </TouchableOpacity>
-        </View>
+            <FlatList
+                ref={flatListRef}
+                data={chat?.messages || []}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                    <ChatBubble message={item.body} isSender={item.sender === userID} />
+                )}
+                contentContainerStyle={styles.messagesContainer}
+                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            />
+            <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.inputField}
+                        value={inputText}
+                        onChangeText={setInputText}
+                        placeholder="Type a message..."
+                        returnKeyType="send"
+                        onSubmitEditing={pushMessage}
+                    />
+                <TouchableOpacity onPress={pushMessage} style={styles.sendButton}>
+                    <Icon name="send" size={27} color="#FFF"/>
+                </TouchableOpacity>
+            </View>
         </KeyboardAvoidingView>
     );
 };
@@ -80,7 +82,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     messagesContainer: {
-        flex: 1,
+        flexGrow: 1,
         padding: 10,
     },
     inputContainer: {
@@ -90,7 +92,7 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.secondaryBackground,
     },
     inputField: {
-        flex: 1,
+        flexGrow: 1,
         marginRight: 10,
         borderWidth: 1,
         borderColor: '#ccc',

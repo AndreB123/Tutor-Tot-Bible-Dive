@@ -18,6 +18,10 @@ func (repo *MessageRepository) CreateNewMessage(message *model.Message) error {
 	return repo.db.Create(message).Error
 }
 
+func (repo *MessageRepository) UpdateMessageContent(messageID uint, content string) error {
+	return repo.db.Model(&model.Message{}).Where("id = ?", messageID).Update("body", content).Error
+}
+
 func (repo *MessageRepository) FindMessagesByChatIDPaginated(chatID uint, lastMessageID uint, limit int) ([]model.Message, error) {
 	var messages []model.Message
 	query := repo.db.Where("chat_id = ? AND id < ?", chatID, lastMessageID).Order("id DESC").Limit(limit)

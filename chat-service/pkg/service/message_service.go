@@ -53,6 +53,10 @@ func (s *MessageService) CreateInitialMessage(userID uint, sender, body string) 
 	return chat, messsage, nil
 }
 
+func (s *MessageService) UpdateMessageContent(messageID uint, content string) error {
+	return s.messageRepo.UpdateMessageContent(messageID, content)
+}
+
 func (s *MessageService) FindMessagesByChatIDPaginated(chatID uint, lastMsgID uint, limit int) ([]model.Message, error) {
 	return s.messageRepo.FindMessagesByChatIDPaginated(chatID, lastMsgID, limit)
 }

@@ -9,14 +9,14 @@ class ChatService {
         this.registerMessageHandlers();
     }
 
-    async sendChatMessage(chatID: string, userID: string, body: string, jwt: string) {
+    async sendChatMessage(chatID: number, userID: string, body: string, jwt: string) {
         await this.webSocketService.onConnected;
         const message = JSON.stringify({
             Type: "chat",
             Action: "start_message_stream",
             JWT: jwt,
             Data: {
-                chatID: chatID,
+                chat_id: chatID,
                 sender: userID,
                 body: body
             }

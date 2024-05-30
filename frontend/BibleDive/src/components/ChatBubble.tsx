@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { View, Text, Animated } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { createStyleSheet } from "../styles/useStyles";
 
 export interface ChatBubbleProps {
@@ -7,18 +7,11 @@ export interface ChatBubbleProps {
     isSender: boolean;
 }
 
- const ChatBubble =({ message, isSender }: ChatBubbleProps) => {
-    console.log(`Rendering ChatBubble: ${message}, isSender: ${isSender}`);
-    const [bubbleWidth, setBubbleWidth] = useState(new Animated.Value(10));
+const ChatBubble = ({ message = "", isSender }: ChatBubbleProps) => {
+    const textRef = useRef(null);
 
     useEffect(() => {
-        console.log("new chat bubble")
-        const newWidth = Math.max(50, message.length * 8); // Ensure minimum width and scale by character count
-        Animated.timing(bubbleWidth, {
-            toValue: newWidth,
-            duration: 300,
-            useNativeDriver: false,
-        }).start();
+        console.log("new chat bubble");
     }, [message]);
 
     const styles = createStyleSheet(theme => ({
@@ -29,6 +22,7 @@ export interface ChatBubbleProps {
             padding: 10,
             alignSelf: isSender ? 'flex-end' : 'flex-start',
             backgroundColor: isSender ? '#DCF8C5' : '#ECECEC',
+            overflow: 'hidden',
         },
         messageText: {
             fontSize: 16,
@@ -36,11 +30,10 @@ export interface ChatBubbleProps {
     }));
 
     return (
-        <Animated.View style={[styles.bubble, { width: bubbleWidth }]}>
-            <Text style={styles.messageText}>{message}</Text>
-        </Animated.View>
+        <View style={styles.bubble}>
+            <Text style={styles.messageText} ref={textRef}>{message}</Text>
+        </View>
     );
-}
-
+};
 
 export default ChatBubble;

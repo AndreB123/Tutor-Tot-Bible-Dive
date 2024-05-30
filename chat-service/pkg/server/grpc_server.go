@@ -160,9 +160,10 @@ func (s *ChatServer) GetAllChatsByUID(ctx context.Context, req *proto.GetChatSum
 
 // helper functions
 func (s *ChatServer) handleOpenAIResponse(chatID uint, sender string, prompt string, userID uint, stream proto.ChatService_StreamMessagesServer) error {
-	return s.openAIService.SendMessageToOpenAI(context.Background(), prompt, func(response string) error {
+	return s.openAIService.SendMessageToOpenAI(context.Background(), chatID, prompt, userID, func(response string, messageID uint) error {
 		resp := &proto.CreateMessageResponse{
 			Message: &proto.Message{
+				Id:     uint32(messageID),
 				ChatId: uint32(chatID),
 				Sender: sender,
 				Body:   response,
@@ -171,12 +172,6 @@ func (s *ChatServer) handleOpenAIResponse(chatID uint, sender string, prompt str
 		if sendErr := stream.Send(resp); sendErr != nil {
 			log.Printf("Error sending message to client: %v", sendErr)
 			return sendErr
-		}
-
-		_, storeErr := s.messageService.CreateMessage(chatID, sender, response, userID)
-		if storeErr != nil {
-			log.Printf("Error storing AI message: %v", storeErr)
-			return storeErr
 		}
 		return nil
 	})

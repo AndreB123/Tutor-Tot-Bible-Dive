@@ -35,9 +35,9 @@ func main() {
 		log.Fatalf("failed to auto-migrate: %v", err)
 	}
 
-	chatService := service.NewChatService(chatRepo, msgRepo)
+	chatService := service.NewChatService(chatRepo)
 	msgService := service.NewMessageService(msgRepo, chatRepo)
-	openAIService := service.NewOpenAIService(cfg)
+	openAIService := service.NewOpenAIService(cfg, msgService)
 
 	chatServer := server.NewChatServer(chatService, msgService, openAIService)
 

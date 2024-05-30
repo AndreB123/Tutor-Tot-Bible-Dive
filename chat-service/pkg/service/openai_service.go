@@ -12,11 +12,12 @@ import (
 )
 
 type OpenAIService struct {
-	Config *config.Config
-	client *openai.Client
+	Config         *config.Config
+	client         *openai.Client
+	messageService *MessageService
 }
 
-func NewOpenAIService(cfg *config.Config) *OpenAIService {
+func NewOpenAIService(cfg *config.Config, msgService *MessageService) *OpenAIService {
 	apiKey := strings.TrimSpace(cfg.OpenAIKey)
 
 	if apiKey == "" {
@@ -26,11 +27,13 @@ func NewOpenAIService(cfg *config.Config) *OpenAIService {
 
 	client := openai.NewClient(apiKey)
 	return &OpenAIService{
-		client: client,
+		client:         client,
+		messageService: msgService,
 	}
+
 }
 
-func (s *OpenAIService) SendMessageToOpenAI(ctx context.Context, prompt string, onMessage func(string) error) error {
+func (s *OpenAIService) SendMessageToOpenAI(ctx context.Context, chatID uint, prompt string, userID uint, onMessage func(string, uint) error) error {
 
 	completionReq := openai.ChatCompletionRequest{
 		Model: openai.GPT3Dot5Turbo,
@@ -57,6 +60,9 @@ func (s *OpenAIService) SendMessageToOpenAI(ctx context.Context, prompt string, 
 
 	defer stream.Close()
 
+	var messageID uint
+	var currentMessage string
+
 	for {
 		resp, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
@@ -76,7 +82,24 @@ func (s *OpenAIService) SendMessageToOpenAI(ctx context.Context, prompt string, 
 			fmt.Printf("Received content: %s\n", content)
 		}
 
-		if err := onMessage(content); err != nil {
+		currentMessage += content
+
+		if messageID == 0 {
+
+			message, err := s.messageService.CreateMessage(chatID, "AI", currentMessage, userID)
+			if err != nil {
+				fmt.Printf("Error creating new message on stream: %v\n", err)
+				return err
+			}
+			messageID = message.ID
+		} else {
+			if err := s.messageService.UpdateMessageContent(messageID, currentMessage); err != nil {
+				fmt.Printf("Error updating message content for stream: %v\n", err)
+				return err
+			}
+		}
+
+		if err := onMessage(content, messageID); err != nil {
 			fmt.Printf("Error in onMessage callback: %v\n", err)
 			return err
 		}

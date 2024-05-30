@@ -7,14 +7,12 @@ import (
 )
 
 type ChatService struct {
-	chatRepository    *repository.ChatRepository
-	messageRepository *repository.MessageRepository
+	chatRepository *repository.ChatRepository
 }
 
-func NewChatService(chatRepo *repository.ChatRepository, messageRepo *repository.MessageRepository) *ChatService {
+func NewChatService(chatRepo *repository.ChatRepository) *ChatService {
 	return &ChatService{
-		chatRepository:    chatRepo,
-		messageRepository: messageRepo,
+		chatRepository: chatRepo,
 	}
 }
 
@@ -36,7 +34,7 @@ func (s *ChatService) GetAllChatSummeryByUID(userID uint) ([]model.ChatSummery, 
 	return s.chatRepository.GetAllChatSummeryByUserID(userID)
 }
 
-//helper funcs
+// helper funcs
 func deriveChatNameFromMessage(body string) string {
 	words := strings.Fields(body)
 	if len(words) > 5 {
