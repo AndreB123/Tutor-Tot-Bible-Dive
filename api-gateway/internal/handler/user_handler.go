@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -187,33 +188,64 @@ func (h *UserHandler) CreateUser(ctx *gin.Context) {
 
 func (h *UserHandler) RefreshToken(ctx *gin.Context) {
 	var tokenRequest struct {
-		RefreshToken string `json:"refresh_token"`
+		RefreshToken string `json:"refreshToken"`
 	}
 
+	// Log the incoming request
+	fmt.Println("Received request to refresh token")
+
+	// Log the raw request body
+	bodyBytes, err := io.ReadAll(ctx.Request.Body)
+	if err != nil {
+		fmt.Printf("Failed to read request body: %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+	fmt.Printf("Raw request body: %s\n", string(bodyBytes))
+
+	// Restore the body for further processing
+	ctx.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 	if err := ctx.ShouldBindJSON(&tokenRequest); err != nil {
+		fmt.Printf("Failed to bind JSON: %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Log the received refresh token
+	fmt.Printf("Received refresh token: %s\n", tokenRequest.RefreshToken)
+
 	tokenJSON, err := json.Marshal(tokenRequest)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal json on refresh token"})
+		fmt.Printf("Failed to marshal JSON: %v\n", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal JSON on refresh token"})
 		return
 	}
 
-	resp, err := http.Post(h.Config.UserHTTPServiceURL+"/refresh_token", dataType, bytes.NewBuffer(tokenJSON))
+	// Log the marshaled JSON
+	fmt.Printf("Marshaled JSON: %s\n", string(tokenJSON))
+
+	resp, err := http.Post(h.Config.UserHTTPServiceURL+"/refresh_token", "application/json", bytes.NewBuffer(tokenJSON))
 	if err != nil {
+		fmt.Printf("Failed to reach user service: %v\n", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reach user service"})
 		return
 	}
 
 	defer resp.Body.Close()
 
+	// Log the response status
+	fmt.Printf("User service response status: %d\n", resp.StatusCode)
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read responce from user service"})
+		fmt.Printf("Failed to read response body: %v\n", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response from user service"})
 		return
 	}
 
-	ctx.Data(resp.StatusCode, dataType, body)
+	// Log the response body
+	fmt.Printf("User service response body: %s\n", string(body))
+
+	ctx.Data(resp.StatusCode, "application/json", body)
 }

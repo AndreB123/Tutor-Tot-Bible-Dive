@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"strings"
 	"time"
 	"user-microservice/pkg/config"
 
@@ -24,7 +25,7 @@ func (s *AuthService) GenerateToken(userID uint, isAccessToken bool) (string, er
 
 	if isAccessToken {
 		secretKey = s.Config.AccessSecret
-		exp = time.Minute * 15
+		exp = time.Second * 15
 	} else {
 		secretKey = s.Config.RefreshSecret
 		exp = time.Hour * 24 * 7
@@ -47,17 +48,36 @@ func (s *AuthService) VerifyToken(tokenString string, isAccessToken bool) (uint,
 		secretKey = s.Config.RefreshSecret
 	}
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(secretKey), nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := claims["user_id"].(uint)
-		return userID, nil
-	} else {
-		return 0, err
+	if err != nil {
+		fmt.Printf("Failed to parse token: %v\n", err)
+		return 0, fmt.Errorf("failed to parse token: %w", err)
 	}
+
+	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
+		userID, err := getUserIDFromClaims(claims)
+		if err != nil {
+			fmt.Printf("Error getting user ID from claims: %v\n", err)
+			return 0, fmt.Errorf("error getting user ID from claims: %w", err)
+		}
+		return userID, nil
+	}
+	fmt.Println("Invalid token or claims type incorrect")
+	return 0, fmt.Errorf("invalid token or claims")
+}
+
+func getUserIDFromClaims(claims jwt.MapClaims) (uint, error) {
+	userIDFloat64, ok := claims["user_id"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("user_id not found in claims or is not a float64")
+	}
+	return uint(userIDFloat64), nil
 }

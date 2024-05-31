@@ -102,7 +102,7 @@ func (h *Handler) Login(c *gin.Context) {
 
 func (h *Handler) RefreshToken(c *gin.Context) {
 	var tokenRequest struct {
-		RefreshToken string `json:"refresh_token"`
+		RefreshToken string `json:"refreshToken"`
 	}
 
 	if err := c.ShouldBindJSON(&tokenRequest); err != nil {
@@ -110,9 +110,11 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	userID, err := h.authService.VerifyToken(tokenRequest.RefreshToken, false)
+	fmt.Printf("Received refresh token: %s\n", tokenRequest.RefreshToken)
 
+	userID, err := h.authService.VerifyToken(tokenRequest.RefreshToken, false)
 	if err != nil {
+		fmt.Printf("Invalid refresh token: %v\n", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
 		return
 	}

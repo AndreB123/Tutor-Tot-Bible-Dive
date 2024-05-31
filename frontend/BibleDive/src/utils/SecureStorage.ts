@@ -2,29 +2,11 @@ import axios from 'axios';
 import * as Keychain from 'react-native-keychain';
 import { Buffer } from 'buffer';
 
+const baseURL = process.env.EXPO_PUBLIC_API_BASE_URL
 
-export const refreshTokens = async () => {
-    const refreshToken = await getRefreshToken();
-    if (!refreshToken) {
-        console.log('No refresh token available, clearing tokens');
-        await clearTokens();
-        return null;
-    }
-
-    try {
-        console.log('Attempting to refresh tokens');
-        const response = await axios.post('/refresh_token', {refreshToken});
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-        await storeTokens(accessToken, newRefreshToken);
-        return accessToken;
-    } catch (error) {
-        console.error('Error refreshing token', error);
-        await clearTokens();
-        return null;
-    }
-};
-
-
+const apiClient = axios.create({
+    baseURL: baseURL
+});
 const parseJwt = (token) => {
     try {
         const base64Url = token.split('.')[1];
@@ -44,9 +26,7 @@ const isTokenExpired = (token) => {
         return true
     }
     const now = Date.now() / 1000;
-    const expired = decoded.exp < now; 
-    console.log(`Token expired: ${expired}`);
-    return expired;
+    return decoded.exp < now; 
 };
 
 export const getUserIDFromToken = async () => {
@@ -86,6 +66,27 @@ export const getRefreshToken = async () => {
     }
 
     return refreshToken;
+};
+
+export const refreshTokens = async () => {
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) {
+        console.log('No refresh token available, clearing tokens');
+        await clearTokens();
+        return null;
+    }
+
+    try {
+        console.log('Attempting to refresh tokens');
+        const response = await apiClient.post('/refresh_token', { refreshToken });
+        const { access_token: accessToken, refresh_token: newRefreshToken } = response.data;
+        await storeTokens(accessToken, newRefreshToken);
+        return accessToken;
+    } catch (error) {
+        console.error('Error refreshing token', error);
+        await clearTokens();
+        return null;
+    }
 };
 
 export const clearTokens = async () => {
