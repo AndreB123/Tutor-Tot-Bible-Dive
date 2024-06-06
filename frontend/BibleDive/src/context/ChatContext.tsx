@@ -19,27 +19,36 @@ interface Chat {
     messages: Message[];
 }
 
+interface ChatSummary {
+    id: number;
+    name: string;
+}
+
 
 interface ChatContextType {
     chats: Chat[];
+    chatSummaries: ChatSummary[];
     setChats: (chats: Chat[]) => void;
     addMessageToChat: (message: Message) => void;
     sendMessage: (message: Message) => void;
     updateMessageFragment: (message: Message) => void;
     getChatById: (id: number) => Chat | undefined;
+    getChatSummaries: () => void;
     chatId: number;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
 
 export const ChatProvider = ({ children }) => {
-    const [chats, setChats] = useState<Chat[]>([]);
-    const [chatId, setChatId] = useState<number>(0);
+    const [ chats, setChats] = useState<Chat[]>([]);
+    const [ chatId, setChatId] = useState<number>(0);
+    const [ chatSummaries, setChatSummaries] = useState<ChatSummary[]>([]);
     const { logoutInitiated } = useAuth();
 
     useEffect(() => {
         if (logoutInitiated) {
             setChats([]);
+            setChatSummaries([]);
             setChatId(0);
         }
     }, [logoutInitiated]);
@@ -101,19 +110,37 @@ export const ChatProvider = ({ children }) => {
         });
     }, []);
 
+    const handleGetChatSummaries = useCallback((summaries: ChatSummary[]) => {
+        setChatSummaries(summaries);
+    }, []);
+
+    const getChatSummaries = useCallback(async () => {
+        try {
+            const jwt = await getAccessToken();
+            if (jwt) {
+                await chatService.getChatSummaries("user_id", jwt);
+            }
+        } catch (error) {
+            console.error("Failed to get chat summaries:", error);
+        }
+    }, []);
+
     const chatService = useMemo(() => new ChatService(
         WebSocketService, 
         updateMessageFragment, 
-        addMessageToChat, 
-    ), [updateMessageFragment, addMessageToChat])
+        addMessageToChat,
+        handleGetChatSummaries 
+    ), [updateMessageFragment, addMessageToChat, handleGetChatSummaries])
 
     const sendMessage = async (message) => {
         try {
             const jwt = await getAccessToken();
-            await chatService.sendChatMessage(message.chat_id, message.sender.toString(), message.body, jwt);
-            console.log("Message sent successfully");
-            addMessageToChat(message); 
-            console.log("Message added to chat:", message);
+            if (jwt) {
+                await chatService.sendChatMessage(message.chat_id, message.sender.toString(), message.body, jwt);
+                console.log("Message sent successfully");
+                addMessageToChat(message); 
+                console.log("Message added to chat:", message);
+            }
         } catch (error) {
             console.error("Failed to send message:", error);
         }
@@ -123,16 +150,17 @@ export const ChatProvider = ({ children }) => {
         return chats.find(chat => chat.id === id);
     };
 
-
     const value = useMemo( ()=> ({
         sendMessage,
         chats,
         setChats,
+        chatSummaries,
         addMessageToChat: addMessageToChat,
         updateMessageFragment,
         getChatById,
+        getChatSummaries,
         chatId
-    }), [sendMessage, chats, chatId]);
+    }), [sendMessage, chats, chatSummaries, chatId]);
 
     return (
         <ChatContext.Provider value={value}>

@@ -5,6 +5,7 @@ class ChatService {
         private webSocketService: IWebSocketService, 
         private onMessageFragment: (message: any) => void,
         private onMessageComplete: (message: any) => void,
+        private onGetChatSummaries: (message: any) => void,
     ) {
         this.registerMessageHandlers();
     }
@@ -25,10 +26,26 @@ class ChatService {
         this.webSocketService.sendMessage(message);
     }
 
+    async getChatSummaries(id: string, jwt: string) {
+        await this.webSocketService.onConnected;
+        const message = JSON.stringify({
+            Type: "chat",
+            Action: "get_chat_summaries",
+            JWT: jwt,
+            Data: {
+                id: id
+            }
+        });
+        console.log("Requesting chat summaries:", message);
+        this.webSocketService.sendMessage(message);
+    }
+
     private registerMessageHandlers() {
         this.webSocketService.registerMessageHandler("message_fragment", this.handleMessageFragment);
         this.webSocketService.registerMessageHandler("message_complete", this.handleMessageComplete);
+        this.webSocketService.registerMessageHandler("get_chat_summaries_respo", this.handleGetChatSummaries);
     }
+
 
     private handleMessageFragment = (message: any) => {
         console.log("Handling message fragment:", message);
@@ -45,16 +62,12 @@ class ChatService {
         }
     }
 
-    getChatSummaries(jwt: string) {
-        const message = JSON.stringify({
-            Type: "chat",
-            Action: "get_chat_summaries",
-            JWT: jwt,
-            Data: {}
-        });
-        console.log("Requesting chat summaries:", message);
-        this.webSocketService.sendMessage(message);
+    private handleGetChatSummaries = (message: any) => {
+        console.log("chat sums handled:", message);
+        const msgContents = message.data.chats;
+        this.onGetChatSummaries(msgContents);
     }
+    
 }
 
 export default ChatService;

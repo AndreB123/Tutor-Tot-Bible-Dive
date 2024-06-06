@@ -46,6 +46,7 @@ message GetRecentMessagesRequest {
 }
 
 message GetChatSummariesUIDRequest {
+    uint32 id = 1;
 }
 
 //Responses
