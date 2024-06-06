@@ -225,7 +225,7 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context) {
 	// Log the marshaled JSON
 	fmt.Printf("Marshaled JSON: %s\n", string(tokenJSON))
 
-	resp, err := http.Post(h.Config.UserHTTPServiceURL+"/refresh_token", "application/json", bytes.NewBuffer(tokenJSON))
+	resp, err := http.Post(h.Config.UserHTTPServiceURL+"/refresh_token", dataType, bytes.NewBuffer(tokenJSON))
 	if err != nil {
 		fmt.Printf("Failed to reach user service: %v\n", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reach user service"})
@@ -247,5 +247,5 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context) {
 	// Log the response body
 	fmt.Printf("User service response body: %s\n", string(body))
 
-	ctx.Data(resp.StatusCode, "application/json", body)
+	ctx.Data(resp.StatusCode, dataType, body)
 }
