@@ -30,8 +30,11 @@ func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMess
 
 	switch msg.Action {
 	case "get_chat_summaries":
-		h.GetChatSummaries(conn, msg.JWT)
-
+		var getChatSummaries proto.GetChatSummariesUIDRequest
+		if err := json.Unmarshal(msg.Data, &getChatSummaries); err != nil {
+			log.Printf("Failed to unmarshal data from getchatsums: %v", err)
+		}
+		h.GetChatSummaries(conn, msg.JWT, getChatSummaries.Id)
 	case "get_recent_messages":
 		var getRecentMessages proto.GetRecentMessagesRequest
 		if err := json.Unmarshal(msg.Data, &getRecentMessages); err != nil {
@@ -89,27 +92,20 @@ func (h *ChatHandler) StreamMessages(conn *websocket.Conn, chatID uint32, body s
 	}
 }
 
-func (h *ChatHandler) GetChatSummaries(conn *websocket.Conn, jwt string) {
+func (h *ChatHandler) GetChatSummaries(conn *websocket.Conn, jwt string, id uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.ChatClient.GetChatSummariesUID(ctxWithMetadata, &proto.GetChatSummariesUIDRequest{})
+	resp, err := h.ChatClient.GetChatSummariesUID(ctxWithMetadata, &proto.GetChatSummariesUIDRequest{Id: id})
 	if err != nil {
 		log.Fatalf("Failed to create message")
 		return
 	}
 
-	summaries, err := json.Marshal(resp)
-	if err != nil {
-		log.Printf("Error marshaling chat sums to JSON: %v", err)
-		return
-	}
-
-	if err := conn.WriteMessage(websocket.TextMessage, summaries); err != nil {
-		log.Printf("Error sending chat summaries over WS connection: %v", err)
-	}
+	log.Printf("chat sums: %v", resp)
+	middleware.SendWebSocketMessage(conn, "get_chat_summaries_resp", resp)
 }
 
 func (h *ChatHandler) GetRecentMessages(conn *websocket.Conn, chatID uint32, lastMsgID uint32, limit int32, jwt string) {
