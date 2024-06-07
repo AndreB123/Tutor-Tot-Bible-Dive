@@ -42,10 +42,13 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
 
     const { user } = useUser();
     const username = user ? user.user.username : 'Diver';
+    const userID = user ? user.user.id : null;
 
     useEffect(() => {
-        getChatSummaries();
-    }, []);
+        if (userID) {
+            getChatSummaries(userID);
+        }
+    }, [userID]);
 
     const handleGetStartedPress = () => {
         navigation.navigate('ChatPage');

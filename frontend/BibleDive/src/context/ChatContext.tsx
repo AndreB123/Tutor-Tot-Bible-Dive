@@ -24,7 +24,6 @@ interface ChatSummary {
     name: string;
 }
 
-
 interface ChatContextType {
     chats: Chat[];
     chatSummaries: ChatSummary[];
@@ -33,7 +32,8 @@ interface ChatContextType {
     sendMessage: (message: Message) => void;
     updateMessageFragment: (message: Message) => void;
     getChatById: (id: number) => Chat | undefined;
-    getChatSummaries: () => void;
+    getChatSummaries: (userID: string) => void;
+    getRecentMessages: (chatID: number) => void;
     chatId: number;
 }
 
@@ -110,15 +110,28 @@ export const ChatProvider = ({ children }) => {
         });
     }, []);
 
+    const handleGetRecentMessages = useCallback((message: any) => {
+        const { chatId, messages } = message.data;
+        setChats(prevChats => {
+            const updatedChats = prevChats.map(chat => {
+                if (chat.id === chatId) {
+                    return { ...chat, messages: [...messages, ...chat.messages] };
+                }
+                return chat;
+            });
+            return updatedChats;
+        });
+    }, []);
+
     const handleGetChatSummaries = useCallback((summaries: ChatSummary[]) => {
         setChatSummaries(summaries);
     }, []);
 
-    const getChatSummaries = useCallback(async () => {
+    const getChatSummaries = useCallback(async (userID: string) => {
         try {
             const jwt = await getAccessToken();
             if (jwt) {
-                await chatService.getChatSummaries("user_id", jwt);
+                await chatService.getChatSummaries(userID, jwt);
             }
         } catch (error) {
             console.error("Failed to get chat summaries:", error);
@@ -129,8 +142,9 @@ export const ChatProvider = ({ children }) => {
         WebSocketService, 
         updateMessageFragment, 
         addMessageToChat,
-        handleGetChatSummaries 
-    ), [updateMessageFragment, addMessageToChat, handleGetChatSummaries])
+        handleGetChatSummaries,
+        handleGetRecentMessages, 
+    ), [updateMessageFragment, addMessageToChat, handleGetChatSummaries, handleGetRecentMessages])
 
     const sendMessage = async (message) => {
         try {
@@ -150,6 +164,18 @@ export const ChatProvider = ({ children }) => {
         return chats.find(chat => chat.id === id);
     };
 
+    const getRecentMessages = useCallback(async (chatID: number) => {
+        try {
+            const jwt = await getAccessToken();
+            if (jwt) {
+                const lastMessageId = 0; // Replace with logic to get the last message ID if needed
+                await chatService.getRecentChatMessages(chatID.toString(), lastMessageId.toString(), jwt);
+            }
+        } catch (error) {
+            console.error("Failed to get recent messages:", error);
+        }
+    }, []);
+
     const value = useMemo( ()=> ({
         sendMessage,
         chats,
@@ -159,6 +185,7 @@ export const ChatProvider = ({ children }) => {
         updateMessageFragment,
         getChatById,
         getChatSummaries,
+        getRecentMessages,
         chatId
     }), [sendMessage, chats, chatSummaries, chatId]);
 

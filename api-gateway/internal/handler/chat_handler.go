@@ -120,13 +120,6 @@ func (h *ChatHandler) GetRecentMessages(conn *websocket.Conn, chatID uint32, las
 		return
 	}
 
-	msgs, err := json.Marshal(resp)
-	if err != nil {
-		log.Printf("Error marshaling recent messages to JSON: %v", err)
-		return
-	}
-
-	if err := conn.WriteMessage(websocket.TextMessage, msgs); err != nil {
-		log.Printf("Errpr sending recent messages to client: %v", err)
-	}
+	log.Printf("Get recent msgs: %v", resp)
+	middleware.SendWebSocketMessage(conn, "get_recent_messages_resp", resp)
 }

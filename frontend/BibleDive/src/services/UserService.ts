@@ -1,7 +1,10 @@
 import  { IWebSocketService } from "./WebSocketService";
 
 class UserService {
-    constructor(private webSocketService: IWebSocketService, private onUpdateUser: (user: any) => void) {
+    constructor(
+        private webSocketService: IWebSocketService, 
+        private onUpdateUser: (user: any) => void
+    ) {
         this.registerMessageHandlers();
     }
 

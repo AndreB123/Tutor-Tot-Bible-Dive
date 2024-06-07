@@ -9,7 +9,7 @@ import { useUser } from "../context/UserContext";
 
 const ChatScreen = ({ initialChatId = 0 }) => {
     const [inputText, setInputText] = useState("");
-    const { getChatById, sendMessage, chatId } = useChat();
+    const { getChatById, sendMessage, chatId, getRecentMessages } = useChat();
     const flatListRef = useRef(null);
     const { userID } = useUser();
     const [currentChatId, setCurrentChatId] = useState(initialChatId);
@@ -38,6 +38,13 @@ const ChatScreen = ({ initialChatId = 0 }) => {
             setInputText("");
         }
     };
+
+    useEffect(() => {
+        if (currentChatId !== 0) {
+            getRecentMessages(currentChatId);
+        }
+    }, [currentChatId, getRecentMessages]);
+
 
     useEffect(() => {
         console.log('Rendering messages:', JSON.stringify(chat?.messages || []), ' chatid: ', JSON.stringify(currentChatId));

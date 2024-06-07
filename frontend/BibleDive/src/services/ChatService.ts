@@ -6,6 +6,7 @@ class ChatService {
         private onMessageFragment: (message: any) => void,
         private onMessageComplete: (message: any) => void,
         private onGetChatSummaries: (message: any) => void,
+        private onGetRecentMessages: (message: any) => void,
     ) {
         this.registerMessageHandlers();
     }
@@ -36,14 +37,31 @@ class ChatService {
                 id: id
             }
         });
-        console.log("Requesting chat summaries:", message);
+        console.log("Requesting chat summaries: ", message);
+        this.webSocketService.sendMessage(message);
+    }
+
+    async getRecentChatMessages(chatId: string, lastMessageId: string, jwt: string, ) {
+        await this.webSocketService.onConnected;
+        const message = JSON.stringify({
+            Type: "chat",
+            Action: "get_recent_messages",
+            JWT: jwt,
+            Data: {
+                chatId: chatId,
+                lastMessageId: lastMessageId,
+                limit: "15",
+            }
+        });
+        console.log("Requesting recent messages: ", message);
         this.webSocketService.sendMessage(message);
     }
 
     private registerMessageHandlers() {
         this.webSocketService.registerMessageHandler("message_fragment", this.handleMessageFragment);
         this.webSocketService.registerMessageHandler("message_complete", this.handleMessageComplete);
-        this.webSocketService.registerMessageHandler("get_chat_summaries_respo", this.handleGetChatSummaries);
+        this.webSocketService.registerMessageHandler("get_chat_summaries_resp", this.handleGetChatSummaries);
+        this.webSocketService.registerMessageHandler("get_recent_messages_resp", this.handleGetRecentMessages);
     }
 
 
@@ -63,9 +81,15 @@ class ChatService {
     }
 
     private handleGetChatSummaries = (message: any) => {
-        console.log("chat sums handled:", message);
+        console.log("Chat sums handled:", message);
         const msgContents = message.data.chats;
         this.onGetChatSummaries(msgContents);
+    }
+
+    private handleGetRecentMessages = (message: any) => {
+        console.log("Handling get recent messages response: ", message);
+        const msgContents = message.data.message;
+        this.onGetRecentMessages(msgContents);
     }
     
 }

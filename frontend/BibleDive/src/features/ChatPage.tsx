@@ -1,6 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context"
 import { createStyleSheet } from "../styles/useStyles"
-import { ScrollView, View } from "react-native";
 import ChatScreen from "../components/ChatScreen";
 
 export interface ChatPageProps {
