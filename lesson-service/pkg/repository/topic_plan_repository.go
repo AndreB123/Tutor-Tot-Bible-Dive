@@ -21,3 +21,16 @@ func (repo *TopicPlanRepository) CreateNewTopicPlan(topicPlan *model.TopicPlan) 
 func (repo *TopicPlanRepository) UpdateTopicPlan(topicPlan *model.TopicPlan) error {
 	return repo.db.Save(topicPlan).Error
 }
+
+func (repo *TopicPlanRepository) GetAllTopicPlansByUserID(id uint) ([]model.TopicPlan, error) {
+	var topicPlans []model.TopicPlan
+
+	results := repo.db.Model(&model.TopicPlan{}).Where("user_id = ?", id)
+
+	err := results.Find(&topicPlans).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return topicPlans, nil
+}
