@@ -39,9 +39,9 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | null>(null);
 
 export const ChatProvider = ({ children }) => {
-    const [ chats, setChats] = useState<Chat[]>([]);
-    const [ chatId, setChatId] = useState<number>(0);
-    const [ chatSummaries, setChatSummaries] = useState<ChatSummary[]>([]);
+    const [chats, setChats] = useState<Chat[]>([]);
+    const [chatId, setChatId] = useState<number>(0);
+    const [chatSummaries, setChatSummaries] = useState<ChatSummary[]>([]);
     const { logoutInitiated } = useAuth();
 
     useEffect(() => {
@@ -52,10 +52,9 @@ export const ChatProvider = ({ children }) => {
         }
     }, [logoutInitiated]);
 
-    const updateChatMessages = (prevChats, message) => {
-        if (!message.body) {
-            return prevChats;
-        }
+    const updateChatMessages = useCallback((prevChats, message) => {
+        if (!message.body) return prevChats;
+
         return prevChats.map(chat => {
             if (chat.id === message.chat_id || chat.id === 0) {
                 const updatedMessages = chat.messages.map(msg => {
@@ -73,51 +72,36 @@ export const ChatProvider = ({ children }) => {
             }
             return chat;
         });
-    };
+    }, []);
 
     const updateMessageFragment = useCallback((message: Message) => {
-        console.log('Updating message fragment:', message);
-
         setChats(prevChats => {
             const updatedChats = updateChatMessages(prevChats, message);
-            console.log('Chats updated:', JSON.stringify(updatedChats));
             setChatId(message.chat_id);
             return updatedChats;
         });
-    }, []);
+    }, [updateChatMessages]);
 
     const addMessageToChat = useCallback((message: Message) => {
-        console.log('Adding message to chat:', message);
-
         setChats(prevChats => {
             const chatExists = prevChats.some(chat => chat.id === message.chat_id || chat.id === 0);
             if (!chatExists) {
-                const newChat = {
-                    id: message.chat_id,
-                    name: '',
-                    messages: [message]
-                };
-                console.log('New chat created:', JSON.stringify(newChat));
+                const newChat = { id: message.chat_id, name: '', messages: [message] };
                 return [...prevChats, newChat];
             }
 
-            const updatedChats = updateChatMessages(prevChats, message);
-            console.log('Chats updated:', JSON.stringify(updatedChats));
-
-            return updatedChats;
+            return updateChatMessages(prevChats, message);
         });
-    }, []);
+    }, [updateChatMessages]);
 
     const handleGetRecentMessages = useCallback((message: any) => {
-        console.log("Handling get recent messages response:", message);
-
         const { messages } = message.data;
         const chat_id = messages.length > 0 ? messages[0].chat_id : null;
 
         if (!chat_id) return;
 
         setChats(prevChats => {
-            let chatExists = prevChats.some(chat => chat.id === chat_id);
+            const chatExists = prevChats.some(chat => chat.id === chat_id);
             if (!chatExists) {
                 const newChat = { id: chat_id, name: '', messages: [] };
                 prevChats = [...prevChats, newChat];
@@ -133,15 +117,8 @@ export const ChatProvider = ({ children }) => {
                         created_at: new Date(msg.created_at.seconds * 1000 + msg.created_at.nanos / 1000000),
                     }));
 
-                    // Remove duplicates
-                    const messageIds = new Set(chat.messages.map(msg => msg.id));
-                    const uniqueMessages = updatedMessages.filter(msg => !messageIds.has(msg.id));
-
-                    console.log("Updated messages:", uniqueMessages);
-
+                    const uniqueMessages = updatedMessages.filter(msg => !chat.messages.some(m => m.id === msg.id));
                     const mergedMessages = [...chat.messages, ...uniqueMessages].sort((a, b) => a.created_at - b.created_at);
-
-                    console.log("Merged messages:", mergedMessages);
 
                     return { ...chat, messages: mergedMessages };
                 }
@@ -178,9 +155,7 @@ export const ChatProvider = ({ children }) => {
             const jwt = await getAccessToken();
             if (jwt) {
                 await chatService.sendChatMessage(message.chat_id, message.sender.toString(), message.body, jwt);
-                console.log("Message sent successfully");
                 addMessageToChat(message);
-                console.log("Message added to chat:", message);
             }
         } catch (error) {
             console.error("Failed to send message:", error);

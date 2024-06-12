@@ -8,19 +8,24 @@ import { useUser } from "../context/UserContext";
 
 const ChatScreen = ({ initialChatId = 0 }) => {
     const [inputText, setInputText] = useState("");
-    const { getChatById, sendMessage, chatId } = useChat();
+    const { getChatById, sendMessage, chatId, getRecentMessages } = useChat();
     const flatListRef = useRef(null);
     const { userID } = useUser();
     const [currentChatId, setCurrentChatId] = useState(initialChatId);
 
     useEffect(() => {
         if (initialChatId === 0 && chatId !== 0) {
-            console.log('Updating chat ID from 0 to:', chatId);
             setCurrentChatId(chatId);
         } else if (initialChatId !== 0) {
             setCurrentChatId(initialChatId);
         }
     }, [chatId, initialChatId]);
+
+    useEffect(() => {
+        if (currentChatId !== 0) {
+            getRecentMessages(currentChatId);
+        }
+    }, [currentChatId, getRecentMessages]);
 
     const chat = getChatById(currentChatId) || { id: currentChatId, name: '', messages: [] };
 
@@ -34,7 +39,6 @@ const ChatScreen = ({ initialChatId = 0 }) => {
                 sender: userID,
                 created_at: new Date(),
             };
-            console.log('Sending message:', JSON.stringify(newMessage));
             sendMessage(newMessage);
             setInputText("");
         }
@@ -51,7 +55,7 @@ const ChatScreen = ({ initialChatId = 0 }) => {
                 data={chat?.messages || []}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <ChatBubble message={item.body} isSender={item.sender == userID} />
+                    <ChatBubble message={item.body} isSender={item.sender === userID} />
                 )}
                 contentContainerStyle={styles.messagesContainer}
                 onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
