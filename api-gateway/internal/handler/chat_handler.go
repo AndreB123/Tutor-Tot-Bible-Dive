@@ -38,7 +38,7 @@ func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMess
 	case "get_recent_messages":
 		var getRecentMessages proto.GetRecentMessagesRequest
 		if err := json.Unmarshal(msg.Data, &getRecentMessages); err != nil {
-			log.Printf("Failed to unmarshal GetRecentMessagesRequst: %v", err)
+			log.Printf("Failed to unmarshal GetRecentMessagesRequest: %v", err)
 		}
 		h.GetRecentMessages(conn, getRecentMessages.ChatId, getRecentMessages.LastMessageId, getRecentMessages.Limit, msg.JWT)
 	case "start_message_stream":
@@ -100,7 +100,7 @@ func (h *ChatHandler) GetChatSummaries(conn *websocket.Conn, jwt string, id uint
 
 	resp, err := h.ChatClient.GetChatSummariesUID(ctxWithMetadata, &proto.GetChatSummariesUIDRequest{Id: id})
 	if err != nil {
-		log.Fatalf("Failed to create message")
+		log.Printf("Failed to create message: %v", err)
 		return
 	}
 
@@ -108,7 +108,7 @@ func (h *ChatHandler) GetChatSummaries(conn *websocket.Conn, jwt string, id uint
 	middleware.SendWebSocketMessage(conn, "get_chat_summaries_resp", resp)
 }
 
-func (h *ChatHandler) GetRecentMessages(conn *websocket.Conn, chatID uint32, lastMsgID uint32, limit int32, jwt string) {
+func (h *ChatHandler) GetRecentMessages(conn *websocket.Conn, chatID uint32, lastMsgID uint32, limit uint32, jwt string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 

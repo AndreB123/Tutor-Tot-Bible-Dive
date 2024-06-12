@@ -41,16 +41,16 @@ class ChatService {
         this.webSocketService.sendMessage(message);
     }
 
-    async getRecentChatMessages(chatId: string, lastMessageId: string, jwt: string, ) {
+    async getRecentChatMessages(chatId: number, lastMessageId: number, jwt: string, ) {
         await this.webSocketService.onConnected;
         const message = JSON.stringify({
             Type: "chat",
             Action: "get_recent_messages",
             JWT: jwt,
             Data: {
-                chatId: chatId,
-                lastMessageId: lastMessageId,
-                limit: "15",
+                chat_id: chatId,
+                last_message_id: lastMessageId,
+                limit: 15,
             }
         });
         console.log("Requesting recent messages: ", message);
@@ -88,8 +88,7 @@ class ChatService {
 
     private handleGetRecentMessages = (message: any) => {
         console.log("Handling get recent messages response: ", message);
-        const msgContents = message.data.message;
-        this.onGetRecentMessages(msgContents);
+        this.onGetRecentMessages(message);
     }
     
 }

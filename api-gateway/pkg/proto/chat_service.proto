@@ -42,7 +42,7 @@ message CreateChatRequest {
 message GetRecentMessagesRequest {
     uint32 chat_id = 1;
     uint32 last_message_id = 2;
-    int32 limit = 3;
+    uint32 limit = 3;
 }
 
 message GetChatSummariesUIDRequest {

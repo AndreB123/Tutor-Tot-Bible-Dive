@@ -3,6 +3,7 @@ package service
 import (
 	"chat-service/pkg/model"
 	"chat-service/pkg/repository"
+	"fmt"
 )
 
 type MessageService struct {
@@ -57,6 +58,7 @@ func (s *MessageService) UpdateMessageContent(messageID uint, content string) er
 	return s.messageRepo.UpdateMessageContent(messageID, content)
 }
 
-func (s *MessageService) FindMessagesByChatIDPaginated(chatID uint, lastMsgID uint, limit int) ([]model.Message, error) {
+func (s *MessageService) FindMessagesByChatIDPaginated(chatID uint, lastMsgID uint, limit uint) ([]model.Message, error) {
+	fmt.Printf("Service: Finding messages for chatID %d, lastMsgID %d, limit %d\n", chatID, lastMsgID, limit)
 	return s.messageRepo.FindMessagesByChatIDPaginated(chatID, lastMsgID, limit)
 }

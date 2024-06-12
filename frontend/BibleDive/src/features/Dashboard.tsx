@@ -21,7 +21,7 @@ type ChatPageNavigationProp = NativeStackNavigationProp<
 
 export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     const navigation = useNavigation<ChatPageNavigationProp>();
-    const { chatSummaries, getChatSummaries } = useChat();
+    const { chatSummaries, getChatSummaries, getRecentMessages } = useChat();
 
     const styles = createStyleSheet((theme) => ({
         container: {
@@ -51,8 +51,18 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     }, [userID]);
 
     const handleGetStartedPress = () => {
-        navigation.navigate('ChatPage');
+        navigation.navigate('ChatPage', { chatID: 0 });
     };
+
+    const handleChatPress = async (chatID: number) => {
+        try {
+            await getRecentMessages(chatID);
+            navigation.navigate('ChatPage', { chatID });
+        } catch (error) {
+            console.error('Failed to get recent messages', error)
+        }
+    };
+    
 
     const sidebarData = [
         {
@@ -63,7 +73,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
         ...chatSummaries.map(summary => ({
             key: summary.id.toString(),
             title: summary.name,
-            onPress: () => {}, // Placeholder for future implementation
+            onPress: () => handleChatPress(summary.id),
         }))
     ];
 

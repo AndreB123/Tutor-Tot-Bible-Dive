@@ -6,10 +6,9 @@ import { theme } from "../styles/theme";
 import { useChat } from "../context/ChatContext";
 import { useUser } from "../context/UserContext";
 
-
 const ChatScreen = ({ initialChatId = 0 }) => {
     const [inputText, setInputText] = useState("");
-    const { getChatById, sendMessage, chatId, getRecentMessages } = useChat();
+    const { getChatById, sendMessage, chatId } = useChat();
     const flatListRef = useRef(null);
     const { userID } = useUser();
     const [currentChatId, setCurrentChatId] = useState(initialChatId);
@@ -18,6 +17,8 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         if (initialChatId === 0 && chatId !== 0) {
             console.log('Updating chat ID from 0 to:', chatId);
             setCurrentChatId(chatId);
+        } else if (initialChatId !== 0) {
+            setCurrentChatId(initialChatId);
         }
     }, [chatId, initialChatId]);
 
@@ -39,17 +40,6 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         }
     };
 
-    useEffect(() => {
-        if (currentChatId !== 0) {
-            getRecentMessages(currentChatId);
-        }
-    }, [currentChatId, getRecentMessages]);
-
-
-    useEffect(() => {
-        console.log('Rendering messages:', JSON.stringify(chat?.messages || []), ' chatid: ', JSON.stringify(currentChatId));
-    }, [chat]);
-
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -61,23 +51,23 @@ const ChatScreen = ({ initialChatId = 0 }) => {
                 data={chat?.messages || []}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <ChatBubble message={item.body} isSender={item.sender === userID} />
+                    <ChatBubble message={item.body} isSender={item.sender == userID} />
                 )}
                 contentContainerStyle={styles.messagesContainer}
                 onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
                 onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
             />
             <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.inputField}
-                        value={inputText}
-                        onChangeText={setInputText}
-                        placeholder="Type a message..."
-                        returnKeyType="send"
-                        onSubmitEditing={pushMessage}
-                    />
+                <TextInput
+                    style={styles.inputField}
+                    value={inputText}
+                    onChangeText={setInputText}
+                    placeholder="Type a message..."
+                    returnKeyType="send"
+                    onSubmitEditing={pushMessage}
+                />
                 <TouchableOpacity onPress={pushMessage} style={styles.sendButton}>
-                    <Icon name="send" size={27} color="#FFF"/>
+                    <Icon name="send" size={27} color="#FFF" />
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>

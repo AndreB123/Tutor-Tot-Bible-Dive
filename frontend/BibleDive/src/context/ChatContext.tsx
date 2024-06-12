@@ -4,7 +4,6 @@ import ChatService from "../services/ChatService";
 import { getAccessToken } from "../utils/SecureStorage";
 import { useAuth } from "./AuthContext";
 
-
 interface Message {
     id: number | null;
     chat_id: number;
@@ -33,7 +32,7 @@ interface ChatContextType {
     updateMessageFragment: (message: Message) => void;
     getChatById: (id: number) => Chat | undefined;
     getChatSummaries: (userID: string) => void;
-    getRecentMessages: (chatID: number) => void;
+    getRecentMessages: (chatID: number) => Promise<void>;
     chatId: number;
 }
 
@@ -53,7 +52,6 @@ export const ChatProvider = ({ children }) => {
         }
     }, [logoutInitiated]);
 
-    
     const updateChatMessages = (prevChats, message) => {
         if (!message.body) {
             return prevChats;
@@ -79,7 +77,7 @@ export const ChatProvider = ({ children }) => {
 
     const updateMessageFragment = useCallback((message: Message) => {
         console.log('Updating message fragment:', message);
-    
+
         setChats(prevChats => {
             const updatedChats = updateChatMessages(prevChats, message);
             console.log('Chats updated:', JSON.stringify(updatedChats));
@@ -87,10 +85,10 @@ export const ChatProvider = ({ children }) => {
             return updatedChats;
         });
     }, []);
-    
+
     const addMessageToChat = useCallback((message: Message) => {
         console.log('Adding message to chat:', message);
-    
+
         setChats(prevChats => {
             const chatExists = prevChats.some(chat => chat.id === message.chat_id || chat.id === 0);
             if (!chatExists) {
@@ -102,24 +100,53 @@ export const ChatProvider = ({ children }) => {
                 console.log('New chat created:', JSON.stringify(newChat));
                 return [...prevChats, newChat];
             }
-    
+
             const updatedChats = updateChatMessages(prevChats, message);
             console.log('Chats updated:', JSON.stringify(updatedChats));
-            
+
             return updatedChats;
         });
     }, []);
 
     const handleGetRecentMessages = useCallback((message: any) => {
-        const { chatId, messages } = message.data;
+        console.log("Handling get recent messages response:", message);
+
+        const { messages } = message.data;
+        const chat_id = messages.length > 0 ? messages[0].chat_id : null;
+
+        if (!chat_id) return;
+
         setChats(prevChats => {
-            const updatedChats = prevChats.map(chat => {
-                if (chat.id === chatId) {
-                    return { ...chat, messages: [...messages, ...chat.messages] };
+            let chatExists = prevChats.some(chat => chat.id === chat_id);
+            if (!chatExists) {
+                const newChat = { id: chat_id, name: '', messages: [] };
+                prevChats = [...prevChats, newChat];
+            }
+
+            return prevChats.map(chat => {
+                if (chat.id === chat_id) {
+                    const updatedMessages = messages.map((msg: any) => ({
+                        id: msg.id,
+                        chat_id: msg.chat_id,
+                        sender: msg.sender,
+                        body: msg.body,
+                        created_at: new Date(msg.created_at.seconds * 1000 + msg.created_at.nanos / 1000000),
+                    }));
+
+                    // Remove duplicates
+                    const messageIds = new Set(chat.messages.map(msg => msg.id));
+                    const uniqueMessages = updatedMessages.filter(msg => !messageIds.has(msg.id));
+
+                    console.log("Updated messages:", uniqueMessages);
+
+                    const mergedMessages = [...chat.messages, ...uniqueMessages].sort((a, b) => a.created_at - b.created_at);
+
+                    console.log("Merged messages:", mergedMessages);
+
+                    return { ...chat, messages: mergedMessages };
                 }
                 return chat;
             });
-            return updatedChats;
         });
     }, []);
 
@@ -139,26 +166,26 @@ export const ChatProvider = ({ children }) => {
     }, []);
 
     const chatService = useMemo(() => new ChatService(
-        WebSocketService, 
-        updateMessageFragment, 
+        WebSocketService,
+        updateMessageFragment,
         addMessageToChat,
         handleGetChatSummaries,
-        handleGetRecentMessages, 
-    ), [updateMessageFragment, addMessageToChat, handleGetChatSummaries, handleGetRecentMessages])
+        handleGetRecentMessages
+    ), [updateMessageFragment, addMessageToChat, handleGetChatSummaries, handleGetRecentMessages]);
 
-    const sendMessage = async (message) => {
+    const sendMessage = async (message: Message) => {
         try {
             const jwt = await getAccessToken();
             if (jwt) {
                 await chatService.sendChatMessage(message.chat_id, message.sender.toString(), message.body, jwt);
                 console.log("Message sent successfully");
-                addMessageToChat(message); 
+                addMessageToChat(message);
                 console.log("Message added to chat:", message);
             }
         } catch (error) {
             console.error("Failed to send message:", error);
         }
-    }
+    };
 
     const getChatById = (id: number) => {
         return chats.find(chat => chat.id === id);
@@ -168,20 +195,21 @@ export const ChatProvider = ({ children }) => {
         try {
             const jwt = await getAccessToken();
             if (jwt) {
-                const lastMessageId = 0; // Replace with logic to get the last message ID if needed
-                await chatService.getRecentChatMessages(chatID.toString(), lastMessageId.toString(), jwt);
+                const lastMessageId = 0;
+                await chatService.getRecentChatMessages(chatID, lastMessageId, jwt);
             }
         } catch (error) {
             console.error("Failed to get recent messages:", error);
+            throw error;
         }
     }, []);
 
-    const value = useMemo( ()=> ({
+    const value = useMemo(() => ({
         sendMessage,
         chats,
         setChats,
         chatSummaries,
-        addMessageToChat: addMessageToChat,
+        addMessageToChat,
         updateMessageFragment,
         getChatById,
         getChatSummaries,
@@ -200,7 +228,6 @@ export const useChat = () => {
     const context = useContext(ChatContext);
     if (context === null) {
         throw new Error('useChat must be used within a ChatProvider');
-
     }
     return context;
 };

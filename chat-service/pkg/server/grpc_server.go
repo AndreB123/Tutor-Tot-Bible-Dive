@@ -5,6 +5,7 @@ import (
 	"chat-service/pkg/proto"
 	"chat-service/pkg/service"
 	"context"
+	"fmt"
 	"log"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -79,15 +80,16 @@ func (s *ChatServer) CreateChat(ctx context.Context, req *proto.CreateChatReques
 }
 
 func (s *ChatServer) GetRecentMessages(ctx context.Context, req *proto.GetRecentMessagesRequest) (*proto.GetRecentMessagesResponse, error) {
+	fmt.Printf("get recent messages called with: %v\n", req)
 	chatID := uint(req.GetChatId())
 	lastMessageID := uint(req.GetLastMessageId())
-	limit := int(req.GetLimit())
+	limit := uint(req.GetLimit())
 	if limit == 0 {
 		limit = 5
 	}
 	messages, err := s.messageService.FindMessagesByChatIDPaginated(chatID, lastMessageID, limit)
 	if err != nil {
-		log.Printf("Failed to find messages: %v", err)
+		log.Printf("Failed to find messages: %v\n", err)
 		return nil, err
 	}
 
@@ -106,7 +108,7 @@ func (s *ChatServer) GetRecentMessages(ctx context.Context, req *proto.GetRecent
 	resp := &proto.GetRecentMessagesResponse{
 		Messages: msgs,
 	}
-
+	fmt.Printf("returning recent messages response: %v\n", resp)
 	return resp, nil
 }
 
@@ -130,12 +132,16 @@ func (s *ChatServer) StreamMessages(stream proto.ChatService_StreamMessagesServe
 		chatID = chat.ID
 	} else {
 		chatID = uint(req.GetChatId())
+		_, err := s.messageService.CreateMessage(chatID, sender, body, userID)
+		if err != nil {
+			log.Printf("Failed to store user message: %v", err)
+		}
 	}
 
 	return s.handleOpenAIResponse(chatID, "Bible Dive", body, userID, stream)
 }
 
-func (s *ChatServer) GetAllChatsByUID(ctx context.Context, req *proto.GetChatSummariesUIDRequest) (*proto.GetChatSummariesUIDResponse, error) {
+func (s *ChatServer) GetChatSummariesUID(ctx context.Context, req *proto.GetChatSummariesUIDRequest) (*proto.GetChatSummariesUIDResponse, error) {
 	userID := ctx.Value(contextkeys.Userkey).(uint)
 	chats, err := s.chatService.GetAllChatSummeryByUID(userID)
 	if err != nil {
