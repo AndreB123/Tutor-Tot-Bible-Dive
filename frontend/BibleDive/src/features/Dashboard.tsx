@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { ScrollView, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createStyleSheet } from '../styles/useStyles';
@@ -64,7 +64,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     };
     
 
-    const sidebarData = [
+    const sidebarData = useMemo(() => [
         {
             key: '1',
             title: 'New Chat',
@@ -75,13 +75,14 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
             title: summary.name,
             onPress: () => handleChatPress(summary.id),
         }))
-    ];
+    ], [chatSummaries, handleGetStartedPress, handleChatPress]);
+    
 
-    const renderItem = ({ item }: { item: any }) => (
+    const renderItem = useCallback(({ item }) => (
         <TouchableOpacity onPress={item.onPress} style={{ padding: 10 }}>
             <Text style={{ color: 'white' }}>{item.title}</Text>
         </TouchableOpacity>
-    );
+    ), []);
 
     return (
         <SafeAreaView style={styles.container} testID={props.testID}>

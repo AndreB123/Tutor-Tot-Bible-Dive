@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, memo } from "react";
 import {
     Animated,
     FlatList,
@@ -22,7 +22,7 @@ interface SideBarProps {
     children: React.ReactNode;
 }
 
-const SideBar: React.FC<SideBarProps> = ({ onPress, title, style, textStyle, data, renderItem, children }) => {
+const SideBar: React.FC<SideBarProps> = memo(({ onPress, title, style, textStyle, data, renderItem, children }) => {
     const [isOpen, setIsOpen] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
 
@@ -71,7 +71,7 @@ const SideBar: React.FC<SideBarProps> = ({ onPress, title, style, textStyle, dat
             </Animated.View>
         </View>
     );
-};
+});
 
 export default SideBar;
 

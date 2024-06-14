@@ -128,7 +128,12 @@ export const ChatProvider = ({ children }) => {
     }, []);
 
     const handleGetChatSummaries = useCallback((summaries: ChatSummary[]) => {
-        setChatSummaries(summaries);
+        setChatSummaries(prevSummaries => {
+            if (JSON.stringify(prevSummaries) === JSON.stringify(summaries)) {
+                return prevSummaries;
+            }
+            return summaries;
+        });
     }, []);
 
     const getChatSummaries = useCallback(async (userID: string) => {
