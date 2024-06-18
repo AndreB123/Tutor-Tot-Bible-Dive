@@ -25,7 +25,7 @@ func (s *AuthService) GenerateToken(userID uint, isAccessToken bool) (string, er
 
 	if isAccessToken {
 		secretKey = s.Config.AccessSecret
-		exp = time.Second * 15
+		exp = time.Minute * 15
 	} else {
 		secretKey = s.Config.RefreshSecret
 		exp = time.Hour * 24 * 7

@@ -21,7 +21,7 @@ type ChatPageNavigationProp = NativeStackNavigationProp<
 
 export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     const navigation = useNavigation<ChatPageNavigationProp>();
-    const { chatSummaries, getChatSummaries, getRecentMessages } = useChat();
+    const { getChatSummaries, getRecentMessages, chats } = useChat();
 
     const styles = createStyleSheet((theme) => ({
         container: {
@@ -62,7 +62,6 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
             console.error('Failed to get recent messages', error)
         }
     };
-    
 
     const sidebarData = useMemo(() => [
         {
@@ -70,13 +69,12 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
             title: 'New Chat',
             onPress: handleGetStartedPress,
         },
-        ...chatSummaries.map(summary => ({
-            key: summary.id.toString(),
-            title: summary.name,
-            onPress: () => handleChatPress(summary.id),
+        ...chats.map(chat => ({
+            key: chat.id.toString(),
+            title: chat.name,
+            onPress: () => handleChatPress(chat.id),
         }))
-    ], [chatSummaries, handleGetStartedPress, handleChatPress]);
-    
+    ], [chats, handleGetStartedPress, handleChatPress]);
 
     const renderItem = useCallback(({ item }) => (
         <TouchableOpacity onPress={item.onPress} style={{ padding: 10 }}>
