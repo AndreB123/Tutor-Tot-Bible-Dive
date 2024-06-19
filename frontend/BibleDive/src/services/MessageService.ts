@@ -4,7 +4,7 @@ class MessageService {
     constructor(
         private webSocketService: IWebSocketService, 
         private onMessageFragment: (message: any) => void,
-        private onMessageComplete: (message: any) => void,
+        private onMessageComplete: () => void,
     ) {
         this.registerMessageHandlers();
     }
@@ -17,7 +17,7 @@ class MessageService {
             JWT: jwt,
             Data: {
                 chat_id: chatID,
-                sender: userID,
+                sender: userID.toString(),
                 body: body
             }
         });
@@ -38,11 +38,7 @@ class MessageService {
 
     private handleMessageComplete = (message: any) => {
         console.log("Message stream complete");
-        if (message?.data?.message) {
-            this.onMessageComplete(message.data.message);
-        } else {
-            console.log("Received message_complete");
-        }
+        this.onMessageComplete();
     }
 }
 

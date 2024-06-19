@@ -1,18 +1,19 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import { createStyleSheet } from "../styles/useStyles";
 
 export interface ChatBubbleProps {
+    id: number;
     message: string;
     isSender: boolean;
 }
 
-const ChatBubble = ({ message = "", isSender }: ChatBubbleProps) => {
+const ChatBubble = ({ id, message = "", isSender }: ChatBubbleProps) => {
     const textRef = useRef(null);
 
     useEffect(() => {
-        console.log("new chat bubble");
-    }, [message]);
+        console.log("new chat bubble with ID:", id);
+    }, [message, id]);
 
     const styles = createStyleSheet(theme => ({
         bubble: {

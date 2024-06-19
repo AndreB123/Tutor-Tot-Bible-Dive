@@ -30,15 +30,21 @@ export const MessageProvider = ({ children }) => {
         setMessage(null);
     }, []);
 
-    const addMessage = useCallback((message: Message) => {
-        addMessageToChat(message);
-        clearMessage();
-    }, [addMessageToChat, clearMessage]);
+    const addMessage = useCallback(() => {
+        if (message) {
+            addMessageToChat(message);
+            console.log("Adding message to chat:", message.id, message.body);
+            clearMessage();
+        }
+    }, [addMessageToChat, clearMessage, message]);
 
     const messageService = useMemo(() => new MessageService(
         WebSocketService,
         setMessageFragment,
-        addMessage
+        () => {
+            console.log("Message stream complete, adding message to chat.");
+            addMessage();
+        }
     ), [setMessageFragment, addMessage]);
 
     const sendMessage = useCallback(async (chatID: number, userID: string, body: string) => {

@@ -1,20 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { View, StyleSheet, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, FlatList } from "react-native";
 import ChatBubble from "./ChatBubble";
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { theme } from "../styles/theme";
 import { useChat } from "../context/ChatContext";
 import { useUser } from "../context/UserContext";
 import { useMessage } from "../context/MessageContext";
+import { Message } from "../models/ChatModels";
 
 const ChatScreen = ({ initialChatId = 0 }) => {
     const [inputText, setInputText] = useState("");
-    const { getChatById,  chatId } = useChat();
-    const { sendMessage } = useMessage();
+    const { getChatById, chatId } = useChat();
+    const { sendMessage, message } = useMessage();
     const flatListRef = useRef(null);
     const { userID } = useUser();
     const [currentChatId, setCurrentChatId] = useState(initialChatId);
+    const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
+    // Set currentChatId based on initialChatId or chatId from context
     useEffect(() => {
         if (initialChatId === 0 && chatId !== 0) {
             setCurrentChatId(chatId);
@@ -23,14 +26,42 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         }
     }, [chatId, initialChatId]);
 
-    const chat = getChatById(currentChatId) || { id: currentChatId, name: '', messages: [] };
+    // Clear local messages when the chat changes
+    useEffect(() => {
+        setLocalMessages([]);
+    }, [currentChatId]);
 
+    // Get the current chat object
+    const chat = useMemo(() => getChatById(currentChatId) || { id: currentChatId, name: '', messages: [] }, [currentChatId, getChatById]);
+
+
+    // Append new user message to local messages and send it
     const pushMessage = () => {
         if (inputText.trim()) {
-            sendMessage( chat.id, userID, inputText );
+            const newMessage: Message = {
+                id: Date.now(), // Temporary ID
+                chat_id: chat.id,
+                sender: userID,
+                body: inputText,
+                created_at: new Date(),
+            };
+            setLocalMessages(prevMessages => [...prevMessages, newMessage]);
+            sendMessage(chat.id, userID, inputText);
             setInputText("");
         }
     };
+
+    // Scroll to the end of the message list
+    const scrollToEnd = useCallback(() => {
+        setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+    }, []);
+
+    // Scroll to end whenever messages change
+    useEffect(() => {
+        scrollToEnd();
+    }, [chat.messages, localMessages, message, scrollToEnd]);
 
     return (
         <KeyboardAvoidingView
@@ -40,14 +71,14 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         >
             <FlatList
                 ref={flatListRef}
-                data={chat?.messages || []}
+                data={[...chat.messages, ...(message && !chat.messages.find(m => m.id === message.id) ? [message] : []), ...localMessages]}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <ChatBubble message={item.body} isSender={item.sender == userID} />
+                    <ChatBubble key={item.id} id={item.id} message={item.body} isSender={item.sender == userID} />
                 )}
                 contentContainerStyle={styles.messagesContainer}
-                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                onContentSizeChange={scrollToEnd}
+                onLayout={scrollToEnd}
             />
             <View style={styles.inputContainer}>
                 <TextInput
