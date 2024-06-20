@@ -63,6 +63,11 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         scrollToEnd();
     }, [chat.messages, localMessages, message, scrollToEnd]);
 
+    const sortedMessages = useMemo(() => {
+        return [...chat.messages, ...(message && !chat.messages.find(m => m.id === message.id) ? [message] : []), ...localMessages]
+        .sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    },[chat.messages, localMessages, message]);
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -71,7 +76,7 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         >
             <FlatList
                 ref={flatListRef}
-                data={[...chat.messages, ...(message && !chat.messages.find(m => m.id === message.id) ? [message] : []), ...localMessages]}
+                data={sortedMessages}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <ChatBubble key={item.id} id={item.id} message={item.body} isSender={item.sender == userID} />

@@ -22,7 +22,8 @@ export const MessageProvider = ({ children }) => {
         setMessage(prevMessage => ({
             ...prevMessage,
             ...fragment,
-            body: (prevMessage?.body || '') + (fragment.body || '')
+            body: (prevMessage?.body || '') + (fragment.body || ''),
+            created_at: prevMessage?.created_at || new Date()
         } as Message));
     }, []);
 
@@ -33,7 +34,7 @@ export const MessageProvider = ({ children }) => {
     const addMessage = useCallback(() => {
         if (message) {
             addMessageToChat(message);
-            console.log("Adding message to chat:", message.id, message.body);
+            console.log("Adding message to chat:", message.id, message.body, message.created_at);
             clearMessage();
         }
     }, [addMessageToChat, clearMessage, message]);
