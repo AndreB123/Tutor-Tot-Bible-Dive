@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, FlatList } from "react-native";
+import { View, StyleSheet, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, FlatList, Keyboard } from "react-native";
 import ChatBubble from "./ChatBubble";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { theme } from "../styles/theme";
@@ -17,7 +17,6 @@ const ChatScreen = ({ initialChatId = 0 }) => {
     const [currentChatId, setCurrentChatId] = useState(initialChatId);
     const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
-    // Set currentChatId based on initialChatId or chatId from context
     useEffect(() => {
         if (initialChatId === 0 && chatId !== 0) {
             setCurrentChatId(chatId);
@@ -26,7 +25,6 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         }
     }, [chatId, initialChatId]);
 
-    // Clear local messages when the chat changes
     const previousChatIdRef = useRef(currentChatId);
     useEffect(() => {
         if (previousChatIdRef.current !== 0 && currentChatId !== 0) {
@@ -35,8 +33,6 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         previousChatIdRef.current = currentChatId;
     }, [currentChatId]);
 
-
-    // Update chat ID based on incoming message fragments
     useEffect(() => {
         if (message && message.chat_id !== currentChatId) {
             setCurrentChatId(message.chat_id);
@@ -44,15 +40,12 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         }
     }, [message]);
 
-    // Get the current chat object
     const chat = useMemo(() => getChatById(currentChatId) || { id: currentChatId, name: '', messages: [] }, [currentChatId, getChatById]);
 
-
-    // Append new user message to local messages and send it
     const pushMessage = () => {
         if (inputText.trim()) {
             const newMessage: Message = {
-                id: Date.now(), // Temporary ID
+                id: Date.now(),
                 chat_id: chat.id,
                 sender: userID,
                 body: inputText,
@@ -64,14 +57,10 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         }
     };
 
-    // Scroll to the end of the message list
     const scrollToEnd = useCallback(() => {
-        setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-        }, 10);
+        flatListRef.current?.scrollToEnd({ animated: true });
     }, []);
 
-    // Scroll to end whenever messages change
     useEffect(() => {
         scrollToEnd();
     }, [chat.messages, localMessages, message, scrollToEnd]);
@@ -81,35 +70,48 @@ const ChatScreen = ({ initialChatId = 0 }) => {
         .sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     },[chat.messages, localMessages, message]);
 
+    useEffect(() => {
+        const showSubscription = Keyboard.addListener("keyboardDidShow", scrollToEnd);
+        const hideSubscription = Keyboard.addListener("keyboardDidHide", scrollToEnd);
+
+        return () => {
+            showSubscription.remove();
+            hideSubscription.remove();
+        };
+    }, [scrollToEnd]);
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.container}
             keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 100}
         >
-            <FlatList
-                ref={flatListRef}
-                data={sortedMessages}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <ChatBubble key={item.id} id={item.id} message={item.body} isSender={item.sender == userID} />
-                )}
-                contentContainerStyle={styles.messagesContainer}
-                onContentSizeChange={scrollToEnd}
-                onLayout={scrollToEnd}
-            />
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.inputField}
-                    value={inputText}
-                    onChangeText={setInputText}
-                    placeholder="Type a message..."
-                    returnKeyType="send"
-                    onSubmitEditing={pushMessage}
+            <View style={styles.innerContainer}>
+                <FlatList
+                    ref={flatListRef}
+                    data={sortedMessages}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <ChatBubble key={item.id} id={item.id} message={item.body} isSender={item.sender == userID} />
+                    )}
+                    contentContainerStyle={styles.messagesContainer}
+                    ListFooterComponent={<View style={{ height: 20 }} />}
+                    onContentSizeChange={scrollToEnd}
+                    onLayout={scrollToEnd}
                 />
-                <TouchableOpacity onPress={pushMessage} style={styles.sendButton}>
-                    <Icon name="send" size={27} color="#FFF" />
-                </TouchableOpacity>
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.inputField}
+                        value={inputText}
+                        onChangeText={setInputText}
+                        placeholder="Type a message..."
+                        returnKeyType="send"
+                        onSubmitEditing={pushMessage}
+                    />
+                    <TouchableOpacity onPress={pushMessage} style={styles.sendButton}>
+                        <Icon name="send" size={27} color="#FFF" />
+                    </TouchableOpacity>
+                </View>
             </View>
         </KeyboardAvoidingView>
     );
@@ -117,17 +119,22 @@ const ChatScreen = ({ initialChatId = 0 }) => {
 
 const styles = StyleSheet.create({
     container: {
+        flexGrow: 1,
+    },
+    innerContainer: {
         flex: 1,
     },
     messagesContainer: {
         flexGrow: 1,
         padding: 10,
+        marginBottom: 5,
     },
     inputContainer: {
         flexDirection: 'row',
         padding: 10,
         alignItems: 'center',
         backgroundColor: theme.colors.secondaryBackground,
+        height: 60,
     },
     inputField: {
         flexGrow: 1,
