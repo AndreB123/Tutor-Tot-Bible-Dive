@@ -1,4 +1,4 @@
-import React, { useState, useRef, memo } from "react";
+import React, { useState, useRef, memo, useEffect, forwardRef, useImperativeHandle } from "react";
 import {
     Animated,
     FlatList,
@@ -19,12 +19,29 @@ interface SideBarProps {
     textStyle?: any;
     data: any[];
     renderItem: ({ item }: { item: any }) => JSX.Element;
+    fixedItem?: JSX.Element;
     children: React.ReactNode;
+    initialOpen?: boolean;
 }
 
-const SideBar: React.FC<SideBarProps> = memo(({ onPress, title, style, textStyle, data, renderItem, children }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const animation = useRef(new Animated.Value(0)).current;
+const SideBar = forwardRef(({ onPress, title, style, textStyle, data, renderItem, fixedItem, children, initialOpen = false }: SideBarProps, ref) => {
+    const [isOpen, setIsOpen] = useState(initialOpen);
+    const animation = useRef(new Animated.Value(initialOpen ? 1 : 0)).current;
+
+    useEffect(() => {
+        setIsOpen(initialOpen);
+        animation.setValue(initialOpen ? 1 : 0);
+    }, [initialOpen]);
+
+    useImperativeHandle(ref, () => ({
+        closeSidebar: () => {
+            Animated.timing(animation, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            }).start(() => setIsOpen(false));
+        }
+    }));
 
     const toggleSidebar = () => {
         const toValue = isOpen ? 0 : 1;
@@ -56,6 +73,7 @@ const SideBar: React.FC<SideBarProps> = memo(({ onPress, title, style, textStyle
                 ]}
             >
                 <Text style={[styles.header, textStyle]}>{title}</Text>
+                {fixedItem && <View>{fixedItem}</View>}
                 <FlatList
                     data={data}
                     renderItem={renderItem}
@@ -73,7 +91,7 @@ const SideBar: React.FC<SideBarProps> = memo(({ onPress, title, style, textStyle
     );
 });
 
-export default SideBar;
+export default memo(SideBar);
 
 const styles = StyleSheet.create({
     background: {

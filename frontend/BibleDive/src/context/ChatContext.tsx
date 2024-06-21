@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import WebSocketService from "../services/WebSocketService";
 import ChatService from "../services/ChatService";
-import { getAccessToken } from "../utils/SecureStorage";
+import { getAccessToken, getUserIDFromToken } from "../utils/SecureStorage";
 import { useAuth } from "./AuthContext";
 import { Chat, Message } from "../models/ChatModels";
 
@@ -12,6 +12,8 @@ interface ChatContextType {
     getChatById: (id: number) => Chat | undefined;
     getChatSummaries: (userID: string) => void;
     getRecentMessages: (chatID: number) => Promise<void>;
+    deleteChatByID: (chatID: number, userID: string) => Promise<void>;
+    deleteAllChatsByUID: (userID: string) => Promise<void>;
     chatId: number;
 }
 
@@ -80,12 +82,41 @@ export const ChatProvider = ({ children }) => {
             return updatedChats;
         });
     }, []);
+
+    const handleDeleteChatByChatID = useCallback(async (response: any) => {
+        if (response !== true) { 
+            return;
+        } 
+        setChats([]);
+        try {
+            const jwt = await getAccessToken();
+            if (jwt) {
+                const userID = await getUserIDFromToken(); 
+                if (userID) {
+                    await chatService.getChatSummaries(userID, jwt);
+                } else {
+                    console.error("Failed to retrieve user ID from token.");
+                }
+            }
+        } catch (error) {
+            console.error("Failed to refresh chat summaries:", error);
+        }
+    }, []);
+
+    const handleDeleteAllChatsByUID = useCallback((response: any) => {
+        if (response !== true) { 
+            return;
+        } 
+        setChats([]);
+    }, []);
     
     const chatService = useMemo(() => new ChatService(
         WebSocketService,
         handleGetChatSummaries,
-        handleGetRecentMessages
-    ), [handleGetChatSummaries, handleGetRecentMessages]);
+        handleGetRecentMessages,
+        handleDeleteChatByChatID,
+        handleDeleteAllChatsByUID, 
+    ), [handleGetChatSummaries, handleGetRecentMessages, handleDeleteChatByChatID, handleDeleteAllChatsByUID]);
 
     const getChatById = useCallback((id: number) => {
         return chats.find(chat => chat.id === id);
@@ -113,6 +144,28 @@ export const ChatProvider = ({ children }) => {
         }
     }, [chatService]);
 
+    const deleteChatByID = useCallback(async (chatID: number, userID: string) => {
+        try {
+            const jwt = await getAccessToken();
+            if (jwt) {
+                await chatService.deleteChatByChatID(chatID, userID, jwt);
+            }
+        } catch (error) {
+            console.error("Failed to delete chat:", error);
+        }
+    }, [chatService]);
+
+    const deleteAllChatsByUID = useCallback(async (userID: string) => {
+        try {
+            const jwt = await getAccessToken();
+            if (jwt) {
+                await chatService.deleteAllChatByUID(userID, jwt);
+            }
+        } catch (error) {
+            console.error("Failed to delete all chats:", error);
+        }
+    }, [chatService]);
+
     const value = useMemo(() => ({
         chats,
         setChats,
@@ -120,6 +173,8 @@ export const ChatProvider = ({ children }) => {
         getChatById,
         getChatSummaries,
         getRecentMessages,
+        deleteChatByID,
+        deleteAllChatsByUID,
         chatId
     }), [chats, addMessageToChat, getChatById, getChatSummaries, getRecentMessages, chatId]);
 

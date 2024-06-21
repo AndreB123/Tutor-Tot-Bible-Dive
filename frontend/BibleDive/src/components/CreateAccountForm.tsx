@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text } from 'react-native';
 import { createStyleSheet } from "../styles/useStyles";
-import { InputField } from "./InputField";
+import { InputField } from "./templates/InputField";
 import { SubmitButton } from "./SubmitButton";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -68,7 +68,7 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
             return;
         }
 
-        const isSuccess = await createAccount(email, username, password);
+        const isSuccess = await createAccount(email, username.toLowerCase(), password);
         if (isSuccess) {
             await checkAuthState();
             navigation.navigate('Dashboard')
@@ -95,6 +95,7 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
                 onChangeText={(text) => { clearError(); setEmail(text); }}
                 placeholder="Email"
                 onSubmitEditing={handleSubmitPress}
+                style={styles.inputField}
                  />
             <Text style={styles.username} testID="56:589">
                 {`Username`}
@@ -104,6 +105,7 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
                 onChangeText={(text) => { clearError(); setUsername(text); }}
                 placeholder="Username"
                 onSubmitEditing={handleSubmitPress}
+                style={styles.inputField}
                  />
             <Text style={styles.password} testID="56:580">
                 {`Password`}
@@ -113,6 +115,7 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
                 onChangeText={(text) => { clearError(); setPassword(text); }}
                 placeholder="Password"
                 onSubmitEditing={handleSubmitPress}
+                style={styles.inputField}
                  />
             <Text style={styles.confirmPassword} testID="56:581">
                 {`Confirm Password`}
@@ -123,6 +126,7 @@ export const CreateAccountForm: React.FC<CreateAccountFormProps> = ({ testID }) 
                 placeholder="Confirm Password"
                 secureTextEntry
                 onSubmitEditing={handleSubmitPress}
+                style={styles.inputField}
                  />
                 
             {error ? <Text style={styles.errors}>{error}</Text> : null}
@@ -230,5 +234,8 @@ const styles = createStyleSheet(theme => ({
     errors: {
         color: theme.colors.errors,
         margin: 10,
+    },
+    inputField: {
+        paddingLeft: 10,
     }
 }))

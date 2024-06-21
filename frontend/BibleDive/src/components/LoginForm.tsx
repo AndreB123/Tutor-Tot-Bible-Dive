@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import { createStyleSheet } from "../styles/useStyles";
 import { SubmitButton } from "./SubmitButton";
-import { InputField } from "./InputField";
+import { InputField } from "./templates/InputField";
 import { CreateAccountButton } from "./CreateAccountButton";
 import React, { useState } from "react";
 import { login } from "../services/AuthService";
@@ -27,7 +27,7 @@ export const Login: React.FC<LoginProps> = ({ testID }) => {
     const { checkAuthState } = useAuth();
 
     const handleLoginPress = async () => {
-        const isSuccess = await login(username, password);
+        const isSuccess = await login(username.toLowerCase(), password);
         if (isSuccess) {
             await checkAuthState();
             navigation.navigate('Dashboard');
@@ -54,6 +54,7 @@ export const Login: React.FC<LoginProps> = ({ testID }) => {
                 onChangeText={(text) => { clearError(); setUsername(text); }}
                 placeholder="Username"
                 onSubmitEditing={handleLoginPress} 
+                style={styles.inputField}
                 />
             <Text style={styles.password} testID="1:3772" >
                 {`Password`}
@@ -64,6 +65,7 @@ export const Login: React.FC<LoginProps> = ({ testID }) => {
                 placeholder="Password"
                 secureTextEntry
                 onSubmitEditing={handleLoginPress}
+                style={styles.inputField} 
                 />
             {error ? <Text style={styles.errors}>{error}</Text> : null}
             <SubmitButton onPress={handleLoginPress} testID="1:3790" />
@@ -126,5 +128,8 @@ const styles = createStyleSheet(theme => ({
     errors: {
         color: theme.colors.errors,
         margin: 10,
+    },
+    inputField: {
+        paddingLeft: 10,
     }
 }));

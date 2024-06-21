@@ -26,6 +26,6 @@ export const theme: Theme = {
         textSecondary:          '#B2B2B2',
         focus:                  '#5294E2',
         errors:                 '#FF5555',
-        headerBackground:       '#4682B4',
+        headerBackground:       '#060270',
     },
 };
