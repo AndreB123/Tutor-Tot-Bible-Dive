@@ -27,9 +27,22 @@ const ChatScreen = ({ initialChatId = 0 }) => {
     }, [chatId, initialChatId]);
 
     // Clear local messages when the chat changes
+    const previousChatIdRef = useRef(currentChatId);
     useEffect(() => {
-        setLocalMessages([]);
+        if (previousChatIdRef.current !== 0 && currentChatId !== 0) {
+            setLocalMessages([]);
+        }
+        previousChatIdRef.current = currentChatId;
     }, [currentChatId]);
+
+
+    // Update chat ID based on incoming message fragments
+    useEffect(() => {
+        if (message && message.chat_id !== currentChatId) {
+            setCurrentChatId(message.chat_id);
+            previousChatIdRef.current = currentChatId;
+        }
+    }, [message]);
 
     // Get the current chat object
     const chat = useMemo(() => getChatById(currentChatId) || { id: currentChatId, name: '', messages: [] }, [currentChatId, getChatById]);
