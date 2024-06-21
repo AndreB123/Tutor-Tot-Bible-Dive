@@ -34,13 +34,13 @@ func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMess
 		if err := json.Unmarshal(msg.Data, &getChatSummaries); err != nil {
 			log.Printf("Failed to unmarshal data from getchatsums: %v", err)
 		}
-		h.GetChatSummaries(conn, msg.JWT, getChatSummaries.Id)
+		go h.GetChatSummaries(conn, msg.JWT, getChatSummaries.Id)
 	case "get_recent_messages":
 		var getRecentMessages proto.GetRecentMessagesRequest
 		if err := json.Unmarshal(msg.Data, &getRecentMessages); err != nil {
 			log.Printf("Failed to unmarshal GetRecentMessagesRequest: %v", err)
 		}
-		h.GetRecentMessages(conn, getRecentMessages.ChatId, getRecentMessages.LastMessageId, getRecentMessages.Limit, msg.JWT)
+		go h.GetRecentMessages(conn, getRecentMessages.ChatId, getRecentMessages.LastMessageId, getRecentMessages.Limit, msg.JWT)
 	case "start_message_stream":
 		var createMsgReq proto.CreateMessageRequest
 		if err := json.Unmarshal(msg.Data, &createMsgReq); err != nil {
@@ -48,6 +48,20 @@ func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMess
 			return
 		}
 		go h.StreamMessages(conn, createMsgReq.ChatId, createMsgReq.Body, createMsgReq.Sender, msg.JWT)
+	case "delete_chat_by_chat_id":
+		var deleteChatByIDReq proto.DeleteChatByIDRequest
+		if err := json.Unmarshal(msg.Data, &deleteChatByIDReq); err != nil {
+			log.Printf("Failed to unmarshal DeleteChatByIDRequest: %v", err)
+			return
+		}
+		go h.DeleteChatByID(conn, msg.JWT, deleteChatByIDReq.UserId, deleteChatByIDReq.ChatId)
+	case "delete_all_chats_by_user_id":
+		var deleteAllChatByUIDReq proto.DeleteAllChatsByUIDRequest
+		if err := json.Unmarshal(msg.Data, &deleteAllChatByUIDReq); err != nil {
+			log.Printf("Failed to unmarshal DeleteAllChatByIIDRequest: %v", err)
+			return
+		}
+		go h.DeleteAllChatByUID(conn, msg.JWT, deleteAllChatByUIDReq.UserId)
 	}
 }
 
@@ -122,4 +136,32 @@ func (h *ChatHandler) GetRecentMessages(conn *websocket.Conn, chatID uint32, las
 
 	log.Printf("Get recent msgs: %v", resp)
 	middleware.SendWebSocketMessage(conn, "get_recent_messages_resp", resp)
+}
+
+func (h *ChatHandler) DeleteChatByID(conn *websocket.Conn, jwt string, userID, chatID uint32) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+	resp, err := h.ChatClient.DeleteChatByID(ctxWithMetadata, &proto.DeleteChatByIDRequest{ChatId: chatID, UserId: userID})
+	if err != nil {
+		log.Printf("Error deleting chats by chatid: %v", err)
+		return
+	}
+	middleware.SendWebSocketMessage(conn, "delete_chat_by_chat_id_resp", resp)
+}
+
+func (h *ChatHandler) DeleteAllChatByUID(conn *websocket.Conn, jwt string, userID uint32) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+	resp, err := h.ChatClient.DeleteAllChatsByUID(ctxWithMetadata, &proto.DeleteAllChatsByUIDRequest{UserId: userID})
+	if err != nil {
+		log.Printf("Error deleting chats by chatid: %v", err)
+		return
+	}
+	middleware.SendWebSocketMessage(conn, "delete_all_chats_by_user_id_resp", resp)
 }

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -162,6 +164,37 @@ func (s *ChatServer) GetChatSummariesUID(ctx context.Context, req *proto.GetChat
 	}
 
 	return resp, nil
+}
+
+func (s *ChatServer) DeleteChatByID(ctx context.Context, req *proto.DeleteChatByIDRequest) (*proto.DeleteChatByIDResponse, error) {
+	userID := uint(req.GetUserId())
+	chatID := uint(req.GetChatId())
+
+	err := s.chatService.DeleteChatByID(ctx, chatID, userID)
+	if err != nil {
+		log.Printf("Failed to delete chat: %v", err)
+		return &proto.DeleteChatByIDResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "failed to delete chat")
+	}
+	return &proto.DeleteChatByIDResponse{
+		Success: true,
+	}, nil
+}
+
+func (s *ChatServer) DeleteAllChatByUID(ctx context.Context, req *proto.DeleteAllChatsByUIDRequest) (*proto.DeleteAllChatsByUIDResponse, error) {
+	userID := uint(req.GetUserId())
+
+	err := s.chatService.DeleteAllChatsByUID(ctx, userID)
+	if err != nil {
+		log.Printf("Failed to delete chat: %v", err)
+		return &proto.DeleteAllChatsByUIDResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "failed to delete chat")
+	}
+	return &proto.DeleteAllChatsByUIDResponse{
+		Success: true,
+	}, nil
 }
 
 // helper functions

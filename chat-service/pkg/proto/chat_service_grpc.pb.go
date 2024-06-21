@@ -24,6 +24,8 @@ const (
 	ChatService_GetRecentMessages_FullMethodName   = "/proto.ChatService/GetRecentMessages"
 	ChatService_StreamMessages_FullMethodName      = "/proto.ChatService/StreamMessages"
 	ChatService_GetChatSummariesUID_FullMethodName = "/proto.ChatService/GetChatSummariesUID"
+	ChatService_DeleteChatByID_FullMethodName      = "/proto.ChatService/DeleteChatByID"
+	ChatService_DeleteAllChatsByUID_FullMethodName = "/proto.ChatService/DeleteAllChatsByUID"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -35,6 +37,8 @@ type ChatServiceClient interface {
 	GetRecentMessages(ctx context.Context, in *GetRecentMessagesRequest, opts ...grpc.CallOption) (*GetRecentMessagesResponse, error)
 	StreamMessages(ctx context.Context, opts ...grpc.CallOption) (ChatService_StreamMessagesClient, error)
 	GetChatSummariesUID(ctx context.Context, in *GetChatSummariesUIDRequest, opts ...grpc.CallOption) (*GetChatSummariesUIDResponse, error)
+	DeleteChatByID(ctx context.Context, in *DeleteChatByIDRequest, opts ...grpc.CallOption) (*DeleteChatByIDResponse, error)
+	DeleteAllChatsByUID(ctx context.Context, in *DeleteAllChatsByUIDRequest, opts ...grpc.CallOption) (*DeleteAllChatsByUIDResponse, error)
 }
 
 type chatServiceClient struct {
@@ -112,6 +116,24 @@ func (c *chatServiceClient) GetChatSummariesUID(ctx context.Context, in *GetChat
 	return out, nil
 }
 
+func (c *chatServiceClient) DeleteChatByID(ctx context.Context, in *DeleteChatByIDRequest, opts ...grpc.CallOption) (*DeleteChatByIDResponse, error) {
+	out := new(DeleteChatByIDResponse)
+	err := c.cc.Invoke(ctx, ChatService_DeleteChatByID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) DeleteAllChatsByUID(ctx context.Context, in *DeleteAllChatsByUIDRequest, opts ...grpc.CallOption) (*DeleteAllChatsByUIDResponse, error) {
+	out := new(DeleteAllChatsByUIDResponse)
+	err := c.cc.Invoke(ctx, ChatService_DeleteAllChatsByUID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility
@@ -121,6 +143,8 @@ type ChatServiceServer interface {
 	GetRecentMessages(context.Context, *GetRecentMessagesRequest) (*GetRecentMessagesResponse, error)
 	StreamMessages(ChatService_StreamMessagesServer) error
 	GetChatSummariesUID(context.Context, *GetChatSummariesUIDRequest) (*GetChatSummariesUIDResponse, error)
+	DeleteChatByID(context.Context, *DeleteChatByIDRequest) (*DeleteChatByIDResponse, error)
+	DeleteAllChatsByUID(context.Context, *DeleteAllChatsByUIDRequest) (*DeleteAllChatsByUIDResponse, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -142,6 +166,12 @@ func (UnimplementedChatServiceServer) StreamMessages(ChatService_StreamMessagesS
 }
 func (UnimplementedChatServiceServer) GetChatSummariesUID(context.Context, *GetChatSummariesUIDRequest) (*GetChatSummariesUIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetChatSummariesUID not implemented")
+}
+func (UnimplementedChatServiceServer) DeleteChatByID(context.Context, *DeleteChatByIDRequest) (*DeleteChatByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteChatByID not implemented")
+}
+func (UnimplementedChatServiceServer) DeleteAllChatsByUID(context.Context, *DeleteAllChatsByUIDRequest) (*DeleteAllChatsByUIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAllChatsByUID not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 
@@ -254,6 +284,42 @@ func _ChatService_GetChatSummariesUID_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_DeleteChatByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteChatByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).DeleteChatByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_DeleteChatByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).DeleteChatByID(ctx, req.(*DeleteChatByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatService_DeleteAllChatsByUID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAllChatsByUIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).DeleteAllChatsByUID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_DeleteAllChatsByUID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).DeleteAllChatsByUID(ctx, req.(*DeleteAllChatsByUIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -276,6 +342,14 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetChatSummariesUID",
 			Handler:    _ChatService_GetChatSummariesUID_Handler,
+		},
+		{
+			MethodName: "DeleteChatByID",
+			Handler:    _ChatService_DeleteChatByID_Handler,
+		},
+		{
+			MethodName: "DeleteAllChatsByUID",
+			Handler:    _ChatService_DeleteAllChatsByUID_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package proto;
 
-option go_package = "api-gateway/pkg/proto";
+option go_package = "chat-service/pkg/proto";
 
 import "google/protobuf/timestamp.proto";
 
@@ -49,6 +49,15 @@ message GetChatSummariesUIDRequest {
     uint32 id = 1;
 }
 
+message DeleteChatByIDRequest {
+    uint32 chat_id = 1;
+    uint32 user_id = 2;
+}
+
+message DeleteAllChatsByUIDRequest {
+    uint32 user_id = 1;
+}
+
 //Responses
 message CreateMessageResponse {
     Message message = 1;
@@ -67,10 +76,20 @@ message GetChatSummariesUIDResponse {
     repeated ChatSummary chats = 1;
 }
 
+message DeleteChatByIDResponse {
+    bool success = 1;
+}
+
+message DeleteAllChatsByUIDResponse {
+    bool success = 1;
+}
+
 service ChatService {
     rpc CreateMessage(CreateMessageRequest) returns (CreateMessageResponse);
     rpc CreateChat(CreateChatRequest) returns (CreateChatResponse);
     rpc GetRecentMessages(GetRecentMessagesRequest) returns (GetRecentMessagesResponse);
     rpc StreamMessages(stream CreateMessageRequest) returns (stream CreateMessageResponse);
     rpc GetChatSummariesUID(GetChatSummariesUIDRequest) returns (GetChatSummariesUIDResponse);
+    rpc DeleteChatByID(DeleteChatByIDRequest) returns (DeleteChatByIDResponse);
+    rpc DeleteAllChatsByUID(DeleteAllChatsByUIDRequest) returns (DeleteAllChatsByUIDResponse);
 }
