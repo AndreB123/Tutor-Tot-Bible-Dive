@@ -10,6 +10,7 @@ export type Theme = {
         textSecondary:          string;
         focus:                  string;
         errors:                 string;
+        headerBackground:       string;
     };
 };
 
@@ -25,5 +26,6 @@ export const theme: Theme = {
         textSecondary:          '#B2B2B2',
         focus:                  '#5294E2',
         errors:                 '#FF5555',
+        headerBackground:       '#4682B4',
     },
 };

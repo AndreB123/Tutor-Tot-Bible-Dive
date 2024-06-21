@@ -41,6 +41,10 @@ func (repo *ChatRepository) GetAllChatSummeryByUserID(userID uint) ([]model.Chat
 	return chats, nil
 }
 
-func (repo *ChatRepository) DeleteChatByID(chatID uint) error {
-	return repo.db.Where("id = ?", chatID).Delete(&model.Chat{}).Error
+func (repo *ChatRepository) DeleteChatByID(chatID, userID uint) error {
+	return repo.db.Where("id = ? AND user_id = ?", chatID, userID).Delete(&model.Chat{}).Error
+}
+
+func (repo *ChatRepository) DeleteAllChatsByUID(userID uint) error {
+	return repo.db.Where("user_id = ?", userID).Delete(&model.Chat{}).Error
 }

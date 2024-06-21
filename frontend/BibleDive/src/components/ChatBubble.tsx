@@ -22,7 +22,7 @@ const ChatBubble = ({ id, message = "", isSender }: ChatBubbleProps) => {
             marginVertical: 5,
             padding: 10,
             alignSelf: isSender ? 'flex-end' : 'flex-start',
-            backgroundColor: isSender ? '#DCF8C5' : '#ECECEC',
+            backgroundColor: isSender ? '#96BBE6' : '#ECECEC',
             overflow: 'hidden',
         },
         messageText: {

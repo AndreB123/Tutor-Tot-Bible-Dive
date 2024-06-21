@@ -1,8 +1,11 @@
 package service
 
 import (
+	contextkeys "chat-service/pkg/context-keys"
 	"chat-service/pkg/model"
 	"chat-service/pkg/repository"
+	"context"
+	"errors"
 	"strings"
 )
 
@@ -32,6 +35,22 @@ func (s *ChatService) UpdateChatName(chatID uint, name string) (*model.Chat, err
 
 func (s *ChatService) GetAllChatSummeryByUID(userID uint) ([]model.ChatSummery, error) {
 	return s.chatRepository.GetAllChatSummeryByUserID(userID)
+}
+
+func (s *ChatService) DeleteChatByID(ctx context.Context, chatID, userID uint) error {
+	ctxUID, ok := ctx.Value(contextkeys.Userkey).(uint)
+	if !ok || ctxUID != userID {
+		return errors.New("unauthorized: user ID invalid")
+	}
+	return s.chatRepository.DeleteChatByID(chatID, userID)
+}
+
+func (s *ChatService) DeleteAllChatsByUID(ctx context.Context, userID uint) error {
+	ctxUID, ok := ctx.Value(contextkeys.Userkey).(uint)
+	if !ok || ctxUID != userID {
+		return errors.New("unauthorized: user ID invalid")
+	}
+	return s.chatRepository.DeleteAllChatsByUID(userID)
 }
 
 // helper funcs
