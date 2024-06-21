@@ -68,7 +68,7 @@ const ChatScreen = ({ initialChatId = 0 }) => {
     const scrollToEnd = useCallback(() => {
         setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        }, 10);
     }, []);
 
     // Scroll to end whenever messages change

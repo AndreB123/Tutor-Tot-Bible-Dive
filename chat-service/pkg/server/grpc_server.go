@@ -169,7 +169,6 @@ func (s *ChatServer) GetChatSummariesUID(ctx context.Context, req *proto.GetChat
 func (s *ChatServer) DeleteChatByID(ctx context.Context, req *proto.DeleteChatByIDRequest) (*proto.DeleteChatByIDResponse, error) {
 	userID := uint(req.GetUserId())
 	chatID := uint(req.GetChatId())
-
 	err := s.chatService.DeleteChatByID(ctx, chatID, userID)
 	if err != nil {
 		log.Printf("Failed to delete chat: %v", err)

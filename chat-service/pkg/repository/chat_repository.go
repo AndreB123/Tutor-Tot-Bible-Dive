@@ -4,6 +4,7 @@ import (
 	"chat-service/pkg/model"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ChatRepository struct {
@@ -42,9 +43,9 @@ func (repo *ChatRepository) GetAllChatSummeryByUserID(userID uint) ([]model.Chat
 }
 
 func (repo *ChatRepository) DeleteChatByID(chatID, userID uint) error {
-	return repo.db.Where("id = ? AND user_id = ?", chatID, userID).Delete(&model.Chat{}).Error
+	return repo.db.Where("id = ? AND user_id = ?", chatID, userID).Select(clause.Associations).Delete(&model.Chat{}).Error
 }
 
 func (repo *ChatRepository) DeleteAllChatsByUID(userID uint) error {
-	return repo.db.Where("user_id = ?", userID).Delete(&model.Chat{}).Error
+	return repo.db.Where("user_id = ?", userID).Select(clause.Associations).Delete(&model.Chat{}).Error
 }

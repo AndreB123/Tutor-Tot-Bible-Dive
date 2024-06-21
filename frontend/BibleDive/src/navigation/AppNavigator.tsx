@@ -14,7 +14,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const styles = StyleSheet.create({
     headerStyle: {
         backgroundColor: theme.colors.headerBackground,
-        borderBottomWidth: 2,
+        borderBottomWidth: 1,
         borderBottomColor: 'black',
     },
     headerTitleStyle: {

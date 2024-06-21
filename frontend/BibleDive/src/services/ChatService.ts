@@ -91,13 +91,13 @@ class ChatService {
 
     private handleDeleteChatByChatID = (message: any) => {
         console.log("handling delete chat by id response: ", message);
-        const msgContents = message.data;
+        const msgContents = message.data.success;
         this.onDeleteChatByChatID(msgContents);
     }
 
     private handleDeleteAllChatByUID = (message: any) => {
         console.log("handling delete all chats by id response: ", message);
-        const msgContents = message.data;
+        const msgContents = message.data.success;
         this.onDeleteAllChatsByUID(msgContents);
     }
 }

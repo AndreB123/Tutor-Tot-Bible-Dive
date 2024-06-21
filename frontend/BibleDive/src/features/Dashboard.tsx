@@ -28,6 +28,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     const [overlayVisible, setOverlayVisible] = useState(false);
     const [chatToDelete, setChatToDelete] = useState<number | null>(null);
     const sidebarRef = useRef<any>(null);
+    const [sidebarData, setSidebarData] = useState([]);
 
     const styles = createStyleSheet((theme) => ({
         container: {
@@ -66,7 +67,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     const username = user ? user.user.username : 'Diver';
     const userID = user ? user.user.id : null;
 
-    useEffect(() => {
+    useMemo(() => {
         if (userID) {
             getChatSummaries(userID);
         }
@@ -94,14 +95,14 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     };
 
     const handleDeletePress = (chatID: number) => {
-        setChatToDelete(chatID);
+        setChatToDelete(Number(chatID));
         setOverlayVisible(true);
     };
 
     const handleConfirmDelete = async () => {
         if (chatToDelete !== null) {
             try {
-                await deleteChatByID(chatToDelete, userID);
+                await deleteChatByID(Number(chatToDelete), userID);
                 setOverlayVisible(false);
                 setChatToDelete(null);
             } catch (error) {
@@ -110,28 +111,25 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
         }
     };
 
-    const newChatItem = {
-        key: '1',
-        title: 'New Chat',
-        onPress: handleGetStartedPress,
-        icon: 'chat-plus'
-    };
+    useEffect(() => {
+        const chatItems = chats.map(chat => ({
+            key: chat.id.toString(),
+            title: chat.name,
+            onPress: () => handleChatPress(chat.id),
+            icon: 'chatbox-outline'
+        }));
+        
+        setSidebarData([ ...chatItems]);
+    }, [chats]);
+
     
-    const chatItems = chats.map(chat => ({
-        key: chat.id.toString(),
-        title: chat.name,
-        onPress: () => handleChatPress(chat.id),
-        icon: 'chatbox-outline' 
-    }));
     
-    const sidebarData = useMemo(() => chatItems, [chats, handleChatPress]);
-    
-    const renderNewChatItem = useCallback(() => (
-        <TouchableOpacity onPress={newChatItem.onPress} style={styles.sidebarItem}>
-            <MaterialIcons name={newChatItem.icon} size={20} color="white" style={{ marginRight: 10 }} />
-            <Text style={styles.sidebarText}>{newChatItem.title}</Text>
+    const renderNewChatItem = () => (
+        <TouchableOpacity onPress={handleGetStartedPress} style={styles.sidebarItem}>
+            <MaterialIcons name="chat-plus" size={20} color="white" style={{ marginRight: 10 }} />
+            <Text style={styles.sidebarText}>New Chat</Text>
         </TouchableOpacity>
-    ), [newChatItem, styles.sidebarItem, styles.sidebarText]);
+    );
 
     const renderChatItem = useCallback(({ item }) => (
         <View style={styles.sidebarItem}>
@@ -147,7 +145,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     return (
         <SafeAreaView style={styles.container} testID={props.testID}>
             <SideBar
-                 ref={sidebarRef}
+                ref={sidebarRef}
                 onPress={handleGetStartedPress}
                 title="Menu"
                 data={sidebarData}
@@ -161,7 +159,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
             </SideBar>
             <ConfirmationOverlay
                 visible={overlayVisible}
-                message="Are you sure you want to delete this chat?"
+                message="Are you sure you want to delete this chat and all its messages?"
                 onConfirm={handleConfirmDelete}
                 onCancel={() => setOverlayVisible(false)}
             />
