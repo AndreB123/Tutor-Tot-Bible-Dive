@@ -10,6 +10,7 @@ const DeleteAllChats = () => {
     const { user } = useUser();
     const { deleteAllChatsByUID } = useChat();
     const [confirmationText, setConfirmationText] = useState("");
+    //TODO verify old password before allowing delete
 
     const handleDeleteAllChats = async () => {
         if (confirmationText.toLowerCase() === "delete") {

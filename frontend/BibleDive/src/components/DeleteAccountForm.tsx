@@ -8,6 +8,7 @@ import { theme } from "../styles/theme";
 const AccountDeletion = () => {
     const {delteUserAccount} = useUser();
     const [confirmationText, setConfirmationText] = useState("");
+    //TODO verify old password before allowing delete
 
     const handleDeleteAccount= () => {
         if (confirmationText.toLowerCase() === "delete") {

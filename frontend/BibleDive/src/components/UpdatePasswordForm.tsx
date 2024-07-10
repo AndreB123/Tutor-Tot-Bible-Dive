@@ -35,6 +35,8 @@ export const UpdatePasswordForm: React.FC<UpdatePasswordFormProps> = ({ testID }
         return password === confirmPassword;
     };
 
+    //TODO verify old password before allowing update
+
     const handleSubmitPress = async () => {
         if (!validatePassword(newPassword)) {
             setError('Password must be at least 10 characters long and include at least one symbol.');
