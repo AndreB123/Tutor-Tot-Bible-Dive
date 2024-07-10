@@ -29,9 +29,13 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     const [chatToDelete, setChatToDelete] = useState<number | null>(null);
     const sidebarRef = useRef<any>(null);
     const [sidebarData, setSidebarData] = useState([]);
+    const { user } = useUser();
+    const username = user ? user.user.username : 'Diver';
+    const userID = user ? user.user.id : null;
 
     const styles = createStyleSheet((theme) => ({
         container: {
+            top: 0,
             flex: 1,
             backgroundColor: theme.colors.primaryBackground,
         },
@@ -63,9 +67,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
         },
     }));
 
-    const { user } = useUser();
-    const username = user ? user.user.username : 'Diver';
-    const userID = user ? user.user.id : null;
+    
 
     useMemo(() => {
         if (userID) {
@@ -143,7 +145,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     ), [styles.sidebarItem, styles.sidebarText]);
 
     return (
-        <SafeAreaView style={styles.container} testID={props.testID}>
+        <SafeAreaView style={styles.container} edges={[]} testID={props.testID}>
             <SideBar
                 ref={sidebarRef}
                 onPress={handleGetStartedPress}

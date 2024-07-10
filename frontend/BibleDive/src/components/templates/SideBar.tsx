@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const { width, height } = Dimensions.get('window');
 
 interface SideBarProps {
-    onPress: () => void;
+    onPress: (id: string) => void;
     title: string;
     style?: any;
     textStyle?: any;
@@ -64,7 +64,7 @@ const SideBar = forwardRef(({ onPress, title, style, textStyle, data, renderItem
     });
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flexGrow: 1, margin: 0 }}>
             <Animated.View
                 style={[
                     styles.background,
@@ -109,11 +109,12 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     content: {
-        flex: 1,
+        flexGrow: 1,
+        top: 0,
         position: 'relative',
     },
     iconButton: {
-        position: 'absolute',
+        position: 'relative',
         top: 10,
         left: 10,
         zIndex: 2,

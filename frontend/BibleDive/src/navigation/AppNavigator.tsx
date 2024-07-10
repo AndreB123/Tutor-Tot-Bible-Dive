@@ -1,26 +1,32 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { LoginScreen } from "../features/LoginScreen";
-import { Dashboard } from "../features/Dashboard";
+import { LoginScreen } from "../feature_pages/LoginScreen";
+import { Dashboard } from "../feature_pages/Dashboard";
 import { RootStackParamList } from "./Navigationtypes";
 import { useAuth } from "../context/AuthContext";
-import { useEffect } from "react";
-import { CreateAccount } from "../features/CreateAccount";
-import { ChatPage } from "../features/ChatPage";
+import React, { useEffect } from "react";
+import { CreateAccount } from "../feature_pages/CreateAccount";
+import { ChatPage } from "../feature_pages/ChatPage";
 import { theme } from "../styles/theme";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
+import { AccountManagement } from "../feature_pages/AccountManagement";
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const styles = StyleSheet.create({
     headerStyle: {
         backgroundColor: theme.colors.headerBackground,
-        borderBottomWidth: 1,
+        borderBottomWidth: 0,
         borderBottomColor: 'black',
     },
     headerTitleStyle: {
         fontWeight: 'bold',
         textAlign: 'center',
         flex: 1,
+    },
+    iconStyle: {
+        marginRight: 10,
     },
 });
 
@@ -47,12 +53,27 @@ function AppNavigator() {
                     <Stack.Screen 
                         name="Dashboard" 
                         component={Dashboard} 
-                        options={{ title: 'Dashboard' }} 
+                        options={({ navigation }) => ({
+                            title: 'Dashboard',
+                            headerRight: () => (
+                                <TouchableOpacity
+                                    style={styles.iconStyle}
+                                    onPress={() => navigation.navigate('AccountManagementPage')}
+                                >
+                                    <Icon name="settings" size={25} color={theme.colors.textPrimary} />
+                                </TouchableOpacity>
+                            ),
+                        })} 
                     />
                     <Stack.Screen 
                         name="ChatPage" 
                         component={ChatPage} 
                         options={{ title: 'Chat' }} 
+                    />
+                    <Stack.Screen
+                        name="AccountManagementPage"
+                        component={AccountManagement}
+                        options={{ title: 'Account Management'}}
                     />
                 </>
             ) : (

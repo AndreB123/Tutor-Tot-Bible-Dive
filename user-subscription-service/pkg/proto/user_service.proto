@@ -12,6 +12,11 @@ message User {
 }
 
 //Request
+message  VerifyUserPasswordRequest {
+    uint32 id = 1;
+    string password = 2;
+}
+
 message GetUserInfoRequest {
     uint32 id = 1;
 }
@@ -22,11 +27,17 @@ message UpdateUserInfoRequest {
     string email = 3;
 }
 
+message UpdateUserPasswordRequest {
+    uint32 id = 1;
+    string password = 2;
+}
+
 message ListUsersRequest {
 }
 
 message DeleteUserRequest {
     uint32 id = 1;
+    string password = 2;
 }
 
 message SearchForUserRequest {
@@ -34,12 +45,20 @@ message SearchForUserRequest {
 }
 
 //Responses
+message  VerifyUserPasswordResponse {
+    bool isAuthorized = 1;
+}
+
 message GetUserInfoResponse {
     User user = 1;
 }
 
 message UpdateUserInfoResponse {
     User user = 1;
+}
+
+message UpdateUserPasswordResponse {
+    bool success = 1;
 }
 
 message ListUsersResponse {
@@ -55,11 +74,17 @@ message SearchForUsersResponse {
 }
 
 service UserService {
+    // Verifies that a password is correct for a userID
+    rpc  VerifyUserPassword(VerifyUserPasswordRequest) returns (VerifyUserPasswordResponse);
+
     // Retrieves user information by ID.
     rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
 
     // Updates user information.
     rpc UpdateUserInfo(UpdateUserInfoRequest) returns (UpdateUserInfoResponse);
+
+    // Updates password 
+    rpc UpdateUserPassword(UpdateUserPasswordRequest) returns (UpdateUserPasswordResponse);
 
     // Lists all users in the system.
     rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);

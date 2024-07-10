@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"user-microservice/pkg/model"
 	"user-microservice/pkg/repository"
@@ -44,6 +45,20 @@ func (s *UserService) CreateUser(user *model.User, password string) (*model.User
 	}
 
 	return user, s.userRepository.Create(user)
+}
+
+func (s *UserService) UpdatePassword(userID uint, password string) error {
+	user, err := s.GetUserByID(userID)
+	if err != nil {
+		fmt.Printf("Error getting user by id: %v", err)
+		return err
+	}
+	err = user.SetPassword(password)
+	if err != nil {
+		fmt.Printf("Error setting new password: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (s *UserService) GetUserByID(userID uint) (*model.User, error) {
@@ -106,14 +121,36 @@ func (s *UserService) SearchUsersByUsername(pattern string) ([]*model.User, erro
 	return users, nil
 }
 
-func (s *UserService) DeleteUser(userID uint) error {
+func (s *UserService) DeleteUser(userID uint, password string) error {
 	if userID == 0 {
 		return errors.New("invalid user ID")
 	}
 
-	err := s.userRepository.DeleteUserByID(userID)
+	ok, err := s.VerifyUserPassword(userID, password)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return errors.New("invalid password")
+	}
+
+	err = s.userRepository.DeleteUserByID(userID)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *UserService) VerifyUserPassword(userID uint, password string) (bool, error) {
+	if userID == 0 {
+		return false, errors.New("invalid user ID")
+	}
+
+	user, err := s.GetUserByID(userID)
+	if err != nil {
+		return false, err
+	}
+
+	return user.ComparePassword(password), nil
 }

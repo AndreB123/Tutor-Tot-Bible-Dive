@@ -3,4 +3,5 @@ export type RootStackParamList = {
     Dashboard: undefined;
     CreateAccount: undefined;
     ChatPage: {chatID: number};
+    AccountManagementPage: undefined;
 };

@@ -19,21 +19,27 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserService_GetUserInfo_FullMethodName    = "/proto.UserService/GetUserInfo"
-	UserService_UpdateUserInfo_FullMethodName = "/proto.UserService/UpdateUserInfo"
-	UserService_ListUsers_FullMethodName      = "/proto.UserService/ListUsers"
-	UserService_DeleteUser_FullMethodName     = "/proto.UserService/DeleteUser"
-	UserService_SearchForUser_FullMethodName  = "/proto.UserService/SearchForUser"
+	UserService_VerifyUserPassword_FullMethodName = "/proto.UserService/VerifyUserPassword"
+	UserService_GetUserInfo_FullMethodName        = "/proto.UserService/GetUserInfo"
+	UserService_UpdateUserInfo_FullMethodName     = "/proto.UserService/UpdateUserInfo"
+	UserService_UpdateUserPassword_FullMethodName = "/proto.UserService/UpdateUserPassword"
+	UserService_ListUsers_FullMethodName          = "/proto.UserService/ListUsers"
+	UserService_DeleteUser_FullMethodName         = "/proto.UserService/DeleteUser"
+	UserService_SearchForUser_FullMethodName      = "/proto.UserService/SearchForUser"
 )
 
 // UserServiceClient is the client API for UserService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
+	// Verifies that a password is correct for a userID
+	VerifyUserPassword(ctx context.Context, in *VerifyUserPasswordRequest, opts ...grpc.CallOption) (*VerifyUserPasswordResponse, error)
 	// Retrieves user information by ID.
 	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error)
 	// Updates user information.
 	UpdateUserInfo(ctx context.Context, in *UpdateUserInfoRequest, opts ...grpc.CallOption) (*UpdateUserInfoResponse, error)
+	// Updates password
+	UpdateUserPassword(ctx context.Context, in *UpdateUserPasswordRequest, opts ...grpc.CallOption) (*UpdateUserPasswordResponse, error)
 	// Lists all users in the system.
 	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
 	// Deletes a user from the system.
@@ -49,6 +55,15 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 	return &userServiceClient{cc}
 }
 
+func (c *userServiceClient) VerifyUserPassword(ctx context.Context, in *VerifyUserPasswordRequest, opts ...grpc.CallOption) (*VerifyUserPasswordResponse, error) {
+	out := new(VerifyUserPasswordResponse)
+	err := c.cc.Invoke(ctx, UserService_VerifyUserPassword_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error) {
 	out := new(GetUserInfoResponse)
 	err := c.cc.Invoke(ctx, UserService_GetUserInfo_FullMethodName, in, out, opts...)
@@ -61,6 +76,15 @@ func (c *userServiceClient) GetUserInfo(ctx context.Context, in *GetUserInfoRequ
 func (c *userServiceClient) UpdateUserInfo(ctx context.Context, in *UpdateUserInfoRequest, opts ...grpc.CallOption) (*UpdateUserInfoResponse, error) {
 	out := new(UpdateUserInfoResponse)
 	err := c.cc.Invoke(ctx, UserService_UpdateUserInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UpdateUserPassword(ctx context.Context, in *UpdateUserPasswordRequest, opts ...grpc.CallOption) (*UpdateUserPasswordResponse, error) {
+	out := new(UpdateUserPasswordResponse)
+	err := c.cc.Invoke(ctx, UserService_UpdateUserPassword_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,10 +122,14 @@ func (c *userServiceClient) SearchForUser(ctx context.Context, in *SearchForUser
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
+	// Verifies that a password is correct for a userID
+	VerifyUserPassword(context.Context, *VerifyUserPasswordRequest) (*VerifyUserPasswordResponse, error)
 	// Retrieves user information by ID.
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
 	// Updates user information.
 	UpdateUserInfo(context.Context, *UpdateUserInfoRequest) (*UpdateUserInfoResponse, error)
+	// Updates password
+	UpdateUserPassword(context.Context, *UpdateUserPasswordRequest) (*UpdateUserPasswordResponse, error)
 	// Lists all users in the system.
 	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
 	// Deletes a user from the system.
@@ -114,11 +142,17 @@ type UserServiceServer interface {
 type UnimplementedUserServiceServer struct {
 }
 
+func (UnimplementedUserServiceServer) VerifyUserPassword(context.Context, *VerifyUserPasswordRequest) (*VerifyUserPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyUserPassword not implemented")
+}
 func (UnimplementedUserServiceServer) GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfo not implemented")
 }
 func (UnimplementedUserServiceServer) UpdateUserInfo(context.Context, *UpdateUserInfoRequest) (*UpdateUserInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserInfo not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateUserPassword(context.Context, *UpdateUserPasswordRequest) (*UpdateUserPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserPassword not implemented")
 }
 func (UnimplementedUserServiceServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListUsers not implemented")
@@ -140,6 +174,24 @@ type UnsafeUserServiceServer interface {
 
 func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
 	s.RegisterService(&UserService_ServiceDesc, srv)
+}
+
+func _UserService_VerifyUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyUserPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).VerifyUserPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_VerifyUserPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).VerifyUserPassword(ctx, req.(*VerifyUserPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _UserService_GetUserInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -174,6 +226,24 @@ func _UserService_UpdateUserInfo_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).UpdateUserInfo(ctx, req.(*UpdateUserInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UpdateUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateUserPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateUserPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateUserPassword(ctx, req.(*UpdateUserPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -240,12 +310,20 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "VerifyUserPassword",
+			Handler:    _UserService_VerifyUserPassword_Handler,
+		},
+		{
 			MethodName: "GetUserInfo",
 			Handler:    _UserService_GetUserInfo_Handler,
 		},
 		{
 			MethodName: "UpdateUserInfo",
 			Handler:    _UserService_UpdateUserInfo_Handler,
+		},
+		{
+			MethodName: "UpdateUserPassword",
+			Handler:    _UserService_UpdateUserPassword_Handler,
 		},
 		{
 			MethodName: "ListUsers",

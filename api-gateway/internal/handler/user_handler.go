@@ -52,6 +52,24 @@ func (h *UserHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMess
 			log.Printf("Failed to unmarshal SearchForUserRequest: %v", err)
 		}
 		h.SearchForUser(conn, msg.JWT, search.Username)
+	case "verify_user_pass":
+		var verify proto.VerifyUserPasswordRequest
+		if err := json.Unmarshal(msg.Data, &verify); err != nil {
+			log.Printf("Failed to unmarshal VerifyUserPasswordRequest: %v", err)
+		}
+		h.VerifyUserPassword(conn, msg.JWT, verify.Password, uint(verify.Id))
+	case "update_user_pass":
+		var updatePassword proto.UpdateUserPasswordRequest
+		if err := json.Unmarshal(msg.Data, &updatePassword); err != nil {
+			log.Printf("Failed to unmarshal UpdateUserPasswordRequest: %v", err)
+		}
+		h.UpdateUserPassword(conn, msg.JWT, updatePassword.Password, uint(updatePassword.Id))
+	case "delete_user":
+		var DeleteUser proto.DeleteUserRequest
+		if err := json.Unmarshal(msg.Data, &DeleteUser); err != nil {
+			log.Printf("Failed to unmarshal DeleteUserRequest: %v", err)
+		}
+		h.UpdateUserPassword(conn, msg.JWT, DeleteUser.Password, uint(DeleteUser.Id))
 	default:
 		log.Print("Invalid action type")
 	}
@@ -95,6 +113,50 @@ func (h *UserHandler) UpdateUserInfo(conn *websocket.Conn, jwt, username, email 
 	if err := conn.WriteMessage(websocket.TextMessage, userInfo); err != nil {
 		log.Printf("Error sending userinfo over WS connnection: %v", err)
 	}
+}
+
+func (h *UserHandler) VerifyUserPassword(conn *websocket.Conn, jwt, password string, userID uint) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+	resp, err := h.UserClient.VerifyUserPassword(ctxWithMetadata, &proto.VerifyUserPasswordRequest{Id: uint32(userID), Password: password})
+	if err != nil {
+		log.Print("Failed to create verify password message")
+		return
+	}
+	middleware.SendWebSocketMessage(conn, "verify_user_pass_resp", resp)
+}
+
+func (h *UserHandler) UpdateUserPassword(conn *websocket.Conn, jwt, password string, userID uint) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+	resp, err := h.UserClient.UpdateUserPassword(ctxWithMetadata, &proto.UpdateUserPasswordRequest{Id: uint32(userID), Password: password})
+
+	if err != nil {
+		log.Print("Failed to create update password message")
+		return
+	}
+	middleware.SendWebSocketMessage(conn, "update_user_pass_resp", resp)
+}
+
+func (h *UserHandler) DeleteUser(conn *websocket.Conn, jwt, password string, userID uint) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+	resp, err := h.UserClient.DeleteUser(ctxWithMetadata, &proto.DeleteUserRequest{Id: uint32(userID), Password: password})
+	if err != nil {
+		log.Print("Failed to create delete message")
+		return
+	}
+	middleware.SendWebSocketMessage(conn, "delete_user_resp", resp)
+
 }
 
 func (h *UserHandler) SearchForUser(conn *websocket.Conn, jwt, username string) {

@@ -23,6 +23,21 @@ func NewUserServer(userServer *service.UserService, authService *service.AuthSer
 	}
 }
 
+func (s *UserServer) VerifyUserPassword(ctx context.Context, req *proto.VerifyUserPasswordRequest) (*proto.VerifyUserPasswordResponse, error) {
+	userID := uint(req.GetId())
+	password := req.GetPassword()
+
+	success, err := s.userService.VerifyUserPassword(userID, password)
+	if err != nil {
+		log.Printf("Failed to check password: %v", err)
+	}
+
+	return &proto.VerifyUserPasswordResponse{
+		IsAuthorized: success,
+	}, nil
+
+}
+
 func (s *UserServer) GetUserInfo(ctx context.Context, req *proto.GetUserInfoRequest) (*proto.GetUserInfoResponse, error) {
 	userID := uint(req.GetId())
 	log.Println("getting user")
@@ -39,6 +54,23 @@ func (s *UserServer) GetUserInfo(ctx context.Context, req *proto.GetUserInfoRequ
 		},
 	}
 	return resp, nil
+}
+
+func (s *UserServer) UpdateUserPassword(ctx context.Context, req *proto.UpdateUserPasswordRequest) (*proto.UpdateUserPasswordResponse, error) {
+	userID := uint(req.GetId())
+	password := req.GetPassword()
+
+	err := s.userService.UpdatePassword(userID, password)
+	if err != nil {
+		log.Printf("Failed to update password: %v", err)
+		return &proto.UpdateUserPasswordResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "failed to update password")
+	}
+
+	return &proto.UpdateUserPasswordResponse{
+		Success: true,
+	}, nil
 }
 
 func (s *UserServer) UpdateUserInfo(ctx context.Context, req *proto.UpdateUserInfoRequest) (*proto.UpdateUserInfoResponse, error) {
@@ -85,7 +117,8 @@ func (s *UserServer) ListUsers(ctx context.Context, req *proto.ListUsersRequest)
 
 func (s *UserServer) DeleteUser(ctx context.Context, req *proto.DeleteUserRequest) (*proto.DeleteUserResponse, error) {
 	userID := uint(req.GetId())
-	err := s.userService.DeleteUser(userID)
+	password := req.GetPassword()
+	err := s.userService.DeleteUser(userID, password)
 	if err != nil {
 		log.Printf("Failed to delete user: %v", err)
 		return &proto.DeleteUserResponse{
