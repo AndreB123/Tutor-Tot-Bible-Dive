@@ -28,8 +28,8 @@ func (repo *LessonRepository) FindLessonByID(lessonID uint) (*model.Lesson, erro
 	return &lesson, nil
 }
 
-func (repo *LessonRepository) GetAllLessonsByTopicPlanID(topicPlanID uint) ([]model.Lesson, error) {
-	var lessons []model.Lesson
+func (repo *LessonRepository) GetAllLessonsByTopicPlanID(topicPlanID uint) ([]*model.Lesson, error) {
+	var lessons []*model.Lesson
 
 	results := repo.db.Model(&model.Lesson{}).Select("id", "title").Where("topic_plan_id = ?", topicPlanID).Order("id DESC")
 

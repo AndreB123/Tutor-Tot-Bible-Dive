@@ -52,6 +52,11 @@ export const ChatProvider = ({ children }) => {
     }, []);
 
     const handleGetChatSummaries = useCallback((summaries: Chat[]) => {
+        if (!summaries || summaries.length === 0) {
+            setChats([]);
+            return;
+        }
+        
         setChats(prevChats => {
             const updatedChats = summaries.map(summary => {
                 const existingChat = prevChats.find(chat => chat.id === summary.id);
