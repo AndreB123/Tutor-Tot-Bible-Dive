@@ -25,7 +25,7 @@ class UserService {
         this.webSocketService.sendMessage(message);
     }
 
-    async updatePassword(id: number, password: string, jwt: string) {
+    async updatePassword(id: number, oldPassword: string ,password: string, jwt: string) {
         await this.webSocketService.onConnected;
         const message = JSON.stringify({
             Type: "user",
@@ -33,6 +33,7 @@ class UserService {
             JWT: jwt,
             Data: {
                 id: id,
+                old_pass: oldPassword,
                 password: password
             }
         });

@@ -59,8 +59,9 @@ func (s *UserServer) GetUserInfo(ctx context.Context, req *proto.GetUserInfoRequ
 func (s *UserServer) UpdateUserPassword(ctx context.Context, req *proto.UpdateUserPasswordRequest) (*proto.UpdateUserPasswordResponse, error) {
 	userID := uint(req.GetId())
 	password := req.GetPassword()
+	oldPass := req.GetOldPass()
 
-	err := s.userService.UpdatePassword(userID, password)
+	err := s.userService.UpdatePassword(userID, oldPass, password)
 	if err != nil {
 		log.Printf("Failed to update password: %v", err)
 		return &proto.UpdateUserPasswordResponse{

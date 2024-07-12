@@ -47,11 +47,15 @@ func (s *UserService) CreateUser(user *model.User, password string) (*model.User
 	return user, s.userRepository.Create(user)
 }
 
-func (s *UserService) UpdatePassword(userID uint, password string) error {
+func (s *UserService) UpdatePassword(userID uint, oldPassword, password string) error {
 	user, err := s.GetUserByID(userID)
 	if err != nil {
 		fmt.Printf("Error getting user by id: %v", err)
 		return err
+	}
+	ok := user.ComparePassword(oldPassword)
+	if !ok {
+		return errors.New("Invalid pass on update password request")
 	}
 	err = user.SetPassword(password)
 	if err != nil {

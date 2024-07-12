@@ -60,8 +60,8 @@ export const AccountManagement: React.FC<AccountManagementScreenProps> = (props)
 
     const renderComponent = () => {
         switch (activeComponent) {
-            // case 'updatePassword':
-            //     return <UpdatePasswordForm />;
+            case 'updatePassword':
+                return <UpdatePasswordForm />;
             case 'deleteAllChats':
                 return <DeleteAllChats />;
             case 'deleteAccount':
@@ -79,7 +79,7 @@ export const AccountManagement: React.FC<AccountManagementScreenProps> = (props)
                 onPress={handleSidebarPress}
                 title="Account Management"
                 data={[
-                    // { id: 'updatePassword', label: 'Update Password' },
+                    { id: 'updatePassword', label: 'Update Password' },
                     { id: 'deleteAllChats', label: 'Delete All Chats' },
                     { id: 'deleteAccount', label: 'Delete Account' },
                     // Add other sidebar items here

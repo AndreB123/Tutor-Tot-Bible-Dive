@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text } from 'react-native';
 import { createStyleSheet } from "../styles/useStyles";
 import { InputField } from "./templates/InputField";
@@ -7,6 +7,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/Navigationtypes";
 import { useAuth } from "../context/AuthContext";
+import { useUser } from "../context/UserContext";
+import { getAccessToken } from "../utils/SecureStorage";
 
 export interface UpdatePasswordFormProps {
     testID?: string,
@@ -22,8 +24,24 @@ export const UpdatePasswordForm: React.FC<UpdatePasswordFormProps> = ({ testID }
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
     const [error, setError] = useState('');
+    const [isOldPasswordVerified, setIsOldPasswordVerified] = useState(false);
+    const [verifyAttempted, setVerifyAttempted] = useState(false);
     const navigation = useNavigation<DashboardNavigationProp>();
     const { checkAuthState } = useAuth();
+    const { userID, verifyPassword, updatePassword, passwordVerifySuccess } = useUser();
+
+    useEffect(() => {
+        if (verifyAttempted) {
+            if (passwordVerifySuccess) {
+                setIsOldPasswordVerified(true);
+                setError('');
+            } else {
+                setError('Old password is incorrect.');
+                setIsOldPasswordVerified(false);
+            }
+            setVerifyAttempted(false);
+        }
+    }, [passwordVerifySuccess, verifyAttempted]);
 
     const validatePassword = (password: string): boolean => {
         const hasTenCharacters = password.length >= 10;
@@ -35,12 +53,25 @@ export const UpdatePasswordForm: React.FC<UpdatePasswordFormProps> = ({ testID }
         return password === confirmPassword;
     };
 
-    //TODO verify old password before allowing update
+    const handleVerifyOldPassword = async () => {
+        if (!oldPassword) {
+            setError('Please enter your old password.');
+            return;
+        }
+
+        setVerifyAttempted(true);
+        const jwt = await getAccessToken();
+        verifyPassword(userID, oldPassword, jwt);
+    };
 
     const handleSubmitPress = async () => {
+        if (!isOldPasswordVerified) {
+            setError('Please verify your old password first.');
+            return;
+        }
+
         if (!validatePassword(newPassword)) {
             setError('Password must be at least 10 characters long and include at least one symbol.');
-            setOldPassword('');
             setNewPassword('');
             setConfirmNewPassword('');
             return;
@@ -48,13 +79,13 @@ export const UpdatePasswordForm: React.FC<UpdatePasswordFormProps> = ({ testID }
 
         if (!passwordsMatch(newPassword, confirmNewPassword)) {
             setError('Passwords do not match.');
-            setOldPassword('');
             setNewPassword('');
             setConfirmNewPassword('');
             return;
         }
 
-        const isSuccess = await updatePassword(oldPassword, newPassword);
+        const jwt = await getAccessToken();
+        const isSuccess = await updatePassword(userID, newPassword, jwt);
         if (isSuccess) {
             await checkAuthState();
             navigation.navigate('Dashboard');
@@ -80,9 +111,10 @@ export const UpdatePasswordForm: React.FC<UpdatePasswordFormProps> = ({ testID }
                 value={oldPassword}
                 onChangeText={(text) => { clearError(); setOldPassword(text); }}
                 placeholder="Old Password"
-                onSubmitEditing={handleSubmitPress}
+                onSubmitEditing={handleVerifyOldPassword}
                 style={styles.inputField}
                  />
+            <SubmitButton onPress={handleVerifyOldPassword} testID="56:579" />
             <Text style={styles.password} testID="56:580">
                 {`New Password`}
             </Text>
@@ -113,6 +145,7 @@ export const UpdatePasswordForm: React.FC<UpdatePasswordFormProps> = ({ testID }
         </View>
     )
 }
+
 
 const styles = createStyleSheet(theme => ({
     root: {

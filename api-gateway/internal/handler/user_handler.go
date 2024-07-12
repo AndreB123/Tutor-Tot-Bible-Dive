@@ -63,13 +63,13 @@ func (h *UserHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMess
 		if err := json.Unmarshal(msg.Data, &updatePassword); err != nil {
 			log.Printf("Failed to unmarshal UpdateUserPasswordRequest: %v", err)
 		}
-		h.UpdateUserPassword(conn, msg.JWT, updatePassword.Password, uint(updatePassword.Id))
+		h.UpdateUserPassword(conn, msg.JWT, updatePassword.OldPass, updatePassword.Password, uint(updatePassword.Id))
 	case "delete_user":
 		var DeleteUser proto.DeleteUserRequest
 		if err := json.Unmarshal(msg.Data, &DeleteUser); err != nil {
 			log.Printf("Failed to unmarshal DeleteUserRequest: %v", err)
 		}
-		h.UpdateUserPassword(conn, msg.JWT, DeleteUser.Password, uint(DeleteUser.Id))
+		h.DeleteUser(conn, msg.JWT, DeleteUser.Password, uint(DeleteUser.Id))
 	default:
 		log.Print("Invalid action type")
 	}
@@ -129,13 +129,13 @@ func (h *UserHandler) VerifyUserPassword(conn *websocket.Conn, jwt, password str
 	middleware.SendWebSocketMessage(conn, "verify_user_pass_resp", resp)
 }
 
-func (h *UserHandler) UpdateUserPassword(conn *websocket.Conn, jwt, password string, userID uint) {
+func (h *UserHandler) UpdateUserPassword(conn *websocket.Conn, jwt, oldPass, password string, userID uint) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.UserClient.UpdateUserPassword(ctxWithMetadata, &proto.UpdateUserPasswordRequest{Id: uint32(userID), Password: password})
+	resp, err := h.UserClient.UpdateUserPassword(ctxWithMetadata, &proto.UpdateUserPasswordRequest{Id: uint32(userID), OldPass: oldPass, Password: password})
 
 	if err != nil {
 		log.Print("Failed to create update password message")

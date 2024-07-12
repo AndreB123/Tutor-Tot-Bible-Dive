@@ -29,7 +29,8 @@ message UpdateUserInfoRequest {
 
 message UpdateUserPasswordRequest {
     uint32 id = 1;
-    string password = 2;
+    string old_pass = 2;
+    string password = 3;
 }
 
 message ListUsersRequest {
