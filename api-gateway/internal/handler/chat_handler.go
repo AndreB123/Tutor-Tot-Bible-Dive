@@ -56,12 +56,12 @@ func (h *ChatHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMess
 		}
 		go h.DeleteChatByID(conn, msg.JWT, deleteChatByIDReq.UserId, deleteChatByIDReq.ChatId)
 	case "delete_all_chats_by_user_id":
-		var deleteAllChatByUIDReq proto.DeleteAllChatsByUIDRequest
-		if err := json.Unmarshal(msg.Data, &deleteAllChatByUIDReq); err != nil {
+		var deleteAllChatsByUIDReq proto.DeleteAllChatsByUIDRequest
+		if err := json.Unmarshal(msg.Data, &deleteAllChatsByUIDReq); err != nil {
 			log.Printf("Failed to unmarshal DeleteAllChatByIIDRequest: %v", err)
 			return
 		}
-		go h.DeleteAllChatByUID(conn, msg.JWT, deleteAllChatByUIDReq.UserId)
+		go h.DeleteAllChatsByUID(conn, msg.JWT, deleteAllChatsByUIDReq.UserId)
 	}
 }
 
@@ -152,7 +152,7 @@ func (h *ChatHandler) DeleteChatByID(conn *websocket.Conn, jwt string, userID, c
 	middleware.SendWebSocketMessage(conn, "delete_chat_by_chat_id_resp", resp)
 }
 
-func (h *ChatHandler) DeleteAllChatByUID(conn *websocket.Conn, jwt string, userID uint32) {
+func (h *ChatHandler) DeleteAllChatsByUID(conn *websocket.Conn, jwt string, userID uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -160,7 +160,7 @@ func (h *ChatHandler) DeleteAllChatByUID(conn *websocket.Conn, jwt string, userI
 
 	resp, err := h.ChatClient.DeleteAllChatsByUID(ctxWithMetadata, &proto.DeleteAllChatsByUIDRequest{UserId: userID})
 	if err != nil {
-		log.Printf("Error deleting chats by chatid: %v", err)
+		log.Printf("Error deleting chats by UID: %v", err)
 		return
 	}
 	middleware.SendWebSocketMessage(conn, "delete_all_chats_by_user_id_resp", resp)

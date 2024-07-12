@@ -181,7 +181,7 @@ func (s *ChatServer) DeleteChatByID(ctx context.Context, req *proto.DeleteChatBy
 	}, nil
 }
 
-func (s *ChatServer) DeleteAllChatByUID(ctx context.Context, req *proto.DeleteAllChatsByUIDRequest) (*proto.DeleteAllChatsByUIDResponse, error) {
+func (s *ChatServer) DeleteAllChatsByUID(ctx context.Context, req *proto.DeleteAllChatsByUIDRequest) (*proto.DeleteAllChatsByUIDResponse, error) {
 	userID := uint(req.GetUserId())
 
 	err := s.chatService.DeleteAllChatsByUID(ctx, userID)

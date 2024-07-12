@@ -4,13 +4,15 @@ import WebSocketService from "../services/WebSocketService";
 import { getUserIDFromToken, getAccessToken } from "../utils/SecureStorage";
 import { useAuth } from "./AuthContext";
 
-
 const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
     const [userID, setUserID] = useState(null);
     const [user, setUser] = useState(null);
-    const { isLoggedIn, logoutInitiated } = useAuth();
+    const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(null);
+    const [passwordVerifySuccess, setPasswordVerifySuccess] = useState(null);
+    const [userDeletionSuccess, setUserDeletionSuccess] = useState(null);
+    const { isLoggedIn, logoutInitiated, logout } = useAuth();
 
     useEffect(() => {
         if (logoutInitiated) {
@@ -23,7 +25,28 @@ export const UserProvider = ({ children }) => {
         setUser(userDetails);
     }, []);
 
-    const userService = useMemo(() => new UserService(WebSocketService, handleUpdateUser), [handleUpdateUser]);
+    const handleUpdatePassword = useCallback((success) => {
+        setPasswordUpdateSuccess(success);
+    }, []);
+
+    const handleVerifyPassword = useCallback((success) => {
+        setPasswordVerifySuccess(success);
+    }, []);
+
+    const handleDeleteUser = useCallback((success) => {
+        setUserDeletionSuccess(success);
+        if (success) {
+            logout();
+        }
+    }, [logout]);
+
+    const userService = useMemo(() => new UserService(
+        WebSocketService, 
+        handleUpdateUser, 
+        handleUpdatePassword, 
+        handleVerifyPassword, 
+        handleDeleteUser
+    ), [handleUpdateUser, handleUpdatePassword, handleVerifyPassword, handleDeleteUser]);
 
     useEffect(() => {
         const loadUserID = async () => {
@@ -45,13 +68,19 @@ export const UserProvider = ({ children }) => {
         }
     }, [isLoggedIn, userService]);
 
-    const value = useMemo(()=> ({
+    const value = useMemo(() => ({
         userID,
         user,
+        passwordUpdateSuccess,
+        passwordVerifySuccess,
+        userDeletionSuccess,
         setUserID,
         setUser,
-        fetchUserDetails: userService.getUserDetails
-    }), [userID, user, userService]);
+        fetchUserDetails: userService.getUserDetails,
+        updatePassword: userService.updatePassword,
+        verifyPassword: userService.verifyPassword,
+        deleteUser: userService.deleteUser,
+    }), [userID, user, passwordUpdateSuccess, passwordVerifySuccess, userDeletionSuccess, userService]);
 
     return (
         <UserContext.Provider value={value}>
@@ -59,7 +88,6 @@ export const UserProvider = ({ children }) => {
         </UserContext.Provider>
     );
 };
-
 
 export const useUser = () => {
     const context = useContext(UserContext);
