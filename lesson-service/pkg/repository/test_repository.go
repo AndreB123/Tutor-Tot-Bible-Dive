@@ -18,6 +18,18 @@ func (repo *TestRespository) CreateNewTest(test *model.Test) error {
 	return repo.db.Create(test).Error
 }
 
+func (repo *TestRespository) GetTestByTestID(testID uint) (*model.Test, error) {
+	var test *model.Test
+
+	result := repo.db.Model(&model.Test{}).Where("id = ?", testID)
+
+	if err := result.Find(&test).Error; err != nil {
+		return nil, err
+	}
+
+	return test, nil
+}
+
 func (repo *TestRespository) GetAllTestsByLessonID(lessonID uint) ([]model.Lesson, error) {
 	var tests []model.Lesson
 

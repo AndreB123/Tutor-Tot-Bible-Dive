@@ -55,9 +55,9 @@ func (s *OpenAIService) GenerateQuickResponse(prompt string) (string, error) {
 func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLessons int) (*model.TopicPlan, error) {
 	prompt = fmt.Sprintf("Create a topic plan for the following subject with %d lessons: %s", numberOfLessons, prompt)
 
-	functionSchema := openai.Function{
+	functionDefinition := openai.FunctionDefinition{
 		Name: "generate_topic_plan",
-		Params: map[string]interface{}{
+		Parameters: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
 				"title": map[string]interface{}{
@@ -86,15 +86,18 @@ func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLe
 		},
 	}
 
-	requestBody := openai.CompletionRequest{
-		Prompt:       prompt,
-		MaxTokens:    1000,
-		Temperature:  0.7,
-		Functions:    []openai.Function{functionSchema},
-		FunctionCall: "generate_topic_plan",
+	requestBody := openai.ChatCompletionRequest{
+		Model:       "gpt-4",
+		Messages:    []openai.ChatCompletionMessage{{Role: "user", Content: prompt}},
+		MaxTokens:   1000,
+		Temperature: 0.7,
+		Functions:   []openai.FunctionDefinition{functionDefinition},
+		FunctionCall: openai.FunctionCall{
+			Name: "generate_topic_plan",
+		},
 	}
 
-	resp, err := s.client.CreateCompletion(context.TODO(), requestBody)
+	resp, err := s.client.CreateChatCompletion(context.TODO(), requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +111,7 @@ func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLe
 		} `json:"lessons"`
 	}
 
-	err = json.Unmarshal([]byte(resp.Choices[0].Text), &topicPlanData)
+	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &topicPlanData)
 	if err != nil {
 		return nil, err
 	}
@@ -140,9 +143,9 @@ func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLe
 func (s *OpenAIService) GenerateDetailedLesson(lesson *model.Lesson) (*model.Lesson, error) {
 	prompt := fmt.Sprintf("Create a detailed lesson plan for the objective: %s", lesson.Objective)
 
-	functionSchema := openai.Function{
+	functionDefinition := openai.FunctionDefinition{
 		Name: "generate_detailed_lesson",
-		Params: map[string]interface{}{
+		Parameters: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
 				"title": map[string]interface{}{
@@ -154,38 +157,34 @@ func (s *OpenAIService) GenerateDetailedLesson(lesson *model.Lesson) (*model.Les
 				"content": map[string]interface{}{
 					"type": "string",
 				},
-				"activities": map[string]interface{}{
-					"type": "array",
-					"items": map[string]interface{}{
-						"type": "string",
-					},
-				},
 			},
-			"required": []string{"title", "objective", "content", "activities"},
+			"required": []string{"title", "objective", "content"},
 		},
 	}
 
-	requestBody := openai.CompletionRequest{
-		Prompt:       prompt,
-		MaxTokens:    1000,
-		Temperature:  0.7,
-		Functions:    []openai.Function{functionSchema},
-		FunctionCall: "generate_detailed_lesson",
+	requestBody := openai.ChatCompletionRequest{
+		Model:       "gpt-4",
+		Messages:    []openai.ChatCompletionMessage{{Role: "user", Content: prompt}},
+		MaxTokens:   1000,
+		Temperature: 0.7,
+		Functions:   []openai.FunctionDefinition{functionDefinition},
+		FunctionCall: openai.FunctionCall{
+			Name: "generate_detailed_lesson",
+		},
 	}
 
-	resp, err := s.client.CreateCompletion(context.TODO(), requestBody)
+	resp, err := s.client.CreateChatCompletion(context.TODO(), requestBody)
 	if err != nil {
 		return nil, err
 	}
 
 	var lessonData struct {
-		Title      string   `json:"title"`
-		Objective  string   `json:"objective"`
-		Content    string   `json:"content"`
-		Activities []string `json:"activities"`
+		Title     string `json:"title"`
+		Objective string `json:"objective"`
+		Content   string `json:"content"`
 	}
 
-	err = json.Unmarshal([]byte(resp.Choices[0].Text), &lessonData)
+	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &lessonData)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +192,6 @@ func (s *OpenAIService) GenerateDetailedLesson(lesson *model.Lesson) (*model.Les
 	lesson.Title = lessonData.Title
 	lesson.Objective = lessonData.Objective
 	lesson.Information = lessonData.Content
-	lesson.Activities = lessonData.Activities
 
 	savedLesson, err := s.lessonService.CreateLesson(lesson)
 	if err != nil {
@@ -201,4 +199,80 @@ func (s *OpenAIService) GenerateDetailedLesson(lesson *model.Lesson) (*model.Les
 	}
 
 	return savedLesson, nil
+}
+
+// GenerateTest generates a test based on a lesson's content
+func (s *OpenAIService) GenerateTest(lesson *model.Lesson) (*model.Test, error) {
+	prompt := fmt.Sprintf("Create a test with questions and answers based on the following lesson content: %s", lesson.Information)
+
+	functionDefinition := openai.FunctionDefinition{
+		Name: "generate_test",
+		Parameters: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"title": map[string]interface{}{
+					"type": "string",
+				},
+				"question_count": map[string]interface{}{
+					"type": "integer",
+				},
+				"questions": map[string]interface{}{
+					"type": "array",
+					"items": map[string]interface{}{
+						"type": "string",
+					},
+				},
+				"answers": map[string]interface{}{
+					"type": "array",
+					"items": map[string]interface{}{
+						"type": "string",
+					},
+				},
+			},
+			"required": []string{"title", "question_count", "questions", "answers"},
+		},
+	}
+
+	requestBody := openai.ChatCompletionRequest{
+		Model:       "gpt-4",
+		Messages:    []openai.ChatCompletionMessage{{Role: "user", Content: prompt}},
+		MaxTokens:   1000,
+		Temperature: 0.7,
+		Functions:   []openai.FunctionDefinition{functionDefinition},
+		FunctionCall: openai.FunctionCall{
+			Name: "generate_test",
+		},
+	}
+
+	resp, err := s.client.CreateChatCompletion(context.TODO(), requestBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var testData struct {
+		Title         string   `json:"title"`
+		QuestionCount uint     `json:"question_count"`
+		Questions     []string `json:"questions"`
+		Answers       []string `json:"answers"`
+	}
+
+	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &testData)
+	if err != nil {
+		return nil, err
+	}
+
+	test := &model.Test{
+		Title:         testData.Title,
+		QuestionCount: testData.QuestionCount,
+		Questions:     testData.Questions,
+		Answers:       testData.Answers,
+		LessonID:      lesson.ID,
+	}
+
+	savedTest, err := s.testService.CreateNewTest(test)
+	if err != nil {
+		return nil, err
+	}
+
+	return savedTest, nil
 }
