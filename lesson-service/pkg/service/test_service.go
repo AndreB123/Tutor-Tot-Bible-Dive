@@ -29,13 +29,22 @@ func (ts *TestService) GetTestByID(testID uint) (*model.Test, error) {
 	return test, err
 }
 
+func (ts *TestService) GetAllTestAnswersByID(testID uint) (*model.Test, error) {
+	testAnswers, err := ts.testRepo.GetAllTestAnswersByID(testID)
+	if err != nil {
+		return nil, err
+	}
+
+	return testAnswers, nil
+}
+
 func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]string, error) {
-	test, err := ts.GetTestByID(userAnswers.TestID)
+	test, err := ts.GetAllTestAnswersByID(userAnswers.TestID)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	if len(userAnswers.Answers) != len(test.Questions) {
+	if len(userAnswers.Answers) != len(test.Answers) {
 		return 0, nil, errors.New("number of answers does not match number of questions")
 	}
 
