@@ -18,3 +18,12 @@ func NewTopicPlanService(topicPlanRepo *repository.TopicPlanRepository) *TopicPl
 func (tp *TopicPlanService) CreateTopicPlan(topicPlan *model.TopicPlan) (*model.TopicPlan, error) {
 	return topicPlan, tp.topicPlanRepo.CreateNewTopicPlan(topicPlan)
 }
+
+func (tp *TopicPlanService) GetAllTopicPlansByUserID(userID uint) (*[]model.TopicPlan, error) {
+	topicPlans, err := tp.topicPlanRepo.GetAllTopicPlansByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &topicPlans, nil
+}

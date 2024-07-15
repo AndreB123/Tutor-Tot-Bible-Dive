@@ -38,6 +38,15 @@ func (ts *TestService) GetAllTestAnswersByID(testID uint) (*model.Test, error) {
 	return testAnswers, nil
 }
 
+func (ts *TestService) GetAllTestQuestionsByID(testID uint) (*model.Test, error) {
+	testQuestions, err := ts.testRepo.GetAllTestQuestionsByID(testID)
+	if err != nil {
+		return nil, err
+	}
+
+	return testQuestions, nil
+}
+
 func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]string, error) {
 	test, err := ts.GetAllTestAnswersByID(userAnswers.TestID)
 	if err != nil {
