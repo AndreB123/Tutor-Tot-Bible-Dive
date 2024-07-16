@@ -56,5 +56,4 @@ func (l *LessonService) AreAllLessonsCompleted(topicPlanID uint) (bool, error) {
 	}
 
 	return true, nil
-
 }

@@ -7,7 +7,7 @@ option go_package = "chat-service/pkg/proto";
 import "google/protobuf/timestamp.proto";
 
 
-//types
+//Types
 message Message {
     uint32 id = 1;
     uint32 chat_id = 2;

@@ -6,20 +6,21 @@ import (
 	"fmt"
 	"lesson-service/pkg/config"
 	"lesson-service/pkg/model"
+	"lesson-service/pkg/repository"
 	"strings"
 
 	openai "github.com/sashabaranov/go-openai"
 )
 
 type OpenAIService struct {
-	Config           *config.Config
-	client           *openai.Client
-	topicPlanService *TopicPlanService
-	lessonService    *LessonService
-	testService      *TestService
+	Config              *config.Config
+	client              *openai.Client
+	topicPlanRepository *repository.TopicPlanRepository
+	lessonRepository    *repository.LessonRepository
+	testRepository      *repository.TestRepository
 }
 
-func NewOpenAIService(cfg *config.Config, lsnService *LessonService, tpcPlanService *TopicPlanService, tstService *TestService) *OpenAIService {
+func NewOpenAIService(cfg *config.Config, lsnRepository *repository.LessonRepository, tpcRepository *repository.TopicPlanRepository, tstRepository *repository.TestRepository) *OpenAIService {
 	apiKey := strings.TrimSpace(cfg.OpenAIKey)
 	if apiKey == "" {
 		fmt.Println("Error: API key is empty")
@@ -28,10 +29,10 @@ func NewOpenAIService(cfg *config.Config, lsnService *LessonService, tpcPlanServ
 
 	client := openai.NewClient(apiKey)
 	return &OpenAIService{
-		client:           client,
-		lessonService:    lsnService,
-		topicPlanService: tpcPlanService,
-		testService:      tstService,
+		client:              client,
+		lessonRepository:    lsnRepository,
+		topicPlanRepository: tpcRepository,
+		testRepository:      tstRepository,
 	}
 }
 
@@ -131,12 +132,12 @@ func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLe
 		topicPlan.Lessons = append(topicPlan.Lessons, lesson)
 	}
 
-	savedTopicPlan, err := s.topicPlanService.CreateTopicPlan(topicPlan)
+	err = s.topicPlanRepository.CreateNewTopicPlan(topicPlan)
 	if err != nil {
 		return nil, err
 	}
 
-	return savedTopicPlan, nil
+	return topicPlan, nil
 }
 
 // GenerateDetailedLesson generates a detailed lesson based on a basic lesson objective
@@ -193,17 +194,21 @@ func (s *OpenAIService) GenerateDetailedLesson(lesson *model.Lesson) (*model.Les
 	lesson.Objective = lessonData.Objective
 	lesson.Information = lessonData.Content
 
-	savedLesson, err := s.lessonService.CreateLesson(lesson)
+	err = s.lessonRepository.CreateNewLesson(lesson)
 	if err != nil {
 		return nil, err
 	}
 
-	return savedLesson, nil
+	return lesson, nil
 }
 
-// GenerateTest generates a test based on a lesson's content
-func (s *OpenAIService) GenerateTest(lesson *model.Lesson) (*model.Test, error) {
-	prompt := fmt.Sprintf("Create a test with questions and answers based on the following lesson content: %s", lesson.Information)
+// Dynamically generates test based on the number of questions specified for each type.
+// Eventually will need to handle short answer grading for tests.
+func (s *OpenAIService) GenerateTest(lesson *model.Lesson, numMultipleChoice, numFillInTheBlank, numShortAnswer, numMatchOptions int) (*model.Test, error) {
+	prompt := fmt.Sprintf(
+		"Create a test with the following number of questions based on the lesson content: %d multiple-choice, %d fill-in-the-blank, %d short answer, and %d match options. Here is the lesson content: %s",
+		numMultipleChoice, numFillInTheBlank, numShortAnswer, numMatchOptions, lesson.Information,
+	)
 
 	functionDefinition := openai.FunctionDefinition{
 		Name: "generate_test",
@@ -219,17 +224,41 @@ func (s *OpenAIService) GenerateTest(lesson *model.Lesson) (*model.Test, error) 
 				"questions": map[string]interface{}{
 					"type": "array",
 					"items": map[string]interface{}{
-						"type": "string",
-					},
-				},
-				"answers": map[string]interface{}{
-					"type": "array",
-					"items": map[string]interface{}{
-						"type": "string",
+						"type": "object",
+						"properties": map[string]interface{}{
+							"question_text": map[string]interface{}{
+								"type": "string",
+							},
+							"type": map[string]interface{}{
+								"type": "string",
+							},
+							"options": map[string]interface{}{
+								"type": "array",
+								"items": map[string]interface{}{
+									"type": "string",
+								},
+							},
+							"answer": map[string]interface{}{
+								"type": "string",
+							},
+							"answer_index": map[string]interface{}{
+								"type": "integer",
+							},
+							"matches": map[string]interface{}{
+								"type": "array",
+								"items": map[string]interface{}{
+									"type": "array",
+									"items": map[string]interface{}{
+										"type": "string",
+									},
+								},
+							},
+						},
+						"required": []string{"question_text", "type"},
 					},
 				},
 			},
-			"required": []string{"title", "question_count", "questions", "answers"},
+			"required": []string{"title", "question_count", "questions"},
 		},
 	}
 
@@ -250,10 +279,16 @@ func (s *OpenAIService) GenerateTest(lesson *model.Lesson) (*model.Test, error) 
 	}
 
 	var testData struct {
-		Title         string   `json:"title"`
-		QuestionCount uint     `json:"question_count"`
-		Questions     []string `json:"questions"`
-		Answers       []string `json:"answers"`
+		Title         string `json:"title"`
+		QuestionCount uint   `json:"question_count"`
+		Questions     []struct {
+			QuestionText string     `json:"question_text"`
+			Type         string     `json:"type"`
+			Options      []string   `json:"options,omitempty"`
+			Answer       string     `json:"answer,omitempty"`
+			AnswerIndex  int        `json:"answer_index,omitempty"`
+			Matches      [][]string `json:"matches,omitempty"`
+		} `json:"questions"`
 	}
 
 	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &testData)
@@ -261,18 +296,30 @@ func (s *OpenAIService) GenerateTest(lesson *model.Lesson) (*model.Test, error) 
 		return nil, err
 	}
 
+	questions := make([]model.Question, len(testData.Questions))
+
+	for i, q := range testData.Questions {
+		questions[i] = model.Question{
+			QuestionText: q.QuestionText,
+			Type:         model.QuestionType(q.Type),
+			Options:      q.Options,
+			Answer:       q.Answer,
+			AnswerIndex:  q.AnswerIndex,
+			Matches:      q.Matches,
+		}
+	}
+
 	test := &model.Test{
 		Title:         testData.Title,
 		QuestionCount: testData.QuestionCount,
-		Questions:     testData.Questions,
-		Answers:       testData.Answers,
+		Questions:     questions,
 		LessonID:      lesson.ID,
 	}
 
-	savedTest, err := s.testService.CreateNewTest(test)
+	err = s.testRepository.CreateNewTest(test)
 	if err != nil {
 		return nil, err
 	}
 
-	return savedTest, nil
+	return test, nil
 }

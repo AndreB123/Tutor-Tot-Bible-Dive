@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "lesson-service/pkg/proto";
+
+//Types
+message TopicPlan {
+    uint32 id = 1;
+
+}
+
+message Lesson {
+    uint32 id = 1;
+    string title = 2;
+    uint32 topic_plan_id = 3;
+    string objective = 4;
+    string information = 5;
+    repeated Test tests = 6;
+    bool completed = 7;
+}
+
+message Test {
+    uint32 id = 1;
+    string title = 2;
+    uint32 question_count = 3;
+    
+}
+
+//Requests
+
+//Responses
+

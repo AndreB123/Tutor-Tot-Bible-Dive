@@ -7,11 +7,13 @@ import (
 
 type TopicPlanService struct {
 	topicPlanRepo *repository.TopicPlanRepository
+	lessonService *LessonService
 }
 
-func NewTopicPlanService(topicPlanRepo *repository.TopicPlanRepository) *TopicPlanService {
+func NewTopicPlanService(topicPlanRepo *repository.TopicPlanRepository, lessonService *LessonService) *TopicPlanService {
 	return &TopicPlanService{
 		topicPlanRepo: topicPlanRepo,
+		lessonService: lessonService,
 	}
 }
 
@@ -26,4 +28,16 @@ func (tp *TopicPlanService) GetAllTopicPlansByUserID(userID uint) (*[]model.Topi
 	}
 
 	return &topicPlans, nil
+}
+
+func (tp *TopicPlanService) IsTopicPlanComplete(topicPlanID uint) (bool, error) {
+	allComplete, err := tp.lessonService.AreAllLessonsCompleted(topicPlanID)
+	if err != nil {
+		return false, err
+	}
+	return allComplete, nil
+}
+
+func (tp *TopicPlanService) UpdateTopicPlanCompleted(topicPlanID uint, completed bool) error {
+	return tp.topicPlanRepo.UpdateTopicPlanCompleted(topicPlanID, completed)
 }
