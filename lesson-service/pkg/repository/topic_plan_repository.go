@@ -18,8 +18,8 @@ func (repo *TopicPlanRepository) CreateNewTopicPlan(topicPlan *model.TopicPlan) 
 	return repo.db.Create(topicPlan).Error
 }
 
-func (repo *TopicPlanRepository) UpdateTopicPlan(topicPlan *model.TopicPlan) error {
-	return repo.db.Save(topicPlan).Error
+func (repo *TopicPlanRepository) UpdateTopicPlan(topicPlan *model.TopicPlan) (*model.TopicPlan, error) {
+	return topicPlan, repo.db.Save(topicPlan).Error
 }
 
 func (repo *TopicPlanRepository) GetAllTopicPlansByUserID(id uint) ([]model.TopicPlan, error) {

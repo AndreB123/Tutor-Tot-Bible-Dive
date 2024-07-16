@@ -39,6 +39,10 @@ func (repo *LessonRepository) GetAllLessonsByTopicPlanID(topicPlanID uint) ([]*m
 	return lessons, nil
 }
 
-func (repo *LessonRepository) UpdateLesson(lesson *model.Lesson) error {
-	return repo.db.Save(lesson).Error
+func (repo *LessonRepository) UpdateLesson(lesson *model.Lesson) (*model.Lesson, error) {
+	return lesson, repo.db.Save(lesson).Error
+}
+
+func (repo *LessonRepository) UpdateLessonCompleted(lessonID uint, completed bool) error {
+	return repo.db.Model(&model.Lesson{}).Where("id = ?", lessonID).Update("completed", completed).Error
 }

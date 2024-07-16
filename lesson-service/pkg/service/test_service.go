@@ -7,10 +7,10 @@ import (
 )
 
 type TestService struct {
-	testRepo *repository.TestRespository
+	testRepo *repository.TestRepository
 }
 
-func NewTestService(testRepo *repository.TestRespository) *TestService {
+func NewTestService(testRepo *repository.TestRepository) *TestService {
 	return &TestService{
 		testRepo: testRepo,
 	}
@@ -69,5 +69,17 @@ func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]st
 		}
 	}
 
+	passingScore := float64(len(test.Answers)) * 0.75
+	passed := float64(score) >= passingScore
+
+	err = ts.RecordTestResult(userAnswers.TestID, passed)
+	if err != nil {
+		return 0, nil, err
+	}
+
 	return score, feedback, nil
+}
+
+func (ts *TestService) RecordTestResult(testID uint, passed bool) error {
+	return ts.testRepo.UpdateTestPassed(testID, passed)
 }

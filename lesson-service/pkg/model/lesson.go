@@ -10,4 +10,5 @@ type Lesson struct {
 	Objective   string `json:"objective"`
 	Information string `json:"information"`
 	Tests       Test   `gorm:"foreignKey:LessonID" json:"tests"`
+	Completed   bool   `json:"completed"`
 }

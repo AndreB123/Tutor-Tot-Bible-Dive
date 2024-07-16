@@ -34,3 +34,27 @@ func (l *LessonService) GetAllLessonsByTopicPlanID(topicID uint) ([]*model.Lesso
 	}
 	return lessons, nil
 }
+
+func (l *LessonService) UpdateLesson(lesson *model.Lesson) (*model.Lesson, error) {
+	return l.lessonRepository.UpdateLesson(lesson)
+}
+
+func (l *LessonService) LessonCompleted(lessonID uint, completed bool) error {
+	return l.lessonRepository.UpdateLessonCompleted(lessonID, completed)
+}
+
+func (l *LessonService) AreAllLessonsCompleted(topicPlanID uint) (bool, error) {
+	lessons, err := l.GetAllLessonsByTopicPlanID(topicPlanID)
+	if err != nil {
+		return false, err
+	}
+
+	for _, lesson := range lessons {
+		if !lesson.Completed {
+			return false, nil
+		}
+	}
+
+	return true, nil
+
+}

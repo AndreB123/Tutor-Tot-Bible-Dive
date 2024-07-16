@@ -10,4 +10,5 @@ type Test struct {
 	Questions     []string `json:"questions"`
 	Answers       []string `json:"answers"`
 	LessonID      uint     `gorm:"index" json:"lesson_id"`
+	Passed        bool     `json:"passed"`
 }

@@ -10,4 +10,5 @@ type TopicPlan struct {
 	Objective string   `json:"objective"`
 	Standard  string   `json:"standard"`
 	Lessons   []Lesson `gorm:"foreignKey:LessonID" json:"lessons"`
+	Completed bool     `json:"completed"`
 }

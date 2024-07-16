@@ -141,7 +141,7 @@ func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLe
 
 // GenerateDetailedLesson generates a detailed lesson based on a basic lesson objective
 func (s *OpenAIService) GenerateDetailedLesson(lesson *model.Lesson) (*model.Lesson, error) {
-	prompt := fmt.Sprintf("Create a detailed lesson plan for the objective: %s", lesson.Objective)
+	prompt := fmt.Sprintf("Create a detailed lesson plan for this lesson: '%s' and this objective: %s", lesson.Title, lesson.Objective)
 
 	functionDefinition := openai.FunctionDefinition{
 		Name: "generate_detailed_lesson",

@@ -6,19 +6,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type TestRespository struct {
+type TestRepository struct {
 	db *gorm.DB
 }
 
-func NewTestRespository(db *gorm.DB) *TestRespository {
-	return &TestRespository{db: db}
+func NewTestRepository(db *gorm.DB) *TestRepository {
+	return &TestRepository{db: db}
 }
 
-func (repo *TestRespository) CreateNewTest(test *model.Test) error {
+func (repo *TestRepository) CreateNewTest(test *model.Test) error {
 	return repo.db.Create(test).Error
 }
 
-func (repo *TestRespository) GetTestByTestID(testID uint) (*model.Test, error) {
+func (repo *TestRepository) GetTestByTestID(testID uint) (*model.Test, error) {
 	var test *model.Test
 
 	result := repo.db.Model(&model.Test{}).Where("id = ?", testID)
@@ -30,7 +30,7 @@ func (repo *TestRespository) GetTestByTestID(testID uint) (*model.Test, error) {
 	return test, nil
 }
 
-func (repo *TestRespository) GetAllTestsByLessonID(lessonID uint) ([]model.Lesson, error) {
+func (repo *TestRepository) GetAllTestsByLessonID(lessonID uint) ([]model.Lesson, error) {
 	var tests []model.Lesson
 
 	result := repo.db.Model(&model.Test{}).Where("lesson_id = ?", lessonID)
@@ -42,10 +42,10 @@ func (repo *TestRespository) GetAllTestsByLessonID(lessonID uint) ([]model.Lesso
 	return tests, nil
 }
 
-func (repo *TestRespository) GetAllTestQuestionsByID(id uint) (*model.Test, error) {
+func (repo *TestRepository) GetAllTestQuestionsByID(testID uint) (*model.Test, error) {
 	var testQuestions *model.Test
 
-	results := repo.db.Model(&model.Test{}).Select("title", "questions").Where("id = ?", id)
+	results := repo.db.Model(&model.Test{}).Select("title", "questions").Where("id = ?", testID)
 
 	if err := results.Find(&testQuestions).Error; err != nil {
 		return nil, err
@@ -54,14 +54,22 @@ func (repo *TestRespository) GetAllTestQuestionsByID(id uint) (*model.Test, erro
 	return testQuestions, nil
 }
 
-func (repo *TestRespository) GetAllTestAnswersByID(id uint) (*model.Test, error) {
+func (repo *TestRepository) GetAllTestAnswersByID(testID uint) (*model.Test, error) {
 	var testAnswers *model.Test
 
-	results := repo.db.Model(&model.Test{}).Select("title", "answers").Where("id = ?", id)
+	results := repo.db.Model(&model.Test{}).Select("title", "answers").Where("id = ?", testID)
 
 	if err := results.Find(&testAnswers).Error; err != nil {
 		return nil, err
 	}
 
 	return testAnswers, nil
+}
+
+func (repo *TestRepository) UpdateTest(test *model.Test) (*model.Test, error) {
+	return test, repo.db.Save(test).Error
+}
+
+func (repo *TestRepository) UpdateTestPassed(testID uint, passed bool) error {
+	return repo.db.Model(&model.Test{}).Where("id = ?", testID).Update("passed", passed).Error
 }
