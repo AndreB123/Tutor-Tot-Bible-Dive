@@ -6,28 +6,142 @@ option go_package = "lesson-service/pkg/proto";
 
 //Types
 message TopicPlan {
-    uint32 id = 1;
-
+    uint32 id                = 1;
+    string title             = 2;
+    uint32 user_id           = 3;
+    string objective         = 4;
+    string standard          = 5;
+    repeated Lesson lesson   = 6;
+    bool completed           = 7;
 }
 
 message Lesson {
-    uint32 id = 1;
-    string title = 2;
+    uint32 id            = 1;
+    string title         = 2;
     uint32 topic_plan_id = 3;
-    string objective = 4;
-    string information = 5;
-    repeated Test tests = 6;
-    bool completed = 7;
+    string objective     = 4;
+    string information   = 5;
+    repeated Test tests  = 6;
+    bool completed       = 7;
+}
+
+message QuestionType {
+    string multiple_choice   = 1;
+    string fill_in_the_blank = 2;
+    string short_answer      = 3;
+    string match_options     = 4; 
+}
+
+message Question {
+    string question_text     = 1;
+    QuestionType type        = 2;
+    repeated string option   = 3;
+    string answer            = 4;
+    uint32 answer_index      = 5;
+    repeated string matches  = 6; 
 }
 
 message Test {
-    uint32 id = 1;
-    string title = 2;
-    uint32 question_count = 3;
-    
+    uint32 id                    = 1;
+    string title                 = 2;
+    uint32 question_count        = 3;
+    repeated Question questions  = 4;
+    uint32 lesson_id             = 5;
+    bool passed                  = 6;
 }
 
 //Requests
+message GenerateQuickResponseRequest {
+    string prompt    = 1;
+}
+
+message GenerateTopicPlanRequest {
+    uint32 user_id           = 1;
+    string prompt            = 2;
+    uint32 number_of_lessons = 3;
+}
+
+message GenerateLessonsRequest {
+    uint32 topic_plan_id = 1;
+}
+
+message GenerateTestsRequest {
+    uint32 lesson_id             = 1;
+    uint32 num_multiple_choice   = 2;
+    uint32 num_fill_in_the_blank = 3;
+    uint32 num_short_answer      = 4;
+    uint32 num_match_options     = 5;
+}
+
+message GetAllTopicPlansByUIDRequest {
+    uint32 user_id = 1;
+}
+
+message GetAllLessonPlansByTopicIDRequest {
+    uint32 topic_plan_id = 1;
+}
+
+message GetAllTestsByLessonIDRequest {
+    uint32 lesson_id = 1;
+}
+
+message GetAllQuestionsByTestIDRequest {
+    uint32 test_id = 1;
+}
+
+message GradeTestRequest {
+    uint32 test_id           = 1;
+    repeated string answers  = 2;
+}
 
 //Responses
+message GenerateQuickResponseResponse {
+    string response  = 1;
+}
 
+message GenerateTopicPlanResponse {
+    TopicPlan topic_plan = 1;
+}
+
+message GenerateLessonsResponse {
+    repeated Lesson lessons = 1;
+}
+
+message GenerateTestsResponse {
+    repeated Test tests = 1;
+}
+
+message GetAllTopicPlansByUIDResponse {
+    repeated TopicPlan topic_plans = 1;
+}
+
+message GetAllLessonPlansByTopicIDResponse {
+    repeated Lesson lessons = 1;
+}
+
+message GetAllTestsByLessonIDResponse {
+    repeated Test tests = 1;
+}
+
+message GetAllQuestionsByTestIDResponse {
+    repeated Question questions = 1;
+}
+
+message GradeTestResponse {
+    int32 score                  = 1;
+    map<int32, string> feedback  = 2;
+    bool passed                  = 3;
+}
+
+//Service
+service LessonService {
+    rpc GenerateQuickResponse(GenerateQuickResponseRequest) returns (GenerateQuickResponseResponse);
+    rpc GenerateTopicPlan(GenerateTopicPlanRequest) returns (GenerateTopicPlanResponse);
+    rpc GenerateLessons(GenerateLessonsRequest) returns (GenerateLessonsResponse);
+    rpc GenerateTests(GenerateTestsRequest) returns (GenerateTestsResponse);
+    rpc GetAllTopicPlansByUID(GetAllTopicPlansByUIDRequest) returns (GetAllTopicPlansByUIDResponse);
+    rpc GetAllLessonPlansByTopicID(GetAllLessonPlansByTopicIDRequest) returns (GetAllLessonPlansByTopicIDResponse);
+    rpc GetAllTestsByLessonID(GetAllTestsByLessonIDRequest) returns (GetAllTestsByLessonIDResponse);
+    rpc GetAllQuestionsByTestID(GetAllQuestionsByTestIDRequest) returns (GetAllQuestionsByTestIDResponse);
+    rpc GradeTest(GradeTestRequest) returns (GradeTestResponse);
+}
