@@ -8,12 +8,14 @@ import (
 )
 
 type TestService struct {
-	testRepo *repository.TestRepository
+	testRepo      *repository.TestRepository
+	openAIService *OpenAIService
 }
 
-func NewTestService(testRepo *repository.TestRepository) *TestService {
+func NewTestService(testRepo *repository.TestRepository, openAIService *OpenAIService) *TestService {
 	return &TestService{
-		testRepo: testRepo,
+		testRepo:      testRepo,
+		openAIService: openAIService,
 	}
 }
 
@@ -63,7 +65,10 @@ func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]st
 
 	for i, userAnswer := range userAnswers.Answers {
 		question := test.Questions[i]
-		isCorrect, feedbackMsg := gradeQuestion(question, userAnswer)
+		isCorrect, feedbackMsg, err := ts.gradeQuestion(question, userAnswer)
+		if err != nil {
+			return 0, nil, err
+		}
 		if isCorrect {
 			score++
 		}
@@ -81,39 +86,52 @@ func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]st
 	return score, feedback, nil
 }
 
-func gradeQuestion(question model.Question, userAnswer string) (bool, string) {
+func (ts *TestService) gradeQuestion(question model.Question, userAnswer string) (bool, string, error) {
 	switch question.Type {
 	case model.MultipleChoice:
 		return gradeMultipleChoice(question, userAnswer)
-	case model.FillInTheBlank, model.ShortAnswer:
-		return gradeFillInTheBlankOrShortAnswer(question, userAnswer)
+	case model.FillInTheBlank:
+		return gradeFillInTheBlank(question, userAnswer)
+	case model.ShortAnswer:
+		return ts.gradeShortAnswer(question, userAnswer)
 	case model.MatchOptions:
 		return gradeMatchOptions(question, userAnswer)
 	default:
-		return false, "Unsupported question type"
+		return false, "Unsupported question type", nil
 	}
 }
 
-func gradeMultipleChoice(question model.Question, userAnswer string) (bool, string) {
+func gradeMultipleChoice(question model.Question, userAnswer string) (bool, string, error) {
 	if userAnswer == question.Options[question.AnswerIndex] {
-		return true, "Correct"
+		return true, "Correct", nil
 	}
-	return false, "Incorrect. Correct answer: " + question.Options[question.AnswerIndex]
+	return false, "Incorrect. Correct answer: " + question.Options[question.AnswerIndex], nil
 }
 
-func gradeFillInTheBlankOrShortAnswer(question model.Question, userAnswer string) (bool, string) {
+func gradeFillInTheBlank(question model.Question, userAnswer string) (bool, string, error) {
 	if userAnswer == question.Answer {
-		return true, "Correct"
+		return true, "Correct", nil
 	}
-	return false, "Incorrect. Correct answer: " + question.Answer
+	return false, "Incorrect. Correct answer: " + question.Answer, nil
 }
 
-func gradeMatchOptions(question model.Question, userAnswer string) (bool, string) {
+func (ts *TestService) gradeShortAnswer(question model.Question, userAnswer string) (bool, string, error) {
+	isCorrect, result, err := ts.openAIService.GradeShortAnswer(userAnswer, question.Answer)
+	if err != nil {
+		return false, "Error grading short answer", err
+	}
+	if isCorrect {
+		return true, "Correct", nil
+	}
+	return false, "Incorrect. OpenAI response: " + result, nil
+}
+
+func gradeMatchOptions(question model.Question, userAnswer string) (bool, string, error) {
 	correctMatches := strings.Join(flattenMatches(question.Matches), ",")
 	if userAnswer == correctMatches {
-		return true, "Correct"
+		return true, "Correct", nil
 	}
-	return false, "Incorrect. Correct answer: " + correctMatches
+	return false, "Incorrect. Correct answer: " + correctMatches, nil
 }
 
 func flattenMatches(matches [][]string) []string {

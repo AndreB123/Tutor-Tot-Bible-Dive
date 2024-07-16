@@ -323,3 +323,20 @@ func (s *OpenAIService) GenerateTest(lesson *model.Lesson, numMultipleChoice, nu
 
 	return test, nil
 }
+
+func (s *OpenAIService) GradeShortAnswer(userAnswer, correctAnswer string) (bool, string, error) {
+	prompt := fmt.Sprintf("Is the following answer correct based on the provided context? Context: %s Answer: %s", correctAnswer, userAnswer)
+
+	resp, err := s.client.CreateCompletion(context.TODO(), openai.CompletionRequest{
+		Prompt:      prompt,
+		MaxTokens:   60,
+		Temperature: 0.7,
+	})
+	if err != nil {
+		return false, "", err
+	}
+
+	result := strings.TrimSpace(resp.Choices[0].Text)
+	isCorrect := strings.Contains(strings.ToLower(result), "yes")
+	return isCorrect, result, nil
+}
