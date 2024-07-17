@@ -26,7 +26,10 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(interceptors.NewUnaryInterceptor(cfg.AccessSecret)), grpc.StreamInterceptor(interceptors.NewStreamInterceptor(cfg.AccessSecret)))
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(
+		interceptors.NewUnaryInterceptor(cfg.AccessSecret)),
+		grpc.StreamInterceptor(interceptors.NewStreamInterceptor(cfg.AccessSecret)),
+	)
 
 	chatRepo := repository.NewChatRepository(db)
 	msgRepo := repository.NewMessageRepository(db)
