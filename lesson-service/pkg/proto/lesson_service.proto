@@ -65,7 +65,7 @@ message GenerateLessonsRequest {
     uint32 topic_plan_id = 1;
 }
 
-message GenerateTestsRequest {
+message GenerateTestRequest {
     uint32 lesson_id             = 1;
     uint32 num_multiple_choice   = 2;
     uint32 num_fill_in_the_blank = 3;
@@ -92,6 +92,8 @@ message GetAllQuestionsByTestIDRequest {
 message GradeTestRequest {
     uint32 test_id           = 1;
     repeated string answers  = 2;
+    uint32 lesson_id         = 3;
+    uint32 topic_plan_id     = 4;
 }
 
 //Responses
@@ -107,8 +109,8 @@ message GenerateLessonsResponse {
     repeated Lesson lessons = 1;
 }
 
-message GenerateTestsResponse {
-    repeated Test tests = 1;
+message GenerateTestResponse {
+    Test test = 1;
 }
 
 message GetAllTopicPlansByUIDResponse {
@@ -138,7 +140,7 @@ service LessonService {
     rpc GenerateQuickResponse(GenerateQuickResponseRequest) returns (GenerateQuickResponseResponse);
     rpc GenerateTopicPlan(GenerateTopicPlanRequest) returns (GenerateTopicPlanResponse);
     rpc GenerateLessons(GenerateLessonsRequest) returns (GenerateLessonsResponse);
-    rpc GenerateTests(GenerateTestsRequest) returns (GenerateTestsResponse);
+    rpc GenerateTests(GenerateTestRequest) returns (GenerateTestResponse);
     rpc GetAllTopicPlansByUID(GetAllTopicPlansByUIDRequest) returns (GetAllTopicPlansByUIDResponse);
     rpc GetAllLessonPlansByTopicID(GetAllLessonPlansByTopicIDRequest) returns (GetAllLessonPlansByTopicIDResponse);
     rpc GetAllTestsByLessonID(GetAllTestsByLessonIDRequest) returns (GetAllTestsByLessonIDResponse);

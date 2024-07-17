@@ -21,13 +21,13 @@ func (tp *TopicPlanService) CreateTopicPlan(topicPlan *model.TopicPlan) (*model.
 	return topicPlan, tp.topicPlanRepo.CreateNewTopicPlan(topicPlan)
 }
 
-func (tp *TopicPlanService) GetAllTopicPlansByUserID(userID uint) (*[]model.TopicPlan, error) {
+func (tp *TopicPlanService) GetAllTopicPlansByUserID(userID uint) ([]*model.TopicPlan, error) {
 	topicPlans, err := tp.topicPlanRepo.GetAllTopicPlansByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &topicPlans, nil
+	return topicPlans, nil
 }
 
 func (tp *TopicPlanService) IsTopicPlanComplete(topicPlanID uint) (bool, error) {

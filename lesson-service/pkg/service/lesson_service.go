@@ -19,7 +19,7 @@ func (l *LessonService) CreateLesson(lesson *model.Lesson) (*model.Lesson, error
 	return lesson, l.lessonRepository.CreateNewLesson(lesson)
 }
 
-func (l *LessonService) FindLessonByID(lessonID uint) (*model.Lesson, error) {
+func (l *LessonService) GetLessonByID(lessonID uint) (*model.Lesson, error) {
 	lesson, err := l.lessonRepository.FindLessonByID(lessonID)
 	if err != nil {
 		return nil, err

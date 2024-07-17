@@ -32,6 +32,15 @@ func (ts *TestService) GetTestByID(testID uint) (*model.Test, error) {
 	return test, err
 }
 
+func (ts *TestService) GetAllTestsByLessonID(lessonID uint) ([]*model.Test, error) {
+	test, err := ts.testRepo.GetAllTestsByLessonID(lessonID)
+	if err != nil {
+		return nil, err
+	}
+
+	return test, nil
+}
+
 func (ts *TestService) GetAllTestAnswersByID(testID uint) (*model.Test, error) {
 	testAnswers, err := ts.testRepo.GetAllTestAnswersByID(testID)
 	if err != nil {
@@ -50,14 +59,14 @@ func (ts *TestService) GetAllTestQuestionsByID(testID uint) (*model.Test, error)
 	return testQuestions, nil
 }
 
-func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]string, error) {
+func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]string, bool, error) {
 	test, err := ts.GetAllTestAnswersByID(userAnswers.TestID)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, false, err
 	}
 
 	if len(userAnswers.Answers) != len(test.Questions) {
-		return 0, nil, errors.New("number of answers does not match number of questions")
+		return 0, nil, false, errors.New("number of answers does not match number of questions")
 	}
 
 	score := 0
@@ -67,7 +76,7 @@ func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]st
 		question := test.Questions[i]
 		isCorrect, feedbackMsg, err := ts.gradeQuestion(question, userAnswer)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, false, err
 		}
 		if isCorrect {
 			score++
@@ -80,10 +89,10 @@ func (ts *TestService) GradeTest(userAnswers model.UserAnswers) (int, map[int]st
 
 	err = ts.RecordTestResult(userAnswers.TestID, passed)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, false, err
 	}
 
-	return score, feedback, nil
+	return score, feedback, passed, nil
 }
 
 func (ts *TestService) gradeQuestion(question model.Question, userAnswer string) (bool, string, error) {
@@ -95,7 +104,7 @@ func (ts *TestService) gradeQuestion(question model.Question, userAnswer string)
 	case model.ShortAnswer:
 		return ts.gradeShortAnswer(question, userAnswer)
 	case model.MatchOptions:
-		return gradeMatchOptions(question, userAnswer)
+		return ts.gradeMatchOptions(question, userAnswer)
 	default:
 		return false, "Unsupported question type", nil
 	}
@@ -126,15 +135,15 @@ func (ts *TestService) gradeShortAnswer(question model.Question, userAnswer stri
 	return false, "Incorrect. OpenAI response: " + result, nil
 }
 
-func gradeMatchOptions(question model.Question, userAnswer string) (bool, string, error) {
-	correctMatches := strings.Join(flattenMatches(question.Matches), ",")
+func (ts *TestService) gradeMatchOptions(question model.Question, userAnswer string) (bool, string, error) {
+	correctMatches := strings.Join(ts.FlattenMatches(question.Matches), ",")
 	if userAnswer == correctMatches {
 		return true, "Correct", nil
 	}
 	return false, "Incorrect. Correct answer: " + correctMatches, nil
 }
 
-func flattenMatches(matches [][]string) []string {
+func (ts *TestService) FlattenMatches(matches [][]string) []string {
 	var flat []string
 	for _, pair := range matches {
 		flat = append(flat, strings.Join(pair, "-"))

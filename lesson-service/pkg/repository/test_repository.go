@@ -30,8 +30,8 @@ func (repo *TestRepository) GetTestByTestID(testID uint) (*model.Test, error) {
 	return test, nil
 }
 
-func (repo *TestRepository) GetAllTestsByLessonID(lessonID uint) ([]model.Lesson, error) {
-	var tests []model.Lesson
+func (repo *TestRepository) GetAllTestsByLessonID(lessonID uint) ([]*model.Test, error) {
+	var tests []*model.Test
 
 	result := repo.db.Model(&model.Test{}).Where("lesson_id = ?", lessonID)
 

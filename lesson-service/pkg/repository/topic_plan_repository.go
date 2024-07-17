@@ -22,8 +22,8 @@ func (repo *TopicPlanRepository) UpdateTopicPlan(topicPlan *model.TopicPlan) (*m
 	return topicPlan, repo.db.Save(topicPlan).Error
 }
 
-func (repo *TopicPlanRepository) GetAllTopicPlansByUserID(id uint) ([]model.TopicPlan, error) {
-	var topicPlans []model.TopicPlan
+func (repo *TopicPlanRepository) GetAllTopicPlansByUserID(id uint) ([]*model.TopicPlan, error) {
+	var topicPlans []*model.TopicPlan
 
 	results := repo.db.Model(&model.TopicPlan{}).Where("user_id = ?", id)
 
