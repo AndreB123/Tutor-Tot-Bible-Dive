@@ -1,0 +1,17 @@
+FROM golang:1.22.1-alpine
+
+WORKDIR /lesson-service
+
+COPY . .
+
+RUN go mod download
+
+RUN go get -u github.com/cosmtrek/air
+RUN go install github.com/cosmtrek/air@latest
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/lesson-service
+
+EXPOSE 8080
+EXPOSE 8082
+
+CMD [ "./main" ]

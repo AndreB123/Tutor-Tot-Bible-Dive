@@ -1,0 +1,16 @@
+# .air.toml
+root = "."
+tmp_dir = "./tmp"
+[build]
+  cmd = "go build -o ./tmp/main ./cmd/lesson-service"
+  bin = "./tmp/main"
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  exclude_dir = ["assets"]
+  delay = 1000
+[log]
+  time = true
+[watch]
+  interval = 20000
+[misc]
+  clean_on_exit = true
+  force_polling = true
