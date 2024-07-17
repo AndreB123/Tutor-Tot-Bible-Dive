@@ -10,14 +10,16 @@ type ServiceFactory interface {
 }
 
 type DefaultServiceFactory struct {
-	chatHandler *handler.ChatHandler
-	userHandler *handler.UserHandler
+	chatHandler   *handler.ChatHandler
+	userHandler   *handler.UserHandler
+	lessonHandler *handler.LessonHandler
 }
 
-func NewDefaultServiceFactory(chatClient proto.ChatServiceClient, userClient proto.UserServiceClient) *DefaultServiceFactory {
+func NewDefaultServiceFactory(chatClient proto.ChatServiceClient, userClient proto.UserServiceClient, lessonClient proto.LessonServiceClient) *DefaultServiceFactory {
 	return &DefaultServiceFactory{
-		chatHandler: &handler.ChatHandler{ChatClient: chatClient},
-		userHandler: &handler.UserHandler{UserClient: userClient},
+		chatHandler:   &handler.ChatHandler{ChatClient: chatClient},
+		userHandler:   &handler.UserHandler{UserClient: userClient},
+		lessonHandler: &handler.LessonHandler{LessonClient: lessonClient},
 	}
 }
 
@@ -27,6 +29,8 @@ func (f *DefaultServiceFactory) GetHandler(messageType string) handler.MessageHa
 		return f.chatHandler
 	case "user":
 		return f.userHandler
+	case "lesson":
+		return f.lessonHandler
 	default:
 		return nil
 	}

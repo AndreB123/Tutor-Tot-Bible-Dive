@@ -11,6 +11,7 @@ type Config struct {
 	UserHTTPServiceURL string
 	UserServiceURL     string
 	ChatServiceURL     string
+	LessonServiceURL   string
 }
 
 func readSecretFile(secretName string) string {
@@ -26,6 +27,7 @@ func LoadConfig() *Config {
 	userHTTPServiceURL := "http://user-subscription-service:8080"
 	userServiceURL := "user-subscription-service:8081"
 	chatServiceURL := "chat-service:8080"
+	lessonServiceURL := "lesson-service:8085"
 
 	return &Config{
 		AccessSecret:       readSecretFile("ACCESS_SECRET"),
@@ -33,5 +35,6 @@ func LoadConfig() *Config {
 		UserHTTPServiceURL: userHTTPServiceURL,
 		UserServiceURL:     userServiceURL,
 		ChatServiceURL:     chatServiceURL,
+		LessonServiceURL:   lessonServiceURL,
 	}
 }

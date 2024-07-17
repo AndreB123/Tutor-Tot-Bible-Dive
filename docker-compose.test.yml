@@ -91,7 +91,7 @@ services:
     build: ./lesson-service
     image: lesson-service:latest
     ports:
-      - "8082:8080"
+      - "8085:8080"
     volumes:
       - ./lesson-service:/lesson-service
       - go-modules:/go/pkg/mod

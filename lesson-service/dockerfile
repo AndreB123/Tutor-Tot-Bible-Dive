@@ -12,6 +12,6 @@ RUN go install github.com/cosmtrek/air@latest
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/lesson-service
 
 EXPOSE 8080
-EXPOSE 8082
+EXPOSE 8085
 
 CMD [ "./main" ]

@@ -11,10 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func LoadRouter(cfg *config.Config, chatClient proto.ChatServiceClient, userClient proto.UserServiceClient) *gin.Engine {
+func LoadRouter(cfg *config.Config, chatClient proto.ChatServiceClient, userClient proto.UserServiceClient, lessonClient proto.LessonServiceClient) *gin.Engine {
 	router := gin.Default()
 
-	serviceFactory := services.NewDefaultServiceFactory(chatClient, userClient)
+	serviceFactory := services.NewDefaultServiceFactory(chatClient, userClient, lessonClient)
 
 	wsManager := websocket.NewWebSocketManager(cfg, serviceFactory)
 

@@ -35,10 +35,20 @@ func main() {
 	log.Println("Connected to User Service")
 	defer UsergrpcConn.Close()
 
+	log.Printf("User Service URL: %s", cfg.LessonServiceURL)
+	LessongrpcConn, err := grpc.Dial(cfg.LessonServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock()) //TODO change to secure connection for prod
+	if err != nil {
+		log.Fatalf("Was not able to connect: %v", err)
+		return
+	}
+	log.Println("Connected to User Service")
+	defer LessongrpcConn.Close()
+
 	chatClient := proto.NewChatServiceClient(chatGrpcConn)
 	userClient := proto.NewUserServiceClient(UsergrpcConn)
+	lessonClient := proto.NewLessonServiceClient(LessongrpcConn)
 
-	router := router.LoadRouter(cfg, chatClient, userClient)
+	router := router.LoadRouter(cfg, chatClient, userClient, lessonClient)
 	log.Println("HTTP router loaded")
 
 	keyPath := "/run/secrets/ssl_key"
