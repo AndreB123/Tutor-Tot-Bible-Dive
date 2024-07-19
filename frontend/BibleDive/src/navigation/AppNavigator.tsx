@@ -10,6 +10,9 @@ import { theme } from "../styles/theme";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { AccountManagement } from "../feature_pages/AccountManagement";
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { TopicPlanOverview } from "../feature_pages/TopicPlanOverview";
+import LessonOptions from "../components/LessonOptions";
+import { LessonPage } from "../feature_pages/LessonPage";
 
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -74,6 +77,21 @@ function AppNavigator() {
                         name="AccountManagementPage"
                         component={AccountManagement}
                         options={{ title: 'Account Management'}}
+                    />
+                    <Stack.Screen
+                        name="TopicPlanOverview"
+                        component={TopicPlanOverview}
+                        options={{title: "Learning Plan"}}
+                    />
+                    <Stack.Screen
+                        name="LessonOptions"
+                        component={LessonOptions}
+                        options={{title: "Lesson Dive"}}
+                    />
+                    <Stack.Screen
+                        name="LessonPage"
+                        component={LessonPage}
+                        options={{ title: 'Get Started' }}
                     />
                 </>
             ) : (

@@ -76,7 +76,14 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 			log.Printf("Failed to unmarshal GetAllQuestionsByTestIDRequest: %v", err)
 		}
 		go h.GetAllQuestionsByTestID(conn, msg.JWT, getAllQuestionsByTestIDReq.TestId)
+	case "generate_topic_plan_overview":
+		var generateQuickResponseReq proto.GenerateQuickResponseRequest
+		if err := json.Unmarshal(msg.Data, &generateQuickResponseReq); err != nil {
+			log.Printf("Failed to unmarshal GenerateQuickResponseRequest: %v", err)
+		}
+		go h.GenerateQuickResponse(conn, msg.JWT, &generateQuickResponseReq)
 	}
+
 }
 
 func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, req *proto.GenerateTopicPlanRequest) {
@@ -197,4 +204,19 @@ func (h *LessonHandler) GetAllQuestionsByTestID(conn *websocket.Conn, jwt string
 	}
 
 	middleware.SendWebSocketMessage(conn, "get_all_questions_by_test_id_resp", resp)
+}
+
+func (h *LessonHandler) GenerateQuickResponse(conn *websocket.Conn, jwt string, req *proto.GenerateQuickResponseRequest) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+	resp, err := h.LessonClient.GenerateQuickResponse(ctxWithMetadata, req)
+	if err != nil {
+		log.Printf("Error generating quick response: %v", err)
+		return
+	}
+
+	middleware.SendWebSocketMessage(conn, "generate_quick_response_resp", resp)
 }

@@ -1,33 +1,54 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTopicPlan } from "../context/TopicPlanContext";
+import { RootStackParamList } from "../navigation/Navigationtypes";
+import { LoadingOverlay } from "./templates/LoadingOverlay";
 
-export const LessonOptions: React.FC = () => {
-    // Placeholder response from the API
-    const lessonResponse = "This is the placeholder response from the API.";
+const LessonOptions = () => {
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const { generateTopicPlan, topicPlanOverview, loading, topicPlan } = useTopicPlan();
 
-    const handleOptionPress = (level: string) => {
-        console.log(`User selected: ${level}`);
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (loading) {
+                console.warn('Request timed out. Navigating back.');
+                navigation.goBack();
+            }
+        }, 30000);
+
+        return () => clearTimeout(timeout); 
+    }, [loading, navigation]);
+
+    const handleOptionPress = async (numberOfLessons: number) => {
+        if (topicPlan) {
+            await generateTopicPlan(topicPlan.id, numberOfLessons);
+            navigation.navigate('TopicPlanOverview', { topicPlanID: topicPlan.id });
+        } else {
+            console.error('Topic Plan ID is not set');
+        }
     };
 
     return (
         <ImageBackground 
-            source={require('./assets/file-i8FTAzicF9GGRFcilarJjKtP.png')} // Corrected path for local image
+            source={require('../assets/deepSea.jpg')}
             style={styles.container}
         >
-            <Text style={styles.response}>{lessonResponse}</Text>
+            <Text style={styles.response}>{topicPlanOverview || "Loading topic plan overview..."}</Text>
             <View style={styles.optionsContainer}>
                 <View style={styles.options}>
-                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress('Shallow Dive')}>
+                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(1)}>
                         <Icon name="user" size={20} color="#fff" style={styles.icon} />
                         <Text style={styles.buttonText}>Shallow Dive</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress('Scuba Dive')}>
+                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(3)}>
                         <Icon name="user" size={20} color="#fff" style={styles.icon} />
                         <Text style={styles.buttonText}>Scuba Dive</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress('Deep Dive')}>
-                        <Icon name="submarine" size={20} color="#fff" style={styles.icon} />
+                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(5)}>
+                        <Icon name="user" size={20} color="#fff" style={styles.icon} />
                         <Text style={styles.buttonText}>Deep Dive</Text>
                     </TouchableOpacity>
                 </View>
@@ -37,12 +58,13 @@ export const LessonOptions: React.FC = () => {
                     </View>
                 </View>
                 <View style={styles.freeDiveContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress('Free Dive')}>
-                        <Icon name="swimmer" size={20} color="#ff4500" style={styles.icon} />
+                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(0)}>
+                        <Icon name="user" size={20} color="#ff4500" style={styles.icon} />
                         <Text style={[styles.buttonText, { color: '#ff4500' }]}>Free Dive</Text>
                     </TouchableOpacity>
                 </View>
             </View>
+            <LoadingOverlay visible={loading} />
         </ImageBackground>
     );
 };
@@ -107,3 +129,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 });
+
+export default LessonOptions;

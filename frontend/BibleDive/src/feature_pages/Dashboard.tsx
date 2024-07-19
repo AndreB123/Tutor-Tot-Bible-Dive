@@ -65,9 +65,21 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
         scrollableContainer: {
             flexGrow: 1,
         },
+        getStartedButton: {
+            backgroundColor: theme.colors.tertiaryBackground,
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            borderRadius: 5,
+            marginTop: 20,
+            marginBottom: 20,
+            alignItems: 'center',
+        },
+        getStartedButtonText: {
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: 'bold',
+        },
     }));
-
-    
 
     useMemo(() => {
         if (userID) {
@@ -84,6 +96,11 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     );
 
     const handleGetStartedPress = () => {
+        navigation.navigate('LessonPage'); // Navigate to LessonPage
+    };
+
+
+    const handleNewChatPress = () => {
         navigation.navigate('ChatPage', { chatID: 0 });
     };
 
@@ -124,10 +141,8 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
         setSidebarData([ ...chatItems]);
     }, [chats]);
 
-    
-    
     const renderNewChatItem = () => (
-        <TouchableOpacity onPress={handleGetStartedPress} style={styles.sidebarItem}>
+        <TouchableOpacity onPress={handleNewChatPress} style={styles.sidebarItem}>
             <MaterialIcons name="chat-plus" size={20} color="white" style={{ marginRight: 10 }} />
             <Text style={styles.sidebarText}>New Chat</Text>
         </TouchableOpacity>
@@ -148,7 +163,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
         <SafeAreaView style={styles.container} edges={[]} testID={props.testID}>
             <SideBar
                 ref={sidebarRef}
-                onPress={handleGetStartedPress}
+                onPress={handleNewChatPress}
                 title="Menu"
                 data={sidebarData}
                 renderItem={renderChatItem}
@@ -156,6 +171,9 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
             >
                 <ScrollView contentContainerStyle={styles.contentContainer}>
                     <Text style={styles.username}>{`Welcome, ${username}`}</Text>
+                    <TouchableOpacity onPress={handleGetStartedPress} style={styles.getStartedButton}>
+                        <Text style={styles.getStartedButtonText}>Get Started</Text>
+                    </TouchableOpacity>
                     <LogoutButton />
                 </ScrollView>
             </SideBar>

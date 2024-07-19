@@ -1,8 +1,7 @@
 import React from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet } from "react-native";
 import { LessonPrompt } from "../components/LessonPrompt";
-import { LessonOptions } from "../components/LessonOptions";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export interface LessonPageScreenProps {
     testID?: string;
@@ -10,9 +9,15 @@ export interface LessonPageScreenProps {
 
 export const LessonPage: React.FC<LessonPageScreenProps> = (props) => {
     return (
-        <SafeAreaView edges={[]} testID={props.testID}>
+        <SafeAreaView style={styles.container} edges={[]} testID={props.testID}>
             <LessonPrompt />
-            <LessonOptions />
         </SafeAreaView>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+});

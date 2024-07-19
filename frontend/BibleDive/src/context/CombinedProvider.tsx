@@ -3,6 +3,7 @@ import { AuthProvider } from './AuthContext';
 import { UserProvider } from './UserContext';
 import { ChatProvider } from './ChatContext';
 import { MessageProvider } from './MessageContext';
+import { TopicPlanProvider } from './TopicPlanContext';
 
 interface CombinedProviderProps {
   children: ReactNode;
@@ -19,6 +20,7 @@ const providers = [
   UserProvider,
   ChatProvider,
   MessageProvider,
+  TopicPlanProvider,
 ];
 
 const CombinedProvider: React.FC<CombinedProviderProps> = ({ children }) => {
