@@ -28,10 +28,10 @@ func LoadConfig() *Config {
 	return &Config{
 		AccessSecret: readSecretFile("ACCESS_SECRET"),
 		OpenAIKey:    readSecretFile("OPENAI_API_KEY"),
-		DBHost:       readSecretFile("CHAT_DB_HOST"),
-		DBUser:       readSecretFile("CHAT_DB_USER"),
-		DBPassword:   readSecretFile("CHAT_DB_PASSWORD"),
-		DBName:       readSecretFile("CHAT_DB_NAME"),
-		DBPort:       readSecretFile("CHAT_DB_PORT"),
+		DBHost:       readSecretFile("LESSON_DB_HOST"),
+		DBUser:       readSecretFile("LESSON_DB_USER"),
+		DBPassword:   readSecretFile("LESSON_DB_PASSWORD"),
+		DBName:       readSecretFile("LESSON_DB_NAME"),
+		DBPort:       readSecretFile("LESSON_DB_PORT"),
 	}
 }

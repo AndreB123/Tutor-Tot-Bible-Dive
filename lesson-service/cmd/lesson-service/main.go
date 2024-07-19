@@ -21,7 +21,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to init db: %v", err)
 	}
-	lis, err := net.Listen("tcp", ":8082")
+	lis, err := net.Listen("tcp", ":8085")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
@@ -32,11 +32,12 @@ func main() {
 	)
 
 	topicPlanRepo := repository.NewTopicPlanRepository(db)
-	lessonRepo := repository.NewLessonRespository(db)
+	lessonRepo := repository.NewLessonRepository(db)
 	testRepo := repository.NewTestRepository(db)
 
-	if err := db.AutoMigrate(&model.TopicPlan{}, &model.Lesson{}, &model.Test{}); err != nil {
-		log.Fatalf("failed to auto-migrate: %v", err)
+	err = db.AutoMigrate(&model.TopicPlan{}, &model.Lesson{}, &model.Test{}, &model.Question{})
+	if err != nil {
+		log.Fatalf("Failed to auto-migrate: %v", err)
 	}
 
 	openAIService := service.NewOpenAIService(cfg, lessonRepo, topicPlanRepo, testRepo)
@@ -44,9 +45,9 @@ func main() {
 	topicPlanService := service.NewTopicPlanService(topicPlanRepo, lessonService)
 	testService := service.NewTestService(testRepo, openAIService)
 
-	LessonServer := server.NewLessonServer(topicPlanService, lessonService, testService, openAIService)
+	lessonServer := server.NewLessonServer(topicPlanService, lessonService, testService, openAIService)
 
-	proto.RegisterLessonServiceServer(grpcServer, LessonServer)
+	proto.RegisterLessonServiceServer(grpcServer, lessonServer)
 
 	log.Println("gRPC server is listening on ", lis.Addr())
 	if err := grpcServer.Serve(lis); err != nil {

@@ -9,6 +9,6 @@ type Lesson struct {
 	TopicPlanID uint   `gorm:"index" json:"topic_plan_id"`
 	Objective   string `json:"objective"`
 	Information string `json:"information"`
-	Tests       Test   `gorm:"foreignKey:LessonID" json:"tests"`
+	Tests       []Test `gorm:"foreignKey:LessonID" json:"tests"`
 	Completed   bool   `json:"completed"`
 }

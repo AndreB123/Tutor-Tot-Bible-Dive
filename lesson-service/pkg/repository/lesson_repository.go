@@ -10,7 +10,7 @@ type LessonRepository struct {
 	db *gorm.DB
 }
 
-func NewLessonRespository(db *gorm.DB) *LessonRepository {
+func NewLessonRepository(db *gorm.DB) *LessonRepository {
 	return &LessonRepository{db: db}
 }
 

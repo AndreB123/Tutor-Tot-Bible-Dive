@@ -20,7 +20,7 @@ func main() {
 	log.Printf("Chat Service URL: %s", cfg.ChatServiceURL)
 	chatGrpcConn, err := grpc.Dial(cfg.ChatServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock()) //TODO change to secure connection for prod
 	if err != nil {
-		log.Fatalf("Was not able to connect: %v", err)
+		log.Fatalf("Was not able to connect to Chat Service: %v", err)
 		return
 	}
 	log.Println("Connected to Chat Service")
@@ -29,19 +29,19 @@ func main() {
 	log.Printf("User Service URL: %s", cfg.UserServiceURL)
 	UsergrpcConn, err := grpc.Dial(cfg.UserServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock()) //TODO change to secure connection for prod
 	if err != nil {
-		log.Fatalf("Was not able to connect: %v", err)
+		log.Fatalf("Was not able to connect User Service: %v", err)
 		return
 	}
 	log.Println("Connected to User Service")
 	defer UsergrpcConn.Close()
 
-	log.Printf("User Service URL: %s", cfg.LessonServiceURL)
+	log.Printf("Lesson Service URL: %s", cfg.LessonServiceURL)
 	LessongrpcConn, err := grpc.Dial(cfg.LessonServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock()) //TODO change to secure connection for prod
 	if err != nil {
-		log.Fatalf("Was not able to connect: %v", err)
+		log.Fatalf("Was not able to connect Lesson Service: %v", err)
 		return
 	}
-	log.Println("Connected to User Service")
+	log.Println("Connected to Lesson Service")
 	defer LessongrpcConn.Close()
 
 	chatClient := proto.NewChatServiceClient(chatGrpcConn)

@@ -15,8 +15,8 @@ create_secret() {
     local key=$1
     local value=$2
 
-    echo "Creating secret for $key..."
-    echo -n $value | docker secret create $key -
+    echo "Creating secret for $key with value length: ${#value}"
+    echo -n "$value" | docker secret create "$key" -
     if [ $? -ne 0 ]; then
         echo "Error creating secret for $key."
     fi
@@ -31,17 +31,20 @@ done
 
 # Remove existing secrets
 while IFS='=' read -r key _; do
+    key=$(echo "$key" | xargs)  # Trim whitespace
     if [ ! -z "$key" ]; then
         echo "Removing secret $key if it exists..."
-        docker secret rm $key 2>/dev/null
+        docker secret rm "$key" 2>/dev/null
     fi
 done < "$SECRETS_FILE"
 
 # Create new secrets from the .env file
 while IFS='=' read -r key value; do
-    if [ ! -z "$key" ]; then
-        create_secret $key $value
-    fi
+    key=$(echo "$key" | xargs)  # Trim whitespace
+    value=$(echo "$value" | xargs)  # Trim whitespace
+    echo "Read key: '$key' value: '$value'"  # Debug log
+    create_secret "$key" "$value"
+
 done < "$SECRETS_FILE"
 
 # Start all services

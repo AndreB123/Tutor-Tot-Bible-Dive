@@ -25,6 +25,16 @@ secrets:
     external: true
   USER_DB_PORT:
     external: true
+  LESSON_DB_PASSWORD:
+    external: true
+  LESSON_DB_USER:
+    external: true
+  LESSON_DB_NAME:
+    external: true
+  LESSON_DB_HOST:
+    external: true
+  LESSON_DB_PORT:
+    external: true
   ssl_cert:
     external: true
   ssl_key:
@@ -38,7 +48,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=TestPass
       - POSTGRES_DB=default_db
-      - POSTGRES_MULTIPLE_DATABASES=BDChat-Service,BDUser-Sub-Service
+      - POSTGRES_MULTIPLE_DATABASES=BDChat-Service,BDUser-Sub-Service,BDLesson-Service
     ports:
       - "5432:5432"
     volumes:

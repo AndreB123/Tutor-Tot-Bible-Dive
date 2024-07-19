@@ -4,8 +4,8 @@ WORKDIR /api-gateway
 
 COPY . .
 
-RUN go get -u github.com/cosmtrek/air
-RUN go install github.com/cosmtrek/air@latest
+RUN go get -u github.com/air-verse/air
+RUN go install github.com/air-verse/air@latest
 
 RUN go mod download
 

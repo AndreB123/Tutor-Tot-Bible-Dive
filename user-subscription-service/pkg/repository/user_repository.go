@@ -40,7 +40,7 @@ func (repo *UserRepository) EmailExists(email string) (bool, error) {
 
 func (repo *UserRepository) UsernameExists(username string) (bool, error) {
 	var count int64
-	result := repo.db.Model(&model.User{}).Where("name = ?", username).Count(&count)
+	result := repo.db.Model(&model.User{}).Where("username = ?", username).Count(&count)
 	if result.Error != nil {
 		return false, result.Error
 	}
