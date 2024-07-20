@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
@@ -10,16 +10,18 @@ import { LoadingOverlay } from "./templates/LoadingOverlay";
 const LessonOptions = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { generateTopicPlan, topicPlanOverview, loading, topicPlan } = useTopicPlan();
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         const timeout = setTimeout(() => {
             if (loading) {
                 console.warn('Request timed out. Navigating back.');
+                setErrorMessage("Request timed out. Please try again.");
                 navigation.goBack();
             }
         }, 30000);
 
-        return () => clearTimeout(timeout); 
+        return () => clearTimeout(timeout);
     }, [loading, navigation]);
 
     const handleOptionPress = async (numberOfLessons: number) => {
@@ -36,7 +38,11 @@ const LessonOptions = () => {
             source={require('../assets/deepSea.jpg')}
             style={styles.container}
         >
-            <Text style={styles.response}>{topicPlanOverview || "Loading topic plan overview..."}</Text>
+            {errorMessage ? (
+                <Text style={styles.errorText}>{errorMessage}</Text>
+            ) : (
+                <Text style={styles.response}>{topicPlanOverview || "Loading topic plan overview..."}</Text>
+            )}
             <View style={styles.optionsContainer}>
                 <View style={styles.options}>
                     <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(1)}>
@@ -78,6 +84,14 @@ const styles = StyleSheet.create({
     response: {
         fontSize: 18,
         color: "#fff",
+        marginBottom: 20,
+        textAlign: "center",
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Background for better readability
+        padding: 10,
+    },
+    errorText: {
+        fontSize: 18,
+        color: "red",
         marginBottom: 20,
         textAlign: "center",
         backgroundColor: 'rgba(0, 0, 0, 0.5)', // Background for better readability

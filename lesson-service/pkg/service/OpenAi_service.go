@@ -36,20 +36,31 @@ func NewOpenAIService(cfg *config.Config, lsnRepository *repository.LessonReposi
 	}
 }
 
-// GenerateQuickResponse generates a quick response to a user's question
 func (s *OpenAIService) GenerateQuickResponse(prompt string) (string, error) {
+	fmt.Println("OpenAIService: GenerateQuickResponse called with prompt:", prompt)
+
+	// Update the prompt to fit the new format
 	prompt = fmt.Sprintf("Provide a brief overview for the following topic: %s", prompt)
 
-	resp, err := s.client.CreateCompletion(context.TODO(), openai.CompletionRequest{
-		Prompt:      prompt,
-		MaxTokens:   150,
-		Temperature: 0.7,
-	})
+	// Create the chat completion request
+	req := openai.ChatCompletionRequest{
+		Model:    "gpt-4-turbo", // Specify the new model here
+		Messages: []openai.ChatCompletionMessage{{Role: "user", Content: prompt}},
+	}
+
+	fmt.Println("OpenAIService: Sending request to OpenAI API:", req)
+	resp, err := s.client.CreateChatCompletion(context.TODO(), req)
 	if err != nil {
+		fmt.Println("OpenAIService: Error calling OpenAI API:", err)
 		return "", err
 	}
 
-	return strings.TrimSpace(resp.Choices[0].Text), nil
+	fmt.Println("OpenAIService: Received response from OpenAI API:", resp)
+
+	// Extract the response content
+	response := strings.TrimSpace(resp.Choices[0].Message.Content)
+
+	return response, nil
 }
 
 // GenerateTopicPlan generates a topic plan with a specified number of lessons

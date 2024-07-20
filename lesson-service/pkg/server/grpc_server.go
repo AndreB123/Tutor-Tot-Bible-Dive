@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"lesson-service/pkg/model"
 	"lesson-service/pkg/proto"
 	"lesson-service/pkg/service"
@@ -31,10 +32,16 @@ func NewLessonServer(
 }
 
 func (s *LessonServer) GenerateQuickResponse(ctx context.Context, req *proto.GenerateQuickResponseRequest) (*proto.GenerateQuickResponseResponse, error) {
+	fmt.Println("GenerateQuickResponse called with prompt:", req.Prompt)
+
 	response, err := s.openAIService.GenerateQuickResponse(req.Prompt)
+	fmt.Println("Response from GenerateQuickResponse:", response)
 	if err != nil {
+		fmt.Println("Error from GenerateQuickResponse:", err)
 		return nil, err
 	}
+
+	fmt.Println("Returning response from GenerateQuickResponse")
 	return &proto.GenerateQuickResponseResponse{Response: response}, nil
 }
 

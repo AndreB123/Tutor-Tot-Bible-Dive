@@ -55,9 +55,9 @@ class TopicPlanService {
     }
 
     private registerMessageHandlers() {
-        this.webSocketService.registerMessageHandler("topic_plan_generated", this.handleTopicPlanGenerated);
-        this.webSocketService.registerMessageHandler("topic_plans_fetched", this.handleTopicPlansFetched);
-        this.webSocketService.registerMessageHandler("topic_plan_overview_generated", this.handleTopicPlanOverviewGenerated);
+        this.webSocketService.registerMessageHandler("generate_topic_plan_resp", this.handleTopicPlanGenerated);
+        this.webSocketService.registerMessageHandler("get_all_topic_plans_by_uid_resp", this.handleTopicPlansFetched);
+        this.webSocketService.registerMessageHandler("generate_topic_plan_overview_resp", this.handleTopicPlanOverviewGenerated);
     }
 
     private handleTopicPlanGenerated = (message: any) => {

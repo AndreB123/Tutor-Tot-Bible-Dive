@@ -77,7 +77,7 @@ func (s *OpenAIService) getFormattedChatHistory(chatID uint, prompt string) ([]o
 
 func (s *OpenAIService) streamChatCompletion(ctx context.Context, messages []openai.ChatCompletionMessage, chatID uint, userID uint, onMessage func(string, uint) error) error {
 	completionReq := openai.ChatCompletionRequest{
-		Model:    openai.GPT3Dot5Turbo,
+		Model:    openai.GPT4oMini,
 		Messages: messages,
 		Stream:   true,
 	}

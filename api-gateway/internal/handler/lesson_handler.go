@@ -32,67 +32,75 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 		var generateTopicPlanReq proto.GenerateTopicPlanRequest
 		if err := json.Unmarshal(msg.Data, &generateTopicPlanReq); err != nil {
 			log.Printf("Failed to unmarshal GenerateTopicPlanRequest: %v", err)
+			return
 		}
-		go h.GenerateTopicPlan(conn, msg.JWT, &generateTopicPlanReq)
+		go h.GenerateTopicPlan(conn, msg.JWT, generateTopicPlanReq)
 	case "generate_lessons":
 		var generateLessonsReq proto.GenerateLessonsRequest
 		if err := json.Unmarshal(msg.Data, &generateLessonsReq); err != nil {
 			log.Printf("Failed to unmarshal GenerateLessonsRequest: %v", err)
+			return
 		}
-		go h.GenerateLessons(conn, msg.JWT, &generateLessonsReq)
+		go h.GenerateLessons(conn, msg.JWT, generateLessonsReq)
 	case "generate_test":
 		var generateTestReq proto.GenerateTestRequest
 		if err := json.Unmarshal(msg.Data, &generateTestReq); err != nil {
 			log.Printf("Failed to unmarshal GenerateTestRequest: %v", err)
+			return
 		}
-		go h.GenerateTest(conn, msg.JWT, &generateTestReq)
+		go h.GenerateTest(conn, msg.JWT, generateTestReq)
 	case "grade_test":
 		var gradeTestReq proto.GradeTestRequest
 		if err := json.Unmarshal(msg.Data, &gradeTestReq); err != nil {
 			log.Printf("Failed to unmarshal GradeTestRequest: %v", err)
+			return
 		}
-		go h.GradeTest(conn, msg.JWT, &gradeTestReq)
+		go h.GradeTest(conn, msg.JWT, gradeTestReq)
 	case "get_all_topic_plans_by_uid":
 		var getAllTopicPlansByUIDReq proto.GetAllTopicPlansByUIDRequest
 		if err := json.Unmarshal(msg.Data, &getAllTopicPlansByUIDReq); err != nil {
 			log.Printf("Failed to unmarshal GetAllTopicPlansByUIDRequest: %v", err)
+			return
 		}
 		go h.GetAllTopicPlansByUID(conn, msg.JWT, getAllTopicPlansByUIDReq.UserId)
 	case "get_all_lesson_plans_by_topic_id":
 		var getAllLessonsByTopicIDReq proto.GetAllLessonPlansByTopicIDRequest
 		if err := json.Unmarshal(msg.Data, &getAllLessonsByTopicIDReq); err != nil {
 			log.Printf("Failed to unmarshal GetAllLessonPlansByTopicIDRequest: %v", err)
+			return
 		}
 		go h.GetAllLessonsByTopicID(conn, msg.JWT, getAllLessonsByTopicIDReq.TopicPlanId)
 	case "get_all_tests_by_lesson_id":
 		var getAllTestsByLessonIDReq proto.GetAllTestsByLessonIDRequest
 		if err := json.Unmarshal(msg.Data, &getAllTestsByLessonIDReq); err != nil {
 			log.Printf("Failed to unmarshal GetAllTestsByLessonIDRequest: %v", err)
+			return
 		}
 		go h.GetAllTestsByLessonID(conn, msg.JWT, getAllTestsByLessonIDReq.LessonId)
 	case "get_all_questions_by_test_id":
 		var getAllQuestionsByTestIDReq proto.GetAllQuestionsByTestIDRequest
 		if err := json.Unmarshal(msg.Data, &getAllQuestionsByTestIDReq); err != nil {
 			log.Printf("Failed to unmarshal GetAllQuestionsByTestIDRequest: %v", err)
+			return
 		}
 		go h.GetAllQuestionsByTestID(conn, msg.JWT, getAllQuestionsByTestIDReq.TestId)
 	case "generate_topic_plan_overview":
 		var generateQuickResponseReq proto.GenerateQuickResponseRequest
 		if err := json.Unmarshal(msg.Data, &generateQuickResponseReq); err != nil {
 			log.Printf("Failed to unmarshal GenerateQuickResponseRequest: %v", err)
+			return
 		}
-		go h.GenerateQuickResponse(conn, msg.JWT, &generateQuickResponseReq)
+		go h.GenerateQuickResponse(conn, msg.JWT, generateQuickResponseReq.Prompt)
 	}
-
 }
 
-func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, req *proto.GenerateTopicPlanRequest) {
+func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, req proto.GenerateTopicPlanRequest) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.LessonClient.GenerateTopicPlan(ctxWithMetadata, req)
+	resp, err := h.LessonClient.GenerateTopicPlan(ctxWithMetadata, &req)
 	if err != nil {
 		log.Printf("Error generating topic plan: %v", err)
 		return
@@ -101,13 +109,13 @@ func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, req 
 	middleware.SendWebSocketMessage(conn, "generate_topic_plan_resp", resp)
 }
 
-func (h *LessonHandler) GenerateLessons(conn *websocket.Conn, jwt string, req *proto.GenerateLessonsRequest) {
+func (h *LessonHandler) GenerateLessons(conn *websocket.Conn, jwt string, req proto.GenerateLessonsRequest) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.LessonClient.GenerateLessons(ctxWithMetadata, req)
+	resp, err := h.LessonClient.GenerateLessons(ctxWithMetadata, &req)
 	if err != nil {
 		log.Printf("Error generating lessons: %v", err)
 		return
@@ -116,13 +124,13 @@ func (h *LessonHandler) GenerateLessons(conn *websocket.Conn, jwt string, req *p
 	middleware.SendWebSocketMessage(conn, "generate_lessons_resp", resp)
 }
 
-func (h *LessonHandler) GenerateTest(conn *websocket.Conn, jwt string, req *proto.GenerateTestRequest) {
+func (h *LessonHandler) GenerateTest(conn *websocket.Conn, jwt string, req proto.GenerateTestRequest) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.LessonClient.GenerateTests(ctxWithMetadata, req)
+	resp, err := h.LessonClient.GenerateTests(ctxWithMetadata, &req)
 	if err != nil {
 		log.Printf("Error generating test: %v", err)
 		return
@@ -131,13 +139,13 @@ func (h *LessonHandler) GenerateTest(conn *websocket.Conn, jwt string, req *prot
 	middleware.SendWebSocketMessage(conn, "generate_test_resp", resp)
 }
 
-func (h *LessonHandler) GradeTest(conn *websocket.Conn, jwt string, req *proto.GradeTestRequest) {
+func (h *LessonHandler) GradeTest(conn *websocket.Conn, jwt string, req proto.GradeTestRequest) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
 
-	resp, err := h.LessonClient.GradeTest(ctxWithMetadata, req)
+	resp, err := h.LessonClient.GradeTest(ctxWithMetadata, &req)
 	if err != nil {
 		log.Printf("Error grading test: %v", err)
 		return
@@ -206,17 +214,24 @@ func (h *LessonHandler) GetAllQuestionsByTestID(conn *websocket.Conn, jwt string
 	middleware.SendWebSocketMessage(conn, "get_all_questions_by_test_id_resp", resp)
 }
 
-func (h *LessonHandler) GenerateQuickResponse(conn *websocket.Conn, jwt string, req *proto.GenerateQuickResponseRequest) {
+func (h *LessonHandler) GenerateQuickResponse(conn *websocket.Conn, jwt string, prompt string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+	log.Print("here 1")
+	req := &proto.GenerateQuickResponseRequest{
 
+		Prompt: prompt,
+	}
+
+	log.Print("here 2")
 	resp, err := h.LessonClient.GenerateQuickResponse(ctxWithMetadata, req)
 	if err != nil {
 		log.Printf("Error generating quick response: %v", err)
+		log.Print("here 3")
 		return
 	}
 
-	middleware.SendWebSocketMessage(conn, "generate_quick_response_resp", resp)
+	middleware.SendWebSocketMessage(conn, "generate_topic_plan_overview_resp", resp)
 }
