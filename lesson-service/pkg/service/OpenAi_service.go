@@ -35,17 +35,17 @@ func NewOpenAIService(cfg *config.Config, lsnRepository *repository.LessonReposi
 		testRepository:      tstRepository,
 	}
 }
-
 func (s *OpenAIService) GenerateQuickResponse(prompt string) (string, error) {
 	fmt.Println("OpenAIService: GenerateQuickResponse called with prompt:", prompt)
 
 	// Update the prompt to fit the new format
-	prompt = fmt.Sprintf("Provide a brief overview for the following topic: %s", prompt)
+	prompt = fmt.Sprintf("Provide a brief answer to the following question, including a title with no formating or special characters and a 250 to 400 character overview: %s", prompt)
 
-	// Create the chat completion request
+	// Create the chat completion request with a token limit
 	req := openai.ChatCompletionRequest{
-		Model:    "gpt-4-turbo", // Specify the new model here
-		Messages: []openai.ChatCompletionMessage{{Role: "user", Content: prompt}},
+		Model:     "gpt-4o-mini",
+		Messages:  []openai.ChatCompletionMessage{{Role: "user", Content: prompt}},
+		MaxTokens: 150, // Set an appropriate token limit for a concise response
 	}
 
 	fmt.Println("OpenAIService: Sending request to OpenAI API:", req)

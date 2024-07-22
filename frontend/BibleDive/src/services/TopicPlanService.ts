@@ -74,7 +74,7 @@ class TopicPlanService {
 
     private handleTopicPlanOverviewGenerated = (message: any) => {
         console.log("Handling topic plan overview generated:", message);
-        const overview = message.data.overview;
+        const overview = message.data.response;
         this.onTopicPlanOverviewGenerated(overview);
     }
 }

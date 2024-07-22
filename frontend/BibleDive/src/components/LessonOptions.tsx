@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Animated, Dimensions, ScrollView } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTopicPlan } from "../context/TopicPlanContext";
-import { RootStackParamList } from "../navigation/Navigationtypes";
+import { RootStackParamList } from '../navigation/Navigationtypes';
 import { LoadingOverlay } from "./templates/LoadingOverlay";
+
+const { height } = Dimensions.get('window');
 
 const LessonOptions = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { generateTopicPlan, topicPlanOverview, loading, topicPlan } = useTopicPlan();
     const [errorMessage, setErrorMessage] = useState("");
+    const scrollViewRef = useRef<ScrollView>(null);
+    const optionsRef = useRef<View>(null);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -33,53 +37,93 @@ const LessonOptions = () => {
         }
     };
 
+    const handleDiveInPress = () => {
+        optionsRef.current?.measureLayout(
+            scrollViewRef.current as any,
+            (x, y) => {
+                scrollViewRef.current?.scrollTo({ y, animated: true });
+            },
+            () => console.error('Error in measuring layout')
+        );
+    };
+
     return (
-        <ImageBackground 
-            source={require('../assets/deepSea.jpg')}
-            style={styles.container}
-        >
-            {errorMessage ? (
-                <Text style={styles.errorText}>{errorMessage}</Text>
-            ) : (
-                <Text style={styles.response}>{topicPlanOverview || "Loading topic plan overview..."}</Text>
-            )}
-            <View style={styles.optionsContainer}>
-                <View style={styles.options}>
-                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(1)}>
-                        <Icon name="user" size={20} color="#fff" style={styles.icon} />
-                        <Text style={styles.buttonText}>Shallow Dive</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(3)}>
-                        <Icon name="user" size={20} color="#fff" style={styles.icon} />
-                        <Text style={styles.buttonText}>Scuba Dive</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(5)}>
-                        <Icon name="user" size={20} color="#fff" style={styles.icon} />
-                        <Text style={styles.buttonText}>Deep Dive</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.separatorContainer}>
-                    <View style={styles.separator}>
-                        <Text style={styles.orText}>or</Text>
+        <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollViewContent} style={styles.container}>
+            <View style={styles.screen}>
+                <ImageBackground source={require('../assets/deepSea.jpg')} style={styles.backgroundImage}>
+                    <View style={styles.overviewContainer}>
+                        {errorMessage ? (
+                            <Text style={styles.errorText}>{errorMessage}</Text>
+                        ) : (
+                            <Text style={styles.response}>{topicPlanOverview || "Loading topic plan overview..."}</Text>
+                        )}
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity style={styles.actionButton} onPress={handleDiveInPress}>
+                                <Text style={styles.buttonText}>Dive In</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.goBack()}>
+                                <Text style={styles.buttonText}>Back to Prompt</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
-                <View style={styles.freeDiveContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(0)}>
-                        <Icon name="user" size={20} color="#ff4500" style={styles.icon} />
-                        <Text style={[styles.buttonText, { color: '#ff4500' }]}>Free Dive</Text>
-                    </TouchableOpacity>
-                </View>
+                </ImageBackground>
+            </View>
+            <View style={styles.screen} ref={optionsRef}>
+                <ImageBackground source={require('../assets/deepSea.jpg')} style={styles.backgroundImage}>
+                    <View style={styles.optionsContainer}>
+                        <View style={styles.options}>
+                            <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(1)}>
+                                <Icon name="user" size={20} color="#fff" style={styles.icon} />
+                                <Text style={styles.buttonText}>Shallow Dive</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(3)}>
+                                <Icon name="user" size={20} color="#fff" style={styles.icon} />
+                                <Text style={styles.buttonText}>Scuba Dive</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(5)}>
+                                <Icon name="user" size={20} color="#fff" style={styles.icon} />
+                                <Text style={styles.buttonText}>Deep Dive</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.separatorContainer}>
+                            <View style={styles.separator}>
+                                <Text style={styles.orText}>or</Text>
+                            </View>
+                        </View>
+                        <View style={styles.freeDiveContainer}>
+                            <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(0)}>
+                                <Icon name="user" size={20} color="#ff4500" style={styles.icon} />
+                                <Text style={[styles.buttonText, { color: '#ff4500' }]}>Free Dive</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </ImageBackground>
             </View>
             <LoadingOverlay visible={loading} />
-        </ImageBackground>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'flex-start',
+    },
+    scrollViewContent: {
+        flexGrow: 1,
+    },
+    screen: {
+        height: height,  // Take up full screen height
+    },
+    backgroundImage: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
+    },
+    overviewContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
     response: {
         fontSize: 18,
@@ -97,9 +141,23 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)', // Background for better readability
         padding: 10,
     },
-    optionsContainer: {
+    buttonContainer: {
         flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+        marginTop: 20,
+    },
+    actionButton: {
+        padding: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 5,
+        margin: 5,
+    },
+    optionsContainer: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
+        padding: 20,
     },
     options: {
         flex: 3,
@@ -133,9 +191,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     orText: {
-        backgroundColor: '#000',
         color: '#fff',
         paddingHorizontal: 5,
+        fontSize: 15,
     },
     freeDiveContainer: {
         flex: 2,
