@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Animated, Dimensions, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Dimensions, ScrollView } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -47,6 +47,10 @@ const LessonOptions = () => {
         );
     };
 
+    const handleFreeDivePress = () => {
+        navigation.navigate('ChatPage', { chatID: 0 });
+    };
+
     return (
         <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollViewContent} style={styles.container}>
             <View style={styles.screen}>
@@ -69,9 +73,9 @@ const LessonOptions = () => {
                 </ImageBackground>
             </View>
             <View style={styles.screen} ref={optionsRef}>
-                <ImageBackground source={require('../assets/deepSea.jpg')} style={styles.backgroundImage}>
+                <ImageBackground source={require('../assets/seascape.webp')} style={styles.backgroundImage}>
                     <View style={styles.optionsContainer}>
-                        <View style={styles.options}>
+                        <View style={styles.leftOptions}>
                             <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(1)}>
                                 <Icon name="user" size={20} color="#fff" style={styles.icon} />
                                 <Text style={styles.buttonText}>Shallow Dive</Text>
@@ -86,12 +90,11 @@ const LessonOptions = () => {
                             </TouchableOpacity>
                         </View>
                         <View style={styles.separatorContainer}>
-                            <View style={styles.separator}>
-                                <Text style={styles.orText}>or</Text>
-                            </View>
+                            <View style={styles.separator} />
+                            <Text style={styles.orText}>or</Text>
                         </View>
-                        <View style={styles.freeDiveContainer}>
-                            <TouchableOpacity style={styles.button} onPress={() => handleOptionPress(0)}>
+                        <View style={styles.rightOption}>
+                            <TouchableOpacity style={styles.button} onPress={handleFreeDivePress}>
                                 <Icon name="user" size={20} color="#ff4500" style={styles.icon} />
                                 <Text style={[styles.buttonText, { color: '#ff4500' }]}>Free Dive</Text>
                             </TouchableOpacity>
@@ -155,13 +158,14 @@ const styles = StyleSheet.create({
     },
     optionsContainer: {
         flex: 1,
-        justifyContent: 'center',
+        flexDirection: 'row', // Horizontal layout
         alignItems: 'center',
         padding: 20,
     },
-    options: {
+    leftOptions: {
         flex: 3,
         justifyContent: 'space-around',
+        alignItems: 'center',
     },
     button: {
         flexDirection: 'row',
@@ -184,18 +188,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     separator: {
-        height: '100%',
+        height: '80%',
         width: 1,
         backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     orText: {
         color: '#fff',
         paddingHorizontal: 5,
         fontSize: 15,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        position: 'absolute',
+        top: '50%',
+        transform: [{ translateY: -50 }]
     },
-    freeDiveContainer: {
+    rightOption: {
         flex: 2,
         justifyContent: 'center',
         alignItems: 'center',

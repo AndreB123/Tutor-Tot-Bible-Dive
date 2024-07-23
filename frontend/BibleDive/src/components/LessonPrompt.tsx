@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, ScrollView } from "react-native";
+import { Text, TextInput, StyleSheet, ScrollView, ImageBackground } from "react-native";
 import { SubmitButton } from "./SubmitButton";
 import { useTopicPlan } from "../context/TopicPlanContext";
 import { useNavigation } from '@react-navigation/native';
@@ -29,6 +29,7 @@ export const LessonPrompt: React.FC = () => {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
+            <ImageBackground source={require('../assets/cartoon_ocean.png')} style={styles.backgroundImage}>
             <Text style={styles.instruction}>Enter a Bible subject, prompt, or question you want to learn about:</Text>
             <TextInput
                 style={styles.input}
@@ -38,6 +39,7 @@ export const LessonPrompt: React.FC = () => {
             />
             <SubmitButton onPress={handleSubmit}  />
             <LoadingOverlay visible={loading} /> 
+            </ImageBackground>
         </ScrollView>
     );
 };
@@ -45,12 +47,18 @@ export const LessonPrompt: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
-        padding: 16,
         backgroundColor: "#fff",
+    },
+    backgroundImage: {
+        flex: 1,
+        padding: 16,
     },
     instruction: {
         fontSize: 16,
+        padding: 10,
         marginBottom: 8,
+        color: "#fff",
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     input: {
         height: 40,
@@ -58,5 +66,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         marginBottom: 16,
         paddingHorizontal: 8,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
     },
 });
