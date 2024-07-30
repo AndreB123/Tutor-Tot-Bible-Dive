@@ -13,7 +13,7 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const route = useRoute();
     const { topicPlanID } = route.params as { topicPlanID: number };
-    const { topicPlan, loading } = useTopicPlan();
+    const { topicPlan, loading, setLoading } = useTopicPlan(); // Add setLoading from context
 
     useEffect(() => {
         if (!loading && !topicPlan) {
@@ -21,12 +21,18 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
         }
     }, [loading, topicPlan, navigation]);
 
+    const handleLessonPress = (lessonID: number) => {
+        setLoading(true);
+        navigation.navigate('LessonDetail', { lessonID });
+    };
+
     const renderLessonItem = ({ item, index }) => {
         const isLocked = index > 0 && !topicPlan.lessons[index - 1].completed;
         return (
             <TouchableOpacity
                 style={[styles.lessonButton, isLocked && styles.lockedLessonButton]}
                 disabled={isLocked}
+                onPress={() => handleLessonPress(item.id)} // Handle lesson press
             >
                 <Text style={styles.lessonText}>{item.title}</Text>
                 {isLocked && <Text style={styles.lockedText}>Locked</Text>}

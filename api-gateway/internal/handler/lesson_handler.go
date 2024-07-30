@@ -41,14 +41,14 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 			log.Printf("Failed to unmarshal GenerateLessonsRequest: %v", err)
 			return
 		}
-		go h.GenerateLessons(conn, msg.JWT, generateLessonsReq)
+		go h.GenerateLessons(conn, msg.JWT, generateLessonsReq.TopicPlanId)
 	case "generate_test":
 		var generateTestReq proto.GenerateTestRequest
 		if err := json.Unmarshal(msg.Data, &generateTestReq); err != nil {
 			log.Printf("Failed to unmarshal GenerateTestRequest: %v", err)
 			return
 		}
-		go h.GenerateTest(conn, msg.JWT, generateTestReq)
+		go h.GenerateTest(conn, msg.JWT, generateTestReq.LessonId)
 	case "grade_test":
 		var gradeTestReq proto.GradeTestRequest
 		if err := json.Unmarshal(msg.Data, &gradeTestReq); err != nil {
@@ -114,13 +114,16 @@ func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, user
 	middleware.SendWebSocketMessage(conn, "generate_topic_plan_resp", resp)
 }
 
-func (h *LessonHandler) GenerateLessons(conn *websocket.Conn, jwt string, req proto.GenerateLessonsRequest) {
+func (h *LessonHandler) GenerateLessons(conn *websocket.Conn, jwt string, topicPlanID uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+	req := &proto.GenerateLessonsRequest{
+		TopicPlanId: topicPlanID,
+	}
 
-	resp, err := h.LessonClient.GenerateLessons(ctxWithMetadata, &req)
+	resp, err := h.LessonClient.GenerateLessons(ctxWithMetadata, req)
 	if err != nil {
 		log.Printf("Error generating lessons: %v", err)
 		return
@@ -129,13 +132,16 @@ func (h *LessonHandler) GenerateLessons(conn *websocket.Conn, jwt string, req pr
 	middleware.SendWebSocketMessage(conn, "generate_lessons_resp", resp)
 }
 
-func (h *LessonHandler) GenerateTest(conn *websocket.Conn, jwt string, req proto.GenerateTestRequest) {
+func (h *LessonHandler) GenerateTest(conn *websocket.Conn, jwt string, lessonID uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+	req := &proto.GenerateTestRequest{
+		LessonId: lessonID,
+	}
 
-	resp, err := h.LessonClient.GenerateTests(ctxWithMetadata, &req)
+	resp, err := h.LessonClient.GenerateTests(ctxWithMetadata, req)
 	if err != nil {
 		log.Printf("Error generating test: %v", err)
 		return

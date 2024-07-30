@@ -1,3 +1,5 @@
+import { Lesson } from "./LessonModels";
+
 // TopicPlanModels.ts
 export interface TopicPlan {
     id: number;
@@ -5,14 +7,6 @@ export interface TopicPlan {
     objective: string;
     standard: string;
     lessons: Lesson[];
-    completed: boolean;
-}
-
-
-interface Lesson {
-    id: number;
-    title: string;
-    objective: string;
     completed: boolean;
 }
 
