@@ -67,6 +67,8 @@ func (s *OpenAIService) GenerateQuickResponse(prompt string) (string, error) {
 func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLessons int) (*model.TopicPlan, error) {
 	prompt = fmt.Sprintf("Create a topic plan for the following subject with %d lessons: %s", numberOfLessons, prompt)
 
+	fmt.Printf("Create a topic plan for the following number of lessons: %v\n", numberOfLessons)
+
 	functionDefinition := openai.FunctionDefinition{
 		Name: "generate_topic_plan",
 		Parameters: map[string]interface{}{
@@ -99,20 +101,38 @@ func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLe
 	}
 
 	requestBody := openai.ChatCompletionRequest{
-		Model:       "gpt-4",
-		Messages:    []openai.ChatCompletionMessage{{Role: "user", Content: prompt}},
-		MaxTokens:   1000,
-		Temperature: 0.7,
-		Functions:   []openai.FunctionDefinition{functionDefinition},
+		Model:     "gpt-4o-mini",
+		Messages:  []openai.ChatCompletionMessage{{Role: "user", Content: prompt}},
+		MaxTokens: 1000,
+		Functions: []openai.FunctionDefinition{functionDefinition},
 		FunctionCall: openai.FunctionCall{
 			Name: "generate_topic_plan",
 		},
 	}
 
+	fmt.Println("OpenAIService: Sending request to OpenAI API:", requestBody)
+
 	resp, err := s.client.CreateChatCompletion(context.TODO(), requestBody)
 	if err != nil {
+		fmt.Println("OpenAIService: Error calling OpenAI API:", err)
 		return nil, err
 	}
+
+	fmt.Println("OpenAIService: Received response from OpenAI API:", resp)
+
+	// Check if there is a valid function call response
+	if len(resp.Choices) == 0 || resp.Choices[0].Message.FunctionCall.Name != "generate_topic_plan" {
+		return nil, fmt.Errorf("unexpected response format or function call name: %v", resp.Choices)
+	}
+
+	// Check if the function call arguments are present
+	functionCallArgs := resp.Choices[0].Message.FunctionCall.Arguments
+	if functionCallArgs == "" {
+		return nil, fmt.Errorf("function call arguments are nil: %v", resp.Choices[0].Message.FunctionCall)
+	}
+
+	// Print the raw function call arguments for debugging
+	fmt.Println("Raw function call arguments:", functionCallArgs)
 
 	var topicPlanData struct {
 		Title     string `json:"title"`
@@ -123,8 +143,9 @@ func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLe
 		} `json:"lessons"`
 	}
 
-	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &topicPlanData)
+	err = json.Unmarshal([]byte(functionCallArgs), &topicPlanData) // Convert string to []byte
 	if err != nil {
+		fmt.Println("OpenAIService: Error unmarshaling function call arguments:", err)
 		return nil, err
 	}
 
@@ -145,6 +166,7 @@ func (s *OpenAIService) GenerateTopicPlan(prompt string, userID uint, numberOfLe
 
 	err = s.topicPlanRepository.CreateNewTopicPlan(topicPlan)
 	if err != nil {
+		fmt.Println("OpenAIService: Error creating new topic plan:", err)
 		return nil, err
 	}
 

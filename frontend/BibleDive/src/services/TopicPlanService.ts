@@ -1,3 +1,4 @@
+import { TopicPlan } from "../models/TopicPlanModels";
 import { IWebSocketService } from "./WebSocketService";
 
 class TopicPlanService {
@@ -10,20 +11,52 @@ class TopicPlanService {
         this.registerMessageHandlers();
     }
 
-    async generateTopicPlan(topicPlanID: number, numberOfLessons: number, jwt: string) {
+    async generateTopicPlan(userID: string, prompt: string, numberOfLessons: number, jwt: string): Promise<any> {
         await this.webSocketService.onConnected;
         const message = JSON.stringify({
             Type: "lesson",
             Action: "generate_topic_plan",
             JWT: jwt,
             Data: {
-                topic_plan_id: topicPlanID,
+                user_id: userID,
+                prompt: prompt,
                 number_of_lessons: numberOfLessons
             }
         });
         console.log("Sending generate_topic_plan message:", message);
         this.webSocketService.sendMessage(message);
+    
+        // Implement a promise to wait for the response
+        return new Promise((resolve, reject) => {
+            const handleMessage = (response: any) => {
+                if (response.action === "generate_topic_plan_resp" && response.data) {
+                    const topicPlan = response.data.topic_plan;
+    
+                    // Ensure lessons are included and properly formatted
+                    const formattedTopicPlan: TopicPlan = {
+                        id: topicPlan.id,
+                        title: topicPlan.title,
+                        objective: topicPlan.objective,
+                        standard: topicPlan.standard,
+                        lessons: topicPlan.lesson.map((lesson: any) => ({
+                            id: lesson.id,
+                            title: lesson.title,
+                            objective: lesson.objective,
+                            completed: false,  // or set appropriately based on your logic
+                        })),
+                        completed: false,  // or set appropriately based on your logic
+                    };
+    
+                    this.onTopicPlanGenerated(formattedTopicPlan);
+                    resolve(formattedTopicPlan);
+                } else {
+                    reject(new Error("Failed to generate topic plan"));
+                }
+            };
+            this.webSocketService.registerMessageHandler("generate_topic_plan_resp", handleMessage);
+        });
     }
+    
 
     async getAllTopicPlansByUID(userID: string, jwt: string) {
         await this.webSocketService.onConnected;

@@ -15,8 +15,6 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
     const { topicPlanID } = route.params as { topicPlanID: number };
     const { topicPlan, loading } = useTopicPlan();
 
-
-
     useEffect(() => {
         if (!loading && !topicPlan) {
             navigation.goBack();
@@ -36,16 +34,16 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
         );
     };
 
-    if (loading) {
+    if (loading || !topicPlan) {
         return <ActivityIndicator size="large" color="#000" style={styles.loader} />;
     }
 
     return (
         <View style={styles.container} testID={props.testID}>
-            <Text style={styles.title}>{topicPlan?.title}</Text>
-            <Text style={styles.objective}>{topicPlan?.objective}</Text>
+            <Text style={styles.title}>{topicPlan.title}</Text>
+            <Text style={styles.objective}>{topicPlan.objective}</Text>
             <FlatList
-                data={topicPlan?.lessons}
+                data={topicPlan.lessons}
                 renderItem={renderLessonItem}
                 keyExtractor={(item) => item.id.toString()}
             />

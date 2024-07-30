@@ -6,12 +6,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTopicPlan } from "../context/TopicPlanContext";
 import { RootStackParamList } from '../navigation/Navigationtypes';
 import { LoadingOverlay } from "./templates/LoadingOverlay";
+import { useUser } from "../context/UserContext";
 
 const { height } = Dimensions.get('window');
 
 const LessonOptions = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const { generateTopicPlan, topicPlanOverview, loading, topicPlan } = useTopicPlan();
+    const { generateTopicPlan, topicPlanOverview, setLoading, loading } = useTopicPlan();
+    const { userID } = useUser();
     const [errorMessage, setErrorMessage] = useState("");
     const scrollViewRef = useRef<ScrollView>(null);
     const optionsRef = useRef<View>(null);
@@ -29,13 +31,22 @@ const LessonOptions = () => {
     }, [loading, navigation]);
 
     const handleOptionPress = async (numberOfLessons: number) => {
-        if (topicPlan) {
-            await generateTopicPlan(topicPlan.id, numberOfLessons);
-            navigation.navigate('TopicPlanOverview', { topicPlanID: topicPlan.id });
-        } else {
-            console.error('Topic Plan ID is not set');
+        try {
+            setLoading(true);
+            const topicPlan = await generateTopicPlan(userID, topicPlanOverview, numberOfLessons);
+            if (topicPlan) {
+                navigation.navigate('TopicPlanOverview', { topicPlanID: topicPlan.id });
+            } else {
+                console.error('Failed to generate topic plan');
+            }
+        } catch (error) {
+            console.error('Error generating topic plan:', error);
+            setErrorMessage("Failed to generate topic plan. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
+    
 
     const handleDiveInPress = () => {
         optionsRef.current?.measureLayout(

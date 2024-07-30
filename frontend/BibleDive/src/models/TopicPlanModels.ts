@@ -8,9 +8,11 @@ export interface TopicPlan {
     completed: boolean;
 }
 
-export interface Lesson {
+
+interface Lesson {
     id: number;
     title: string;
+    objective: string;
     completed: boolean;
 }
 

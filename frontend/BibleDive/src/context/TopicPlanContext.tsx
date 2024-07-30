@@ -10,10 +10,12 @@ interface TopicPlanContextType {
     topicPlanOverview: string;
     setTopicPlan: (plan: TopicPlan) => void;
     setTopicPlans: (plans: TopicPlans) => void;
-    generateTopicPlan: (topicPlanID: number, numberOfLessons: number) => Promise<void>;
+    generateTopicPlan: (userID: string, prompt: string, numberOfLessons: number) => Promise<TopicPlan | null>;
     getAllTopicPlansByUID: (userID: string) => Promise<void>;
     generateTopicPlanOverview: (userID: string, prompt: string) => Promise<void>;
     loading: boolean;
+    setLoading: (loading: boolean) => void;
+    setTopicPlanOverview: (topicPlanOverview: string) => void; 
 }
 
 interface TopicPlanProviderProps {
@@ -48,19 +50,23 @@ export const TopicPlanProvider: React.FC<TopicPlanProviderProps> = ({ children }
         handleTopicPlanOverviewGenerated
     ), [handleTopicPlanGenerated, handleTopicPlansFetched, handleTopicPlanOverviewGenerated]);
 
-    const generateTopicPlan = useCallback(async (topicPlanID: number, numberOfLessons: number) => {
+    const generateTopicPlan = useCallback(async (userID: string, prompt: string, numberOfLessons: number): Promise<TopicPlan | null> => {
         try {
             setLoading(true);
             const jwt = await getAccessToken();
             if (jwt) {
-                await topicPlanService.generateTopicPlan(topicPlanID, numberOfLessons, jwt);
+                const topicPlan = await topicPlanService.generateTopicPlan(userID, prompt, numberOfLessons, jwt);
+                handleTopicPlanGenerated(topicPlan);
+                return topicPlan;  // Return the topic plan object
             }
         } catch (error) {
             console.error("Failed to generate topic plan:", error);
+        } finally {
             setLoading(false);
         }
-    }, [topicPlanService]);
-
+        return null;  // Return null if something goes wrong
+    }, [topicPlanService, handleTopicPlanGenerated]);
+    
     const getAllTopicPlansByUID = useCallback(async (userID: string) => {
         try {
             setLoading(true);
@@ -97,7 +103,9 @@ export const TopicPlanProvider: React.FC<TopicPlanProviderProps> = ({ children }
         getAllTopicPlansByUID,
         generateTopicPlanOverview,
         loading,
-    }), [topicPlan, topicPlans, topicPlanOverview, setTopicPlan, setTopicPlans, generateTopicPlan, getAllTopicPlansByUID, generateTopicPlanOverview, loading]);
+        setLoading,
+        setTopicPlanOverview
+    }), [topicPlan, topicPlans, topicPlanOverview, setTopicPlan, setTopicPlans, generateTopicPlan, getAllTopicPlansByUID, generateTopicPlanOverview, loading,  setLoading, setTopicPlanOverview]);
 
     return (
         <TopicPlanContext.Provider value={value}>

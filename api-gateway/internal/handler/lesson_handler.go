@@ -34,7 +34,7 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 			log.Printf("Failed to unmarshal GenerateTopicPlanRequest: %v", err)
 			return
 		}
-		go h.GenerateTopicPlan(conn, msg.JWT, generateTopicPlanReq)
+		go h.GenerateTopicPlan(conn, msg.JWT, generateTopicPlanReq.UserId, generateTopicPlanReq.Prompt, generateTopicPlanReq.NumberOfLessons)
 	case "generate_lessons":
 		var generateLessonsReq proto.GenerateLessonsRequest
 		if err := json.Unmarshal(msg.Data, &generateLessonsReq); err != nil {
@@ -94,13 +94,18 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 	}
 }
 
-func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, req proto.GenerateTopicPlanRequest) {
+func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, userID uint32, prompt string, numberOfLessons uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+	req := &proto.GenerateTopicPlanRequest{
+		UserId:          userID,
+		Prompt:          prompt,
+		NumberOfLessons: numberOfLessons,
+	}
 
-	resp, err := h.LessonClient.GenerateTopicPlan(ctxWithMetadata, &req)
+	resp, err := h.LessonClient.GenerateTopicPlan(ctxWithMetadata, req)
 	if err != nil {
 		log.Printf("Error generating topic plan: %v", err)
 		return
@@ -219,17 +224,12 @@ func (h *LessonHandler) GenerateQuickResponse(conn *websocket.Conn, jwt string, 
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-	log.Print("here 1")
 	req := &proto.GenerateQuickResponseRequest{
-
 		Prompt: prompt,
 	}
-
-	log.Print("here 2")
 	resp, err := h.LessonClient.GenerateQuickResponse(ctxWithMetadata, req)
 	if err != nil {
 		log.Printf("Error generating quick response: %v", err)
-		log.Print("here 3")
 		return
 	}
 
