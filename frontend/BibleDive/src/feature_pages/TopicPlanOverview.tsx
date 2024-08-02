@@ -2,7 +2,8 @@ import React, { useEffect } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTopicPlan } from "../context/TopicPlanContext";
-import { RootStackParamList } from "../navigation/Navigationtypes";
+import { useLesson } from "../context/LessonContext"; // Import useLesson hook
+import { RootStackParamList } from '../navigation/Navigationtypes';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export interface TopicPlanOverviewProps {
@@ -13,21 +14,32 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const route = useRoute();
     const { topicPlanID } = route.params as { topicPlanID: number };
-    const { topicPlan, loading, setLoading } = useTopicPlan(); // Add setLoading from context
+    const { topicPlan, loading: topicPlanLoading, setLoading: setTopicPlanLoading } = useTopicPlan(); // Add setLoading from context
+    const { lessons, loading: lessonsLoading, setLoading: setLessonsLoading, getAllLessonsByTopicID } = useLesson(); // Add lesson context
 
     useEffect(() => {
-        if (!loading && !topicPlan) {
+        const fetchLessons = async () => {
+            setLessonsLoading(true);
+            await getAllLessonsByTopicID(topicPlanID);
+            setLessonsLoading(false);
+        };
+
+        fetchLessons();
+    }, [topicPlanID, getAllLessonsByTopicID, setLessonsLoading]);
+
+    useEffect(() => {
+        if (!topicPlanLoading && !topicPlan) {
             navigation.goBack();
         }
-    }, [loading, topicPlan, navigation]);
+    }, [topicPlanLoading, topicPlan, navigation]);
 
     const handleLessonPress = (lessonID: number) => {
-        setLoading(true);
-        navigation.navigate('LessonDetail', { lessonID });
+        setLessonsLoading(true);
+        navigation.navigate('LessonPage', { lessonID });
     };
 
     const renderLessonItem = ({ item, index }) => {
-        const isLocked = index > 0 && !topicPlan.lessons[index - 1].completed;
+        const isLocked = index > 0 && !lessons[index - 1].completed;
         return (
             <TouchableOpacity
                 style={[styles.lessonButton, isLocked && styles.lockedLessonButton]}
@@ -40,7 +52,7 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
         );
     };
 
-    if (loading || !topicPlan) {
+    if (topicPlanLoading || lessonsLoading || !topicPlan) {
         return <ActivityIndicator size="large" color="#000" style={styles.loader} />;
     }
 
@@ -49,7 +61,7 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
             <Text style={styles.title}>{topicPlan.title}</Text>
             <Text style={styles.objective}>{topicPlan.objective}</Text>
             <FlatList
-                data={topicPlan.lessons}
+                data={lessons}
                 renderItem={renderLessonItem}
                 keyExtractor={(item) => item.id.toString()}
             />

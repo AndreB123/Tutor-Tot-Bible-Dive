@@ -212,6 +212,25 @@ func (s *LessonServer) GetAllLessonPlansByTopicID(ctx context.Context, req *prot
 	return &proto.GetAllLessonPlansByTopicIDResponse{Lessons: protoLessons}, nil
 }
 
+func (s *LessonServer) GetLessonByID(ctx context.Context, req *proto.GetLessonByIDRequest) (*proto.GetLessonByIDResponse, error) {
+	lesson, err := s.lessonService.GetLessonByID(uint(req.LessonId))
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &proto.GetLessonByIDResponse{
+		Lesson: &proto.Lesson{
+			Id:          uint32(lesson.ID),
+			Title:       lesson.Title,
+			TopicPlanId: uint32(lesson.TopicPlanID),
+			Objective:   lesson.Objective,
+			Information: lesson.Information,
+			Completed:   lesson.Completed,
+		},
+	}
+	return resp, nil
+}
+
 func (s *LessonServer) GetAllTestsByLessonID(ctx context.Context, req *proto.GetAllTestsByLessonIDRequest) (*proto.GetAllTestsByLessonIDResponse, error) {
 	tests, err := s.testService.GetAllTestsByLessonID(uint(req.LessonId))
 	if err != nil {

@@ -6,5 +6,6 @@ export type RootStackParamList = {
     AccountManagementPage: undefined;
     TopicPlanOverview: {topicPlanID: number};
     LessonOptions: undefined;
-    LessonPage: undefined;
+    LessonPromptPage: undefined;
+    LessonPage: {lessonID: number};
 };

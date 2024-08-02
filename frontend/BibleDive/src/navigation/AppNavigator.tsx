@@ -12,6 +12,7 @@ import { AccountManagement } from "../feature_pages/AccountManagement";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { TopicPlanOverview } from "../feature_pages/TopicPlanOverview";
 import LessonOptions from "../components/LessonOptions";
+import { LessonPromptPage } from "../feature_pages/LessonPromptPage";
 import { LessonPage } from "../feature_pages/LessonPage";
 
 
@@ -89,9 +90,14 @@ function AppNavigator() {
                         options={{title: "Lesson Dive"}}
                     />
                     <Stack.Screen
+                        name="LessonPromptPage"
+                        component={LessonPromptPage}
+                        options={{ title: 'Get Started' }}
+                    />
+                    <Stack.Screen
                         name="LessonPage"
                         component={LessonPage}
-                        options={{ title: 'Get Started' }}
+                        options={{ title: 'Lesson' }}
                     />
                 </>
             ) : (

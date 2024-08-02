@@ -9,6 +9,7 @@ interface LessonContextType {
     setLessons: (lessons: Lesson[]) => void;
     generateLessons: (topicPlanID: number) => Promise<Lesson[] | null>;
     getAllLessonsByTopicID: (topicPlanID: number) => Promise<void>;
+    getOrGenerateLessonByID: (topicPlanID: number, lessonID: number) => Promise<Lesson | null>; // New method
     loading: boolean;
     setLoading: (loading: boolean) => void;
 }
@@ -67,14 +68,36 @@ export const LessonProvider: React.FC<LessonProviderProps> = ({ children }) => {
         }
     }, [lessonService]);
 
+    const getOrGenerateLessonByID = useCallback(async (topicPlanID: number, lessonID: number): Promise<Lesson | null> => {
+        try {
+            setLoading(true);
+            const jwt = await getAccessToken();
+            if (jwt) {
+                const lesson = await lessonService.getLessonByID(topicPlanID, lessonID, jwt);
+                if (!lesson.information) {
+                    const generatedLessons = await generateLessons(topicPlanID);
+                    const updatedLesson = generatedLessons?.find(l => l.id === lessonID) || null;
+                    return updatedLesson;
+                }
+                return lesson;
+            }
+        } catch (error) {
+            console.error("Failed to get or generate lesson:", error);
+        } finally {
+            setLoading(false);
+        }
+        return null;
+    }, [lessonService, generateLessons]);
+
     const value = useMemo(() => ({
         lessons,
         setLessons,
         generateLessons,
+        getOrGenerateLessonByID,
         getAllLessonsByTopicID,
         loading,
         setLoading
-    }), [lessons, generateLessons, getAllLessonsByTopicID, loading, setLoading]);
+    }), [lessons, generateLessons, getOrGenerateLessonByID, getAllLessonsByTopicID, loading, setLoading]);
 
     return (
         <LessonContext.Provider value={value}>

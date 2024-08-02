@@ -37,6 +37,33 @@ class LessonService {
         });
     }
 
+    async getLessonByID(topicPlanID: number, lessonID: number, jwt: string): Promise<Lesson | null> {
+        await this.webSocketService.onConnected;
+        const message = JSON.stringify({
+            Type: "lesson",
+            Action: "get_lesson_by_id",
+            JWT: jwt,
+            Data: {
+                topic_plan_id: topicPlanID,
+                lesson_id: lessonID
+            }
+        });
+        console.log("Sending get_lesson_by_id message:", message);
+        this.webSocketService.sendMessage(message);
+    
+        return new Promise((resolve, reject) => {
+            const handleMessage = (response: any) => {
+                if (response.action === "get_lesson_by_id_resp" && response.data) {
+                    const lesson = response.data.lesson;
+                    resolve(lesson);
+                } else {
+                    reject(new Error("Failed to get lesson by ID"));
+                }
+            };
+            this.webSocketService.registerMessageHandler("get_lesson_by_id_resp", handleMessage);
+        });
+    }
+
     async getAllLessonsByTopicID(topicPlanID: number, jwt: string) {
         await this.webSocketService.onConnected;
         const message = JSON.stringify({

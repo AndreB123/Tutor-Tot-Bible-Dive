@@ -55,7 +55,7 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 			log.Printf("Failed to unmarshal GradeTestRequest: %v", err)
 			return
 		}
-		go h.GradeTest(conn, msg.JWT, gradeTestReq)
+		go h.GradeTest(conn, msg.JWT, gradeTestReq.TestId, gradeTestReq.TestId, gradeTestReq.TopicPlanId)
 	case "get_all_topic_plans_by_uid":
 		var getAllTopicPlansByUIDReq proto.GetAllTopicPlansByUIDRequest
 		if err := json.Unmarshal(msg.Data, &getAllTopicPlansByUIDReq); err != nil {
@@ -77,6 +77,13 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 			return
 		}
 		go h.GetAllTestsByLessonID(conn, msg.JWT, getAllTestsByLessonIDReq.LessonId)
+	case "get_lesson_by_lessonID":
+		var GetLessonByIDReq proto.GetLessonByIDRequest
+		if err := json.Unmarshal(msg.Data, &GetLessonByIDReq); err != nil {
+			log.Printf("Failed to unmarshal GetLessonByIDReq: %v", err)
+			return
+		}
+		go h.GetLessonsByID(conn, msg.JWT, GetLessonByIDReq.LessonId)
 	case "get_all_questions_by_test_id":
 		var getAllQuestionsByTestIDReq proto.GetAllQuestionsByTestIDRequest
 		if err := json.Unmarshal(msg.Data, &getAllQuestionsByTestIDReq); err != nil {
@@ -150,13 +157,18 @@ func (h *LessonHandler) GenerateTest(conn *websocket.Conn, jwt string, lessonID 
 	middleware.SendWebSocketMessage(conn, "generate_test_resp", resp)
 }
 
-func (h *LessonHandler) GradeTest(conn *websocket.Conn, jwt string, req proto.GradeTestRequest) {
+func (h *LessonHandler) GradeTest(conn *websocket.Conn, jwt string, testID, lessonID, topicPlanID uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+	req := &proto.GradeTestRequest{
+		TestId:      testID,
+		LessonId:    lessonID,
+		TopicPlanId: topicPlanID,
+	}
 
-	resp, err := h.LessonClient.GradeTest(ctxWithMetadata, &req)
+	resp, err := h.LessonClient.GradeTest(ctxWithMetadata, req)
 	if err != nil {
 		log.Printf("Error grading test: %v", err)
 		return
@@ -193,6 +205,21 @@ func (h *LessonHandler) GetAllLessonsByTopicID(conn *websocket.Conn, jwt string,
 	}
 
 	middleware.SendWebSocketMessage(conn, "get_all_lesson_plans_by_topic_id_resp", resp)
+}
+
+func (h *LessonHandler) GetLessonsByID(conn *websocket.Conn, jwt string, lessonID uint32) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+	resp, err := h.LessonClient.GetLessonByID(ctxWithMetadata, &proto.GetLessonByIDRequest{LessonId: lessonID})
+	if err != nil {
+		log.Printf("Error getting lesson by lesson ID: %v", err)
+		return
+	}
+
+	middleware.SendWebSocketMessage(conn, "get_lesson_by_id_resp", resp)
 }
 
 func (h *LessonHandler) GetAllTestsByLessonID(conn *websocket.Conn, jwt string, lessonID uint32) {
