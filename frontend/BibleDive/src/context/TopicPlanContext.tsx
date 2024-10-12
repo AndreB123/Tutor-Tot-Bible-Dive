@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState, React
 import WebSocketService from "../services/WebSocketService";
 import TopicPlanService from "../services/TopicPlanService";
 import { getAccessToken } from "../utils/SecureStorage";
-import { TopicPlan, TopicPlans } from "../models/TopicPlanModels"; // Define TopicPlan and TopicPlans models
+import { TopicPlan, TopicPlans } from "../models/TopicPlanModels";
 
 interface TopicPlanContextType {
     topicPlan: TopicPlan | null;

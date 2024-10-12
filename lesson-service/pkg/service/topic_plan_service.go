@@ -30,6 +30,15 @@ func (tp *TopicPlanService) GetAllTopicPlansByUserID(userID uint) ([]*model.Topi
 	return topicPlans, nil
 }
 
+func (tp *TopicPlanService) GetTopicPlanByID(topicPlanID uint) (*model.TopicPlan, error) {
+	topicPlan, err := tp.topicPlanRepo.GetTopicPlanByID(topicPlanID)
+	if err != nil {
+		return nil, err
+	}
+
+	return topicPlan, nil
+}
+
 func (tp *TopicPlanService) IsTopicPlanComplete(topicPlanID uint) (bool, error) {
 	allComplete, err := tp.lessonService.AreAllLessonsCompleted(topicPlanID)
 	if err != nil {

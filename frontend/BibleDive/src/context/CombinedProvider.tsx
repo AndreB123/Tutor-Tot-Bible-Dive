@@ -4,6 +4,8 @@ import { UserProvider } from './UserContext';
 import { ChatProvider } from './ChatContext';
 import { MessageProvider } from './MessageContext';
 import { TopicPlanProvider } from './TopicPlanContext';
+import { LessonProvider } from './LessonContext';
+import { TestProvider } from './TestContext';
 
 interface CombinedProviderProps {
   children: ReactNode;
@@ -21,6 +23,8 @@ const providers = [
   ChatProvider,
   MessageProvider,
   TopicPlanProvider,
+  LessonProvider,
+  TestProvider,
 ];
 
 const CombinedProvider: React.FC<CombinedProviderProps> = ({ children }) => {

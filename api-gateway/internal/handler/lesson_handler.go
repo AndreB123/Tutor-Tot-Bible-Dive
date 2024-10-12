@@ -83,7 +83,7 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 			log.Printf("Failed to unmarshal GetLessonByIDReq: %v", err)
 			return
 		}
-		go h.GetLessonsByID(conn, msg.JWT, GetLessonByIDReq.LessonId)
+		go h.GetLessonByID(conn, msg.JWT, GetLessonByIDReq.LessonId)
 	case "get_all_questions_by_test_id":
 		var getAllQuestionsByTestIDReq proto.GetAllQuestionsByTestIDRequest
 		if err := json.Unmarshal(msg.Data, &getAllQuestionsByTestIDReq); err != nil {
@@ -98,7 +98,15 @@ func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMe
 			return
 		}
 		go h.GenerateQuickResponse(conn, msg.JWT, generateQuickResponseReq.Prompt)
+	case "get_topic_plan_by_id":
+		var getTopicPlanByIDReq proto.GetTopicPlanByIDRequest
+		if err := json.Unmarshal(msg.Data, &getTopicPlanByIDReq); err != nil {
+			log.Printf("Failed to unmarshal GetTopicPlanByIDRequest: %v", err)
+			return
+		}
+		go h.GetTopicPlanByID(conn, msg.JWT, getTopicPlanByIDReq.TopicPlanId)
 	}
+
 }
 
 func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, userID uint32, prompt string, numberOfLessons uint32) {
@@ -192,6 +200,21 @@ func (h *LessonHandler) GetAllTopicPlansByUID(conn *websocket.Conn, jwt string, 
 	middleware.SendWebSocketMessage(conn, "get_all_topic_plans_by_uid_resp", resp)
 }
 
+func (h *LessonHandler) GetTopicPlanByID(conn *websocket.Conn, jwt string, topicPlanID uint32) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+	resp, err := h.LessonClient.GetTopicPlanByID(ctxWithMetadata, &proto.GetTopicPlanByIDRequest{TopicPlanId: topicPlanID})
+	if err != nil {
+		log.Printf("Error getting topic plan by ID: %v", err)
+		return
+	}
+
+	middleware.SendWebSocketMessage(conn, "get_topic_plan_by_id_resp", resp)
+}
+
 func (h *LessonHandler) GetAllLessonsByTopicID(conn *websocket.Conn, jwt string, topicPlanID uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -207,7 +230,7 @@ func (h *LessonHandler) GetAllLessonsByTopicID(conn *websocket.Conn, jwt string,
 	middleware.SendWebSocketMessage(conn, "get_all_lesson_plans_by_topic_id_resp", resp)
 }
 
-func (h *LessonHandler) GetLessonsByID(conn *websocket.Conn, jwt string, lessonID uint32) {
+func (h *LessonHandler) GetLessonByID(conn *websocket.Conn, jwt string, lessonID uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 

@@ -14,18 +14,18 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const route = useRoute();
     const { topicPlanID } = route.params as { topicPlanID: number };
-    const { topicPlan, loading: topicPlanLoading, setLoading: setTopicPlanLoading } = useTopicPlan(); // Add setLoading from context
-    const { lessons, loading: lessonsLoading, setLoading: setLessonsLoading, getAllLessonsByTopicID } = useLesson(); // Add lesson context
+    const { topicPlan, loading: topicPlanLoading, setLoading: setTopicPlanLoading, getTopicPlanByID } = useTopicPlan();
+    const { setLoading: setLessonsLoading, getLessonByID } = useLesson(); // Use `getLessonByID` for fetching full lesson details
 
     useEffect(() => {
-        const fetchLessons = async () => {
-            setLessonsLoading(true);
-            await getAllLessonsByTopicID(topicPlanID);
-            setLessonsLoading(false);
+        const fetchTopicPlan = async () => {
+            setTopicPlanLoading(true);
+            await getTopicPlanByID(topicPlanID);
+            setTopicPlanLoading(false);
         };
 
-        fetchLessons();
-    }, [topicPlanID, getAllLessonsByTopicID, setLessonsLoading]);
+        fetchTopicPlan();
+    }, [topicPlanID, getTopicPlanByID, setTopicPlanLoading]);
 
     useEffect(() => {
         if (!topicPlanLoading && !topicPlan) {
@@ -33,18 +33,22 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
         }
     }, [topicPlanLoading, topicPlan, navigation]);
 
-    const handleLessonPress = (lessonID: number) => {
+    const handleLessonPress = async (lessonID: number) => {
         setLessonsLoading(true);
+        await getLessonByID(lessonID);  // Fetch the full lesson object
+        setLessonsLoading(false);
         navigation.navigate('LessonPage', { lessonID });
     };
 
     const renderLessonItem = ({ item, index }) => {
-        const isLocked = index > 0 && !lessons[index - 1].completed;
+        console.log('Rendering lesson item:', item.title, index);
+        const isLocked = index > 0 && !topicPlan.lesson[index - 1].completed;  // Assuming 'completed' is part of the lesson metadata
+
         return (
             <TouchableOpacity
                 style={[styles.lessonButton, isLocked && styles.lockedLessonButton]}
                 disabled={isLocked}
-                onPress={() => handleLessonPress(item.id)} // Handle lesson press
+                onPress={() => handleLessonPress(item.id)}
             >
                 <Text style={styles.lessonText}>{item.title}</Text>
                 {isLocked && <Text style={styles.lockedText}>Locked</Text>}
@@ -52,7 +56,7 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
         );
     };
 
-    if (topicPlanLoading || lessonsLoading || !topicPlan) {
+    if (topicPlanLoading || !topicPlan) {
         return <ActivityIndicator size="large" color="#000" style={styles.loader} />;
     }
 
@@ -61,7 +65,7 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
             <Text style={styles.title}>{topicPlan.title}</Text>
             <Text style={styles.objective}>{topicPlan.objective}</Text>
             <FlatList
-                data={lessons}
+                data={topicPlan.lesson}
                 renderItem={renderLessonItem}
                 keyExtractor={(item) => item.id.toString()}
             />
@@ -73,16 +77,18 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#2c22b8',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 10,
+        color: '#fff',
     },
     objective: {
         fontSize: 18,
         marginBottom: 20,
+        color: '#fff',
     },
     lessonButton: {
         padding: 15,

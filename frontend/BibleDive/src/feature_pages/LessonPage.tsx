@@ -17,6 +17,6 @@ export const LessonPage: React.FC<LessonPageScreenProps> = (props) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#ff66',
     },
 });

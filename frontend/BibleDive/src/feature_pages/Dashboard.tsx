@@ -96,7 +96,7 @@ export const Dashboard: React.FC<DashboardScreenProps> = (props) => {
     );
 
     const handleGetStartedPress = () => {
-        navigation.navigate('LessonPage'); // Navigate to LessonPage
+        navigation.navigate('LessonPromptPage'); // Navigate to LessonPage
     };
 
 

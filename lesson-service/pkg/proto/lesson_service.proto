@@ -77,6 +77,10 @@ message GetAllTopicPlansByUIDRequest {
     uint32 user_id = 1;
 }
 
+message GetTopicPlanByIDRequest {
+    uint32 topic_plan_id = 1;
+}
+
 message GetLessonByIDRequest {
     uint32 lesson_id = 1;
 }
@@ -121,6 +125,10 @@ message GetAllTopicPlansByUIDResponse {
     repeated TopicPlan topic_plans = 1;
 }
 
+message GetTopicPlanByIDResponse {
+    TopicPlan topic_plan = 1;
+}
+
 message GetLessonByIDResponse {
     Lesson lesson = 1;
 }
@@ -155,4 +163,5 @@ service LessonService {
     rpc GetAllTestsByLessonID(GetAllTestsByLessonIDRequest) returns (GetAllTestsByLessonIDResponse);
     rpc GetAllQuestionsByTestID(GetAllQuestionsByTestIDRequest) returns (GetAllQuestionsByTestIDResponse);
     rpc GradeTest(GradeTestRequest) returns (GradeTestResponse);
+    rpc GetTopicPlanByID(GetTopicPlanByIDRequest) returns (GetTopicPlanByIDResponse);
 }

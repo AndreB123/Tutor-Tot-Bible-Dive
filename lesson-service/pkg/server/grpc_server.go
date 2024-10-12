@@ -157,6 +157,36 @@ func (s *LessonServer) GenerateTest(ctx context.Context, req *proto.GenerateTest
 	return &proto.GenerateTestResponse{Test: protoTest}, nil
 }
 
+func (s *LessonServer) GetTopicPlanByID(ctx context.Context, req *proto.GetTopicPlanByIDRequest) (*proto.GetTopicPlanByIDResponse, error) {
+	topicPlan, err := s.topicService.GetTopicPlanByID(uint(req.TopicPlanId))
+	if err != nil {
+		return nil, err
+	}
+
+	protoTopicPlan := &proto.TopicPlan{
+		Id:        uint32(topicPlan.ID),
+		Title:     topicPlan.Title,
+		UserId:    uint32(topicPlan.UserID),
+		Objective: topicPlan.Objective,
+		Standard:  topicPlan.Standard,
+		Completed: topicPlan.Completed,
+	}
+
+	for _, lesson := range topicPlan.Lessons {
+		protoLesson := &proto.Lesson{
+			Id:          uint32(lesson.ID),
+			Title:       lesson.Title,
+			TopicPlanId: uint32(lesson.TopicPlanID),
+			Objective:   lesson.Objective,
+			Information: lesson.Information,
+			Completed:   lesson.Completed,
+		}
+		protoTopicPlan.Lesson = append(protoTopicPlan.Lesson, protoLesson)
+	}
+
+	return &proto.GetTopicPlanByIDResponse{TopicPlan: protoTopicPlan}, nil
+}
+
 func (s *LessonServer) GetAllTopicPlansByUID(ctx context.Context, req *proto.GetAllTopicPlansByUIDRequest) (*proto.GetAllTopicPlansByUIDResponse, error) {
 	topicPlans, err := s.topicService.GetAllTopicPlansByUserID(uint(req.UserId))
 	if err != nil {
@@ -196,6 +226,7 @@ func (s *LessonServer) GetAllLessonPlansByTopicID(ctx context.Context, req *prot
 		return nil, err
 	}
 
+	fmt.Println("test 1")
 	var protoLessons []*proto.Lesson
 	for _, lesson := range lessons {
 		protoLesson := &proto.Lesson{

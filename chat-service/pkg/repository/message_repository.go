@@ -2,7 +2,7 @@ package repository
 
 import (
 	"chat-service/pkg/model"
-	"fmt"
+	"sync"
 
 	"gorm.io/gorm"
 )
@@ -25,19 +25,52 @@ func (repo *MessageRepository) UpdateMessageContent(messageID uint, content stri
 
 func (repo *MessageRepository) FindMessagesByChatIDPaginated(chatID uint, lastMessageID uint, limit uint) ([]model.Message, error) {
 	var messages []model.Message
-	query := repo.db.Where("chat_id = ? AND id < ?", chatID, lastMessageID).Order("id DESC").Limit(int(limit))
-	if lastMessageID == 0 {
-		query = repo.db.Where("chat_id = ?", chatID).Order("id DESC").Limit(int(limit))
+	var wg sync.WaitGroup
+	msgCh := make(chan []model.Message, 20)
+	errCh := make(chan error, 1)
+
+	fetchMessages := func(chatID, lastMessageID, limit uint) {
+		defer wg.Done()
+		var msgs []model.Message
+
+		query := repo.db.Where("chat_id = ? AND id < ?", chatID, lastMessageID).Order("id DESC").Limit(int(limit))
+		if lastMessageID == 0 {
+			query = repo.db.Where("chat_id = ?", chatID).Order("id DESC").Limit(int(limit))
+		}
+		result := query.Find(&msgs)
+		if result.Error != nil {
+			errCh <- result.Error
+			return
+		}
+		msgCh <- msgs
 	}
 
-	result := query.Find(&messages)
-	if result.Error != nil {
-		fmt.Printf("Repo: Error finding messages: %v\n", result.Error)
-		return nil, result.Error
-	}
+	wg.Add(1)
 
-	fmt.Printf("Repo: Found messages: %v\n", messages)
-	return messages, nil
+	go fetchMessages(chatID, lastMessageID, limit)
+
+	go func() {
+		wg.Wait()
+		close(msgCh)
+		close(errCh)
+	}()
+
+	for {
+		select {
+		case msgs, ok := <-msgCh:
+			if ok {
+				messages = append(messages, msgs...)
+			}
+		case err, ok := <-errCh:
+			if ok {
+				return nil, err
+			}
+		default:
+			if len(msgCh) == 0 && len(errCh) == 0 {
+				return messages, nil
+			}
+		}
+	}
 }
 
 func (repo *MessageRepository) DeleteMessageByMessageID(messageID uint) error {

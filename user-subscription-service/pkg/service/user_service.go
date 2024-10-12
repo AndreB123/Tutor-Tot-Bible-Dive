@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"user-microservice/pkg/model"
 	"user-microservice/pkg/repository"
 )
@@ -20,24 +21,62 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 
 func (s *UserService) CreateUser(user *model.User, password string) (*model.User, error) {
 	err := user.SetPassword(password)
-
 	if err != nil {
 		return nil, err
 	}
 
-	emailExists, err := s.userRepository.EmailExists(user.Email)
-	if err != nil {
-		return nil, err
+	emailExistsCh := make(chan bool)
+	usernameExistsCH := make(chan bool)
+	errorCh := make(chan error, 2)
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		exists, err := s.userRepository.EmailExists(user.Email)
+		if err != nil {
+			errorCh <- err
+			return
+		}
+		emailExistsCh <- exists
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		exists, err := s.userRepository.UsernameExists(user.Username)
+		if err != nil {
+			errorCh <- err
+			return
+		}
+		usernameExistsCH <- exists
+	}()
+
+	go func() {
+		wg.Wait()
+		close(emailExistsCh)
+		close(usernameExistsCH)
+		close(errorCh)
+	}()
+
+	var emailExists, usernameExists bool
+	var collectedErrors []error
+
+	for i := 0; i < 2; i++ {
+		select {
+		case err := <-errorCh:
+			collectedErrors = append(collectedErrors, err)
+		case emailExists = <-emailExistsCh:
+		case usernameExists = <-usernameExistsCH:
+		}
+	}
+
+	if len(collectedErrors) > 0 {
+		return nil, errors.New(collectErrors(collectedErrors))
 	}
 
 	if emailExists {
 		return nil, errors.New("email in use")
-	}
-
-	usernameExists, err := s.userRepository.UsernameExists(user.Username)
-
-	if err != nil {
-		return nil, err
 	}
 
 	if usernameExists {
@@ -45,6 +84,14 @@ func (s *UserService) CreateUser(user *model.User, password string) (*model.User
 	}
 
 	return user, s.userRepository.Create(user)
+}
+
+func collectErrors(errors []error) string {
+	var errMsg string
+	for _, err := range errors {
+		errMsg += err.Error() + "; "
+	}
+	return errMsg
 }
 
 func (s *UserService) UpdatePassword(userID uint, oldPassword, password string) error {
@@ -55,7 +102,7 @@ func (s *UserService) UpdatePassword(userID uint, oldPassword, password string) 
 	}
 	ok := user.ComparePassword(oldPassword)
 	if !ok {
-		return errors.New("Invalid pass on update password request")
+		return errors.New("invalid pass on update password request")
 	}
 	err = user.SetPassword(password)
 	if err != nil {

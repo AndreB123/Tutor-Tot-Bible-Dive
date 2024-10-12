@@ -29,6 +29,7 @@ const (
 	LessonService_GetAllTestsByLessonID_FullMethodName      = "/proto.LessonService/GetAllTestsByLessonID"
 	LessonService_GetAllQuestionsByTestID_FullMethodName    = "/proto.LessonService/GetAllQuestionsByTestID"
 	LessonService_GradeTest_FullMethodName                  = "/proto.LessonService/GradeTest"
+	LessonService_GetTopicPlanByID_FullMethodName           = "/proto.LessonService/GetTopicPlanByID"
 )
 
 // LessonServiceClient is the client API for LessonService service.
@@ -45,6 +46,7 @@ type LessonServiceClient interface {
 	GetAllTestsByLessonID(ctx context.Context, in *GetAllTestsByLessonIDRequest, opts ...grpc.CallOption) (*GetAllTestsByLessonIDResponse, error)
 	GetAllQuestionsByTestID(ctx context.Context, in *GetAllQuestionsByTestIDRequest, opts ...grpc.CallOption) (*GetAllQuestionsByTestIDResponse, error)
 	GradeTest(ctx context.Context, in *GradeTestRequest, opts ...grpc.CallOption) (*GradeTestResponse, error)
+	GetTopicPlanByID(ctx context.Context, in *GetTopicPlanByIDRequest, opts ...grpc.CallOption) (*GetTopicPlanByIDResponse, error)
 }
 
 type lessonServiceClient struct {
@@ -145,6 +147,15 @@ func (c *lessonServiceClient) GradeTest(ctx context.Context, in *GradeTestReques
 	return out, nil
 }
 
+func (c *lessonServiceClient) GetTopicPlanByID(ctx context.Context, in *GetTopicPlanByIDRequest, opts ...grpc.CallOption) (*GetTopicPlanByIDResponse, error) {
+	out := new(GetTopicPlanByIDResponse)
+	err := c.cc.Invoke(ctx, LessonService_GetTopicPlanByID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LessonServiceServer is the server API for LessonService service.
 // All implementations must embed UnimplementedLessonServiceServer
 // for forward compatibility
@@ -159,6 +170,7 @@ type LessonServiceServer interface {
 	GetAllTestsByLessonID(context.Context, *GetAllTestsByLessonIDRequest) (*GetAllTestsByLessonIDResponse, error)
 	GetAllQuestionsByTestID(context.Context, *GetAllQuestionsByTestIDRequest) (*GetAllQuestionsByTestIDResponse, error)
 	GradeTest(context.Context, *GradeTestRequest) (*GradeTestResponse, error)
+	GetTopicPlanByID(context.Context, *GetTopicPlanByIDRequest) (*GetTopicPlanByIDResponse, error)
 	mustEmbedUnimplementedLessonServiceServer()
 }
 
@@ -195,6 +207,9 @@ func (UnimplementedLessonServiceServer) GetAllQuestionsByTestID(context.Context,
 }
 func (UnimplementedLessonServiceServer) GradeTest(context.Context, *GradeTestRequest) (*GradeTestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GradeTest not implemented")
+}
+func (UnimplementedLessonServiceServer) GetTopicPlanByID(context.Context, *GetTopicPlanByIDRequest) (*GetTopicPlanByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTopicPlanByID not implemented")
 }
 func (UnimplementedLessonServiceServer) mustEmbedUnimplementedLessonServiceServer() {}
 
@@ -389,6 +404,24 @@ func _LessonService_GradeTest_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LessonService_GetTopicPlanByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTopicPlanByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LessonServiceServer).GetTopicPlanByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LessonService_GetTopicPlanByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LessonServiceServer).GetTopicPlanByID(ctx, req.(*GetTopicPlanByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LessonService_ServiceDesc is the grpc.ServiceDesc for LessonService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -435,6 +468,10 @@ var LessonService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GradeTest",
 			Handler:    _LessonService_GradeTest_Handler,
+		},
+		{
+			MethodName: "GetTopicPlanByID",
+			Handler:    _LessonService_GetTopicPlanByID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

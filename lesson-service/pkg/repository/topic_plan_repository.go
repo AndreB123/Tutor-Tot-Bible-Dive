@@ -35,6 +35,15 @@ func (repo *TopicPlanRepository) GetAllTopicPlansByUserID(id uint) ([]*model.Top
 	return topicPlans, nil
 }
 
+func (repo *TopicPlanRepository) GetTopicPlanByID(id uint) (*model.TopicPlan, error) {
+	topicPlan := &model.TopicPlan{}
+	err := repo.db.Model(&model.TopicPlan{}).Where("id = ?", id).First(topicPlan).Error
+	if err != nil {
+		return nil, err
+	}
+	return topicPlan, nil
+}
+
 func (repo *TopicPlanRepository) UpdateTopicPlanCompleted(topicPlanID uint, completed bool) error {
 	return repo.db.Model(&model.TopicPlan{}).Where("id = ?", topicPlanID).Update("completed", completed).Error
 }
