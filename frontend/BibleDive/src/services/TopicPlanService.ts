@@ -7,6 +7,7 @@ class TopicPlanService {
         private onTopicPlanGenerated: (topicPlan: any) => void,
         private onTopicPlansFetched: (topicPlans: any) => void,
         private onTopicPlanOverviewGenerated: (overview: any) => void,
+        private onTopicPlanFetched: (topicPlan: any) => void,
     ) {
         this.registerMessageHandlers();
     }
@@ -87,10 +88,39 @@ class TopicPlanService {
         this.webSocketService.sendMessage(message);
     }
 
+    async getTopicPlanByID(topicPlanID: string, jwt: string): Promise<any> {
+        await this.webSocketService.onConnected;
+        const message = JSON.stringify({
+            Type: "lesson",
+            Action: "get_topic_plan_by_id",
+            JWT: jwt,
+            Data: {
+                topic_plan_id: topicPlanID
+            }
+        });
+        console.log("Sending get_topic_plan_by_id message:", message);
+        this.webSocketService.sendMessage(message);
+    
+        // Implement a promise to wait for the response
+        return new Promise((resolve, reject) => {
+            const handleMessage = (response: any) => {
+                if (response.action === "get_topic_plan_by_id_resp" && response.data) {
+                    const topicPlan = response.data.topic_plan;
+                    this.onTopicPlanFetched(topicPlan);
+                    resolve(topicPlan);
+                } else {
+                    reject(new Error("Failed to fetch topic plan by ID"));
+                }
+            };
+            this.webSocketService.registerMessageHandler("get_topic_plan_by_id_resp", handleMessage);
+        });
+    }
+
     private registerMessageHandlers() {
         this.webSocketService.registerMessageHandler("generate_topic_plan_resp", this.handleTopicPlanGenerated);
         this.webSocketService.registerMessageHandler("get_all_topic_plans_by_uid_resp", this.handleTopicPlansFetched);
         this.webSocketService.registerMessageHandler("generate_topic_plan_overview_resp", this.handleTopicPlanOverviewGenerated);
+        this.webSocketService.registerMessageHandler("get_topic_plan_by_id_resp", this.handleTopicPlanFetched);
     }
 
     private handleTopicPlanGenerated = (message: any) => {
@@ -109,6 +139,12 @@ class TopicPlanService {
         console.log("Handling topic plan overview generated:", message);
         const overview = message.data.response;
         this.onTopicPlanOverviewGenerated(overview);
+    }
+
+    private handleTopicPlanFetched = (message: any) => {
+        console.log("Handling topic plan fetched:", message);
+        const topicPlan = message.data.topic_plan;
+        this.onTopicPlanFetched(topicPlan);
     }
 }
 

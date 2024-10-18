@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTopicPlan } from "../context/TopicPlanContext";
-import { useLesson } from "../context/LessonContext"; // Import useLesson hook
 import { RootStackParamList } from '../navigation/Navigationtypes';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -13,9 +12,8 @@ export interface TopicPlanOverviewProps {
 export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const route = useRoute();
-    const { topicPlanID } = route.params as { topicPlanID: number };
+    const { topicPlanID } = route.params as { topicPlanID: string };
     const { topicPlan, loading: topicPlanLoading, setLoading: setTopicPlanLoading, getTopicPlanByID } = useTopicPlan();
-    const { setLoading: setLessonsLoading, getLessonByID } = useLesson(); // Use `getLessonByID` for fetching full lesson details
 
     useEffect(() => {
         const fetchTopicPlan = async () => {
@@ -33,24 +31,16 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
         }
     }, [topicPlanLoading, topicPlan, navigation]);
 
-    const handleLessonPress = async (lessonID: number) => {
-        setLessonsLoading(true);
-        await getLessonByID(lessonID);  // Fetch the full lesson object
-        setLessonsLoading(false);
-        navigation.navigate('LessonPage', { lessonID });
-    };
-
     const renderLessonItem = ({ item, index }) => {
-        console.log('Rendering lesson item:', item.title, index);
-        const isLocked = index > 0 && !topicPlan.lesson[index - 1].completed;  // Assuming 'completed' is part of the lesson metadata
+        console.log('Rendering lesson item:', item.name, index);
+        const isLocked = index > 0 && !topicPlan.lessons[index - 1].completed;  // Assuming 'completed' is part of the lesson metadata
 
         return (
             <TouchableOpacity
                 style={[styles.lessonButton, isLocked && styles.lockedLessonButton]}
                 disabled={isLocked}
-                onPress={() => handleLessonPress(item.id)}
             >
-                <Text style={styles.lessonText}>{item.title}</Text>
+                <Text style={styles.lessonText}>{item.name}</Text>
                 {isLocked && <Text style={styles.lockedText}>Locked</Text>}
             </TouchableOpacity>
         );
@@ -65,7 +55,7 @@ export const TopicPlanOverview: React.FC<TopicPlanOverviewProps> = (props) => {
             <Text style={styles.title}>{topicPlan.title}</Text>
             <Text style={styles.objective}>{topicPlan.objective}</Text>
             <FlatList
-                data={topicPlan.lesson}
+                data={topicPlan.lessons}
                 renderItem={renderLessonItem}
                 keyExtractor={(item) => item.id.toString()}
             />

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"lesson-service/pkg/model"
 	"lesson-service/pkg/repository"
 )
@@ -36,6 +37,7 @@ func (tp *TopicPlanService) GetTopicPlanByID(topicPlanID uint) (*model.TopicPlan
 		return nil, err
 	}
 
+	fmt.Println("Topic plan returned: ", topicPlan.Lessons)
 	return topicPlan, nil
 }
 

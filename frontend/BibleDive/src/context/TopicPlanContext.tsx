@@ -13,6 +13,7 @@ interface TopicPlanContextType {
     generateTopicPlan: (userID: string, prompt: string, numberOfLessons: number) => Promise<TopicPlan | null>;
     getAllTopicPlansByUID: (userID: string) => Promise<void>;
     generateTopicPlanOverview: (userID: string, prompt: string) => Promise<void>;
+    getTopicPlanByID: (topicPlanID: string) => Promise<TopicPlan | null>;
     loading: boolean;
     setLoading: (loading: boolean) => void;
     setTopicPlanOverview: (topicPlanOverview: string) => void; 
@@ -43,12 +44,17 @@ export const TopicPlanProvider: React.FC<TopicPlanProviderProps> = ({ children }
         setLoading(false);
     }, []);
 
+    const handleTopicPlanFetched = useCallback((fetchedPlan: TopicPlan) => {
+        setTopicPlan(fetchedPlan);
+    }, []);
+
     const topicPlanService = useMemo(() => new TopicPlanService(
         WebSocketService,
         handleTopicPlanGenerated,
         handleTopicPlansFetched,
-        handleTopicPlanOverviewGenerated
-    ), [handleTopicPlanGenerated, handleTopicPlansFetched, handleTopicPlanOverviewGenerated]);
+        handleTopicPlanOverviewGenerated,
+        handleTopicPlanFetched
+    ), [handleTopicPlanGenerated, handleTopicPlansFetched, handleTopicPlanOverviewGenerated, handleTopicPlanFetched]);
 
     const generateTopicPlan = useCallback(async (userID: string, prompt: string, numberOfLessons: number): Promise<TopicPlan | null> => {
         try {
@@ -93,6 +99,24 @@ export const TopicPlanProvider: React.FC<TopicPlanProviderProps> = ({ children }
         }
     }, [topicPlanService]);
 
+
+    const getTopicPlanByID = useCallback(async (topicPlanID: string): Promise<TopicPlan | null> => {
+        try {
+            setLoading(true);
+            const jwt = await getAccessToken();
+            if (jwt) {
+                const fetchedPlan = await topicPlanService.getTopicPlanByID(topicPlanID, jwt);
+                handleTopicPlanFetched(fetchedPlan);
+                return fetchedPlan;
+            }
+        } catch (error) {
+            console.error("Failed to fetch topic plan by ID:", error);
+        } finally {
+            setLoading(false);
+        }
+        return null;
+    }, [topicPlanService, handleTopicPlanFetched]);
+
     const value = useMemo(() => ({
         topicPlan,
         topicPlans,
@@ -102,10 +126,11 @@ export const TopicPlanProvider: React.FC<TopicPlanProviderProps> = ({ children }
         generateTopicPlan,
         getAllTopicPlansByUID,
         generateTopicPlanOverview,
+        getTopicPlanByID,
         loading,
         setLoading,
         setTopicPlanOverview
-    }), [topicPlan, topicPlans, topicPlanOverview, setTopicPlan, setTopicPlans, generateTopicPlan, getAllTopicPlansByUID, generateTopicPlanOverview, loading,  setLoading, setTopicPlanOverview]);
+    }), [topicPlan, topicPlans, topicPlanOverview, setTopicPlan, setTopicPlans, generateTopicPlan, getAllTopicPlansByUID, generateTopicPlanOverview,  getTopicPlanByID, loading,  setLoading, setTopicPlanOverview]);
 
     return (
         <TopicPlanContext.Provider value={value}>

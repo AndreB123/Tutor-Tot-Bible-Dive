@@ -35,6 +35,7 @@ func NewOpenAIService(cfg *config.Config, lsnRepository *repository.LessonReposi
 		testRepository:      tstRepository,
 	}
 }
+
 func (s *OpenAIService) GenerateQuickResponse(prompt string) (string, error) {
 	fmt.Println("OpenAIService: GenerateQuickResponse called with prompt:", prompt)
 
