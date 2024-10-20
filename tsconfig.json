@@ -1,0 +1,11 @@
+{
+    "extends": "./frontend/BibleDive/tsconfig.json",
+    "compilerOptions": {
+      "baseUrl": "./",
+      "paths": {
+        "*": ["frontend/BibleDive/*"]
+      }
+    },
+    "include": ["frontend/BibleDive/**/*"]
+  }
+  

@@ -1,4 +1,11 @@
 {
+  "private": true,
+  "workspaces": [
+    "frontend/BibleDive"
+  ],
+  "scripts": {
+    "start:frontend": "npm run start --workspace frontend/BibleDive"
+  },
   "dependencies": {
     "react-devtools": "^4.27.2",
     "react-native-config": "^1.5.1"

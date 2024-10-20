@@ -13,281 +13,143 @@ import (
 )
 
 type LessonHandler struct {
-	Config       *config.Config
-	LessonClient proto.LessonServiceClient
+	Config         *config.Config
+	LessonClient   proto.LessonServiceClient
+	actionHandlers map[string]func(conn *websocket.Conn, jwt string, data []byte)
 }
 
 func NewLessonHandler(cfg *config.Config, lessonClient proto.LessonServiceClient) *LessonHandler {
-	return &LessonHandler{
+	h := &LessonHandler{
 		Config:       cfg,
 		LessonClient: lessonClient,
 	}
+
+	h.actionHandlers = map[string]func(conn *websocket.Conn, jwt string, data []byte){
+		"generate_topic_plan":              h.handleGenerateTopicPlan,
+		"generate_lessons":                 h.handleGenerateLessons,
+		"generate_test":                    h.handleGenerateTest,
+		"grade_test":                       h.handleGradeTest,
+		"get_all_topic_plans_by_uid":       h.handleGetAllTopicPlansByUID,
+		"get_all_lesson_plans_by_topic_id": h.handleGetAllLessonsByTopicID,
+		"get_all_tests_by_lesson_id":       h.handleGetAllTestsByLessonID,
+		"get_lesson_by_lessonID":           h.handleGetLessonByID,
+		"get_all_questions_by_test_id":     h.handleGetAllQuestionsByTestID,
+		"generate_topic_plan_overview":     h.handleGenerateQuickResponse,
+		"get_topic_plan_by_id":             h.handleGetTopicPlanByID,
+	}
+
+	return h
 }
 
 func (h *LessonHandler) ProcessMessage(conn *websocket.Conn, msg middleware.WSMessage) {
 	log.Printf("Raw data: %s", string(msg.Data))
 
-	switch msg.Action {
-	case "generate_topic_plan":
-		var generateTopicPlanReq proto.GenerateTopicPlanRequest
-		if err := json.Unmarshal(msg.Data, &generateTopicPlanReq); err != nil {
-			log.Printf("Failed to unmarshal GenerateTopicPlanRequest: %v", err)
-			return
-		}
-		go h.GenerateTopicPlan(conn, msg.JWT, generateTopicPlanReq.UserId, generateTopicPlanReq.Prompt, generateTopicPlanReq.NumberOfLessons)
-	case "generate_lessons":
-		var generateLessonsReq proto.GenerateLessonsRequest
-		if err := json.Unmarshal(msg.Data, &generateLessonsReq); err != nil {
-			log.Printf("Failed to unmarshal GenerateLessonsRequest: %v", err)
-			return
-		}
-		go h.GenerateLessons(conn, msg.JWT, generateLessonsReq.TopicPlanId)
-	case "generate_test":
-		var generateTestReq proto.GenerateTestRequest
-		if err := json.Unmarshal(msg.Data, &generateTestReq); err != nil {
-			log.Printf("Failed to unmarshal GenerateTestRequest: %v", err)
-			return
-		}
-		go h.GenerateTest(conn, msg.JWT, generateTestReq.LessonId)
-	case "grade_test":
-		var gradeTestReq proto.GradeTestRequest
-		if err := json.Unmarshal(msg.Data, &gradeTestReq); err != nil {
-			log.Printf("Failed to unmarshal GradeTestRequest: %v", err)
-			return
-		}
-		go h.GradeTest(conn, msg.JWT, gradeTestReq.TestId, gradeTestReq.TestId, gradeTestReq.TopicPlanId)
-	case "get_all_topic_plans_by_uid":
-		var getAllTopicPlansByUIDReq proto.GetAllTopicPlansByUIDRequest
-		if err := json.Unmarshal(msg.Data, &getAllTopicPlansByUIDReq); err != nil {
-			log.Printf("Failed to unmarshal GetAllTopicPlansByUIDRequest: %v", err)
-			return
-		}
-		go h.GetAllTopicPlansByUID(conn, msg.JWT, getAllTopicPlansByUIDReq.UserId)
-	case "get_all_lesson_plans_by_topic_id":
-		var getAllLessonsByTopicIDReq proto.GetAllLessonPlansByTopicIDRequest
-		if err := json.Unmarshal(msg.Data, &getAllLessonsByTopicIDReq); err != nil {
-			log.Printf("Failed to unmarshal GetAllLessonPlansByTopicIDRequest: %v", err)
-			return
-		}
-		go h.GetAllLessonsByTopicID(conn, msg.JWT, getAllLessonsByTopicIDReq.TopicPlanId)
-	case "get_all_tests_by_lesson_id":
-		var getAllTestsByLessonIDReq proto.GetAllTestsByLessonIDRequest
-		if err := json.Unmarshal(msg.Data, &getAllTestsByLessonIDReq); err != nil {
-			log.Printf("Failed to unmarshal GetAllTestsByLessonIDRequest: %v", err)
-			return
-		}
-		go h.GetAllTestsByLessonID(conn, msg.JWT, getAllTestsByLessonIDReq.LessonId)
-	case "get_lesson_by_lessonID":
-		var GetLessonByIDReq proto.GetLessonByIDRequest
-		if err := json.Unmarshal(msg.Data, &GetLessonByIDReq); err != nil {
-			log.Printf("Failed to unmarshal GetLessonByIDReq: %v", err)
-			return
-		}
-		go h.GetLessonByID(conn, msg.JWT, GetLessonByIDReq.LessonId)
-	case "get_all_questions_by_test_id":
-		var getAllQuestionsByTestIDReq proto.GetAllQuestionsByTestIDRequest
-		if err := json.Unmarshal(msg.Data, &getAllQuestionsByTestIDReq); err != nil {
-			log.Printf("Failed to unmarshal GetAllQuestionsByTestIDRequest: %v", err)
-			return
-		}
-		go h.GetAllQuestionsByTestID(conn, msg.JWT, getAllQuestionsByTestIDReq.TestId)
-	case "generate_topic_plan_overview":
-		var generateQuickResponseReq proto.GenerateQuickResponseRequest
-		if err := json.Unmarshal(msg.Data, &generateQuickResponseReq); err != nil {
-			log.Printf("Failed to unmarshal GenerateQuickResponseRequest: %v", err)
-			return
-		}
-		go h.GenerateQuickResponse(conn, msg.JWT, generateQuickResponseReq.Prompt)
-	case "get_topic_plan_by_id":
-		var getTopicPlanByIDReq proto.GetTopicPlanByIDRequest
-		if err := json.Unmarshal(msg.Data, &getTopicPlanByIDReq); err != nil {
-			log.Printf("Failed to unmarshal GetTopicPlanByIDRequest: %v", err)
-			return
-		}
-		go h.GetTopicPlanByID(conn, msg.JWT, getTopicPlanByIDReq.TopicPlanId)
+	handlerFunc, ok := h.actionHandlers[msg.Action]
+	if !ok {
+		log.Printf("Unknown action: %s", msg.Action)
+		return
 	}
-
+	handlerFunc(conn, msg.JWT, msg.Data)
 }
 
-func (h *LessonHandler) GenerateTopicPlan(conn *websocket.Conn, jwt string, userID uint32, prompt string, numberOfLessons uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-	req := &proto.GenerateTopicPlanRequest{
-		UserId:          userID,
-		Prompt:          prompt,
-		NumberOfLessons: numberOfLessons,
-	}
-
-	resp, err := h.LessonClient.GenerateTopicPlan(ctxWithMetadata, req)
-	if err != nil {
-		log.Printf("Error generating topic plan: %v", err)
+// Generic handler function to reduce repetition
+func (h *LessonHandler) handleAction(conn *websocket.Conn, jwt string, data []byte, req interface{}, serviceFunc func(ctx context.Context, req interface{}) (interface{}, error), respAction string) {
+	if err := json.Unmarshal(data, req); err != nil {
+		log.Printf("Failed to unmarshal %T: %v", req, err)
 		return
 	}
 
-	middleware.SendWebSocketMessage(conn, "generate_topic_plan_resp", resp)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+
+		ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
+
+		resp, err := serviceFunc(ctxWithMetadata, req)
+		if err != nil {
+			log.Printf("Error in service method: %v", err)
+			return
+		}
+
+		middleware.SendWebSocketMessage(conn, respAction, resp)
+	}()
 }
 
-func (h *LessonHandler) GenerateLessons(conn *websocket.Conn, jwt string, topicPlanID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+// Individual handler functions
 
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-	req := &proto.GenerateLessonsRequest{
-		TopicPlanId: topicPlanID,
-	}
-
-	resp, err := h.LessonClient.GenerateLessons(ctxWithMetadata, req)
-	if err != nil {
-		log.Printf("Error generating lessons: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "generate_lessons_resp", resp)
+func (h *LessonHandler) handleGenerateTopicPlan(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GenerateTopicPlanRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GenerateTopicPlan(ctx, req.(*proto.GenerateTopicPlanRequest))
+	}, "generate_topic_plan_resp")
 }
 
-func (h *LessonHandler) GenerateTest(conn *websocket.Conn, jwt string, lessonID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-	req := &proto.GenerateTestRequest{
-		LessonId: lessonID,
-	}
-
-	resp, err := h.LessonClient.GenerateTests(ctxWithMetadata, req)
-	if err != nil {
-		log.Printf("Error generating test: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "generate_test_resp", resp)
+func (h *LessonHandler) handleGenerateLessons(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GenerateLessonsRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GenerateLessons(ctx, req.(*proto.GenerateLessonsRequest))
+	}, "generate_lessons_resp")
 }
 
-func (h *LessonHandler) GradeTest(conn *websocket.Conn, jwt string, testID, lessonID, topicPlanID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-	req := &proto.GradeTestRequest{
-		TestId:      testID,
-		LessonId:    lessonID,
-		TopicPlanId: topicPlanID,
-	}
-
-	resp, err := h.LessonClient.GradeTest(ctxWithMetadata, req)
-	if err != nil {
-		log.Printf("Error grading test: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "grade_test_resp", resp)
+func (h *LessonHandler) handleGenerateTest(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GenerateTestRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GenerateTests(ctx, req.(*proto.GenerateTestRequest))
+	}, "generate_test_resp")
 }
 
-func (h *LessonHandler) GetAllTopicPlansByUID(conn *websocket.Conn, jwt string, userID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-
-	resp, err := h.LessonClient.GetAllTopicPlansByUID(ctxWithMetadata, &proto.GetAllTopicPlansByUIDRequest{UserId: userID})
-	if err != nil {
-		log.Printf("Error getting all topic plans by user ID: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "get_all_topic_plans_by_uid_resp", resp)
+func (h *LessonHandler) handleGradeTest(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GradeTestRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GradeTest(ctx, req.(*proto.GradeTestRequest))
+	}, "grade_test_resp")
 }
 
-func (h *LessonHandler) GetTopicPlanByID(conn *websocket.Conn, jwt string, topicPlanID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-
-	resp, err := h.LessonClient.GetTopicPlanByID(ctxWithMetadata, &proto.GetTopicPlanByIDRequest{TopicPlanId: topicPlanID})
-	if err != nil {
-		log.Printf("Error getting topic plan by ID: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "get_topic_plan_by_id_resp", resp)
+func (h *LessonHandler) handleGetAllTopicPlansByUID(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GetAllTopicPlansByUIDRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GetAllTopicPlansByUID(ctx, req.(*proto.GetAllTopicPlansByUIDRequest))
+	}, "get_all_topic_plans_by_uid_resp")
 }
 
-func (h *LessonHandler) GetAllLessonsByTopicID(conn *websocket.Conn, jwt string, topicPlanID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-
-	resp, err := h.LessonClient.GetAllLessonPlansByTopicID(ctxWithMetadata, &proto.GetAllLessonPlansByTopicIDRequest{TopicPlanId: topicPlanID})
-	if err != nil {
-		log.Printf("Error getting all lessons by topic ID: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "get_all_lesson_plans_by_topic_id_resp", resp)
+func (h *LessonHandler) handleGetAllLessonsByTopicID(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GetAllLessonPlansByTopicIDRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GetAllLessonPlansByTopicID(ctx, req.(*proto.GetAllLessonPlansByTopicIDRequest))
+	}, "get_all_lesson_plans_by_topic_id_resp")
 }
 
-func (h *LessonHandler) GetLessonByID(conn *websocket.Conn, jwt string, lessonID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-
-	resp, err := h.LessonClient.GetLessonByID(ctxWithMetadata, &proto.GetLessonByIDRequest{LessonId: lessonID})
-	if err != nil {
-		log.Printf("Error getting lesson by lesson ID: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "get_lesson_by_id_resp", resp)
+func (h *LessonHandler) handleGetAllTestsByLessonID(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GetAllTestsByLessonIDRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GetAllTestsByLessonID(ctx, req.(*proto.GetAllTestsByLessonIDRequest))
+	}, "get_all_tests_by_lesson_id_resp")
 }
 
-func (h *LessonHandler) GetAllTestsByLessonID(conn *websocket.Conn, jwt string, lessonID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-
-	resp, err := h.LessonClient.GetAllTestsByLessonID(ctxWithMetadata, &proto.GetAllTestsByLessonIDRequest{LessonId: lessonID})
-	if err != nil {
-		log.Printf("Error getting all tests by lesson ID: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "get_all_tests_by_lesson_id_resp", resp)
+func (h *LessonHandler) handleGetLessonByID(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GetLessonByIDRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GetLessonByID(ctx, req.(*proto.GetLessonByIDRequest))
+	}, "get_lesson_by_id_resp")
 }
 
-func (h *LessonHandler) GetAllQuestionsByTestID(conn *websocket.Conn, jwt string, testID uint32) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-
-	resp, err := h.LessonClient.GetAllQuestionsByTestID(ctxWithMetadata, &proto.GetAllQuestionsByTestIDRequest{TestId: testID})
-	if err != nil {
-		log.Printf("Error getting all questions by test ID: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "get_all_questions_by_test_id_resp", resp)
+func (h *LessonHandler) handleGetAllQuestionsByTestID(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GetAllQuestionsByTestIDRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GetAllQuestionsByTestID(ctx, req.(*proto.GetAllQuestionsByTestIDRequest))
+	}, "get_all_questions_by_test_id_resp")
 }
 
-func (h *LessonHandler) GenerateQuickResponse(conn *websocket.Conn, jwt string, prompt string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+func (h *LessonHandler) handleGenerateQuickResponse(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GenerateQuickResponseRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GenerateQuickResponse(ctx, req.(*proto.GenerateQuickResponseRequest))
+	}, "generate_topic_plan_overview_resp")
+}
 
-	ctxWithMetadata := middleware.WithJWTMetadata(ctx, jwt)
-	req := &proto.GenerateQuickResponseRequest{
-		Prompt: prompt,
-	}
-	resp, err := h.LessonClient.GenerateQuickResponse(ctxWithMetadata, req)
-	if err != nil {
-		log.Printf("Error generating quick response: %v", err)
-		return
-	}
-
-	middleware.SendWebSocketMessage(conn, "generate_topic_plan_overview_resp", resp)
+func (h *LessonHandler) handleGetTopicPlanByID(conn *websocket.Conn, jwt string, data []byte) {
+	var req proto.GetTopicPlanByIDRequest
+	h.handleAction(conn, jwt, data, &req, func(ctx context.Context, req interface{}) (interface{}, error) {
+		return h.LessonClient.GetTopicPlanByID(ctx, req.(*proto.GetTopicPlanByIDRequest))
+	}, "get_topic_plan_by_id_resp")
 }
