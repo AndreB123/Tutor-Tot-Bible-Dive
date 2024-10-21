@@ -1,10 +1,8 @@
 package middleware
 
-import "encoding/json"
-
+// WSMessage represents the incoming WebSocket message structure
 type WSMessage struct {
-	Action string          `json:"action"`
-	Type   string          `json:"type"`
-	JWT    string          `json:"jwt"`
-	Data   json.RawMessage `json:"data"`
+	Service string // The name of the target service (e.g., "chat", "user", "lesson")
+	JWT     string // The JWT token for authentication
+	Data    []byte // The protobuf-encoded data payload
 }

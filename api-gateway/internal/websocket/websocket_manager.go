@@ -69,12 +69,12 @@ func (manager *WebSocketManager) handleMessage(conn *websocket.Conn, msg []byte)
 		return
 	}
 
-	log.Printf("Received message with type: %s", wsMsg.Type)
+	log.Printf("Received message with type: %s", wsMsg.Service)
 
-	handler := manager.serviceFactory.GetHandler(wsMsg.Type)
+	handler := manager.serviceFactory.GetHandler(wsMsg.Service)
 	if handler != nil {
 		handler.ProcessMessage(conn, wsMsg)
 	} else {
-		log.Println("Handler not found for message type:", wsMsg.Type)
+		log.Println("Handler not found for message type:", wsMsg.Service)
 	}
 }

@@ -23,8 +23,8 @@ func NewDefaultServiceFactory(chatClient proto.ChatServiceClient, userClient pro
 	}
 }
 
-func (f *DefaultServiceFactory) GetHandler(messageType string) handler.MessageHandler {
-	switch messageType {
+func (f *DefaultServiceFactory) GetHandler(service string) handler.MessageHandler {
+	switch service {
 	case "chat":
 		return f.chatHandler
 	case "user":
